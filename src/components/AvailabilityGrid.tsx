@@ -391,7 +391,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 px-6 py-3 border-t border-border text-[10px] font-sans text-muted-foreground shrink-0">
+      <div className="flex flex-wrap items-center gap-3 sm:gap-4 px-4 sm:px-6 py-2 sm:py-3 border-t border-border text-[10px] font-sans text-muted-foreground shrink-0">
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-sm bg-primary/80" /> Fully Paid
         </span>
