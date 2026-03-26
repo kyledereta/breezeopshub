@@ -3,9 +3,8 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import DashboardPage from "./pages/Dashboard";
-import Index from "./pages/Index";
 import TodayPage from "./pages/Today";
+import Index from "./pages/Index";
 import BookingsPage from "./pages/Bookings";
 import BalancesPage from "./pages/Balances";
 import RevenuePage from "./pages/Revenue";
@@ -15,7 +14,6 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -23,9 +21,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<DashboardPage />} />
+          <Route path="/" element={<TodayPage />} />
           <Route path="/availability" element={<Index />} />
-          <Route path="/today" element={<TodayPage />} />
           <Route path="/bookings" element={<BookingsPage />} />
           <Route path="/balances" element={<BalancesPage />} />
           <Route path="/revenue" element={<RevenuePage />} />
