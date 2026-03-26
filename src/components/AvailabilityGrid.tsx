@@ -451,7 +451,8 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
                           key={key}
                           className={cn(
                             "border-b border-r border-border cursor-pointer hover:bg-primary/10 transition-colors",
-                            isToday(day) && "bg-primary/5"
+                            isToday(day) && "bg-primary/5",
+                            isWeekend(day) && "bg-muted/15"
                           )}
                           onClick={() => onCellClick?.(unit.id, day)}
                         />
