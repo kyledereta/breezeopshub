@@ -59,6 +59,31 @@ function getUnitIcon(name: string) {
   if (name.includes("Kubo")) return TreePalm;
   return Home;
 }
+
+// Booking source → icon mapping
+function getSourceIcon(source: string) {
+  switch (source) {
+    case "Facebook Direct": return Facebook;
+    case "Instagram": return Instagram;
+    case "Airbnb": return Globe;
+    case "Walk-in": return MapPin;
+    case "Referral": return Share2;
+    case "TikTok": return Globe;
+    default: return Globe;
+  }
+}
+
+function getSourceColor(source: string) {
+  switch (source) {
+    case "Facebook Direct": return "text-ocean";
+    case "Instagram": return "text-airbnb-pink";
+    case "Airbnb": return "text-airbnb-pink";
+    case "Walk-in": return "text-coral";
+    case "Referral": return "text-primary";
+    default: return "text-muted-foreground";
+  }
+}
+
 interface AvailabilityGridProps {
   onCellClick?: (unitId: string, date: Date) => void;
   onBookingClick?: (booking: Booking) => void;
