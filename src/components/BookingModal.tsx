@@ -269,6 +269,11 @@ export function BookingModal({
         pets: values.pets,
         deposit_status: values.deposit_status as DepositStatus,
         deposit_deducted_amount: values.deposit_status === "Deducted" ? values.deposit_deducted_amount : 0,
+        extra_pax_fee: values.extra_pax_fee,
+        discount_given: values.discount_given,
+        discount_type: values.discount_type,
+        discount_reason: values.discount_reason || null,
+      };
       };
 
       // Upload ID files if any
