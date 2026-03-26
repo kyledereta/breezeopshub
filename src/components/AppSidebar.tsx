@@ -1,4 +1,4 @@
-import { Calendar, Sun, ClipboardList, Wallet, BarChart3, Users, Settings } from "lucide-react";
+import { Calendar, Sun, ClipboardList, Wallet, BarChart3, Users, Settings, LayoutDashboard } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import breezeLogo from "@/assets/breeze-logo.png";
@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/sidebar";
 
 const navItems = [
-  { title: "Availability", url: "/", icon: Calendar },
+  { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Availability", url: "/availability", icon: Calendar },
   { title: "Today", url: "/today", icon: Sun },
   { title: "Bookings", url: "/bookings", icon: ClipboardList },
   { title: "Pending Balances", url: "/balances", icon: Wallet },

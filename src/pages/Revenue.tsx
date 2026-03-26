@@ -7,7 +7,9 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
   ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend,
 } from "recharts";
-import { Banknote, TrendingUp, CalendarCheck, Users, UtensilsCrossed, ShieldMinus } from "lucide-react";
+import { Banknote, TrendingUp, CalendarCheck, Users, UtensilsCrossed, ShieldMinus, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { downloadCsv } from "@/lib/csvExport";
 
 const CHART_COLORS = {
   primary: "hsl(38, 55%, 51%)",
@@ -147,6 +149,20 @@ export default function RevenuePage() {
       <div className="flex flex-col h-[calc(100vh-3rem)]">
         <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border shrink-0">
           <h1 className="text-xl sm:text-3xl font-display text-foreground tracking-wide">Revenue Dashboard</h1>
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-xs"
+            onClick={() => {
+              const headers = ["Month", "Revenue", "Bookings", "Occupancy %", "ADR", "RevPAR"];
+              const rows = enrichedMonthlyData.map((m) => [
+                m.month, String(m.revenue), String(m.bookings), String(m.occupancy), String(m.adr), String(m.revpar),
+              ]);
+              downloadCsv("revenue.csv", headers, rows);
+            }}
+          >
+            <Download className="h-3.5 w-3.5 mr-1" /> Export
+          </Button>
         </div>
 
         {isLoading ? (

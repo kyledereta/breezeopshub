@@ -92,6 +92,8 @@ export function BookingModal({
   const isEditing = !!booking;
   const [idFiles, setIdFiles] = useState<File[]>([]);
   const [existingIds, setExistingIds] = useState<string[]>([]);
+  const [guestSuggestions, setGuestSuggestions] = useState<{ id: string; guest_name: string; phone: string | null; email: string | null; pets: boolean }[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   // Load existing ID files when editing
   useEffect(() => {
@@ -315,11 +317,55 @@ export function BookingModal({
                 control={form.control}
                 name="guest_name"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="relative">
                     <FormLabel className="text-xs text-muted-foreground">Guest Name</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Full name" className="bg-background border-border" />
+                      <Input
+                        {...field}
+                        placeholder="Full name"
+                        className="bg-background border-border"
+                        autoComplete="off"
+                        onChange={async (e) => {
+                          field.onChange(e);
+                          const q = e.target.value.trim();
+                          if (q.length >= 2) {
+                            const { data } = await supabase
+                              .from("guests")
+                              .select("id, guest_name, phone, email, pets")
+                              .ilike("guest_name", `%${q}%`)
+                              .limit(5);
+                            setGuestSuggestions(data || []);
+                            setShowSuggestions(true);
+                          } else {
+                            setShowSuggestions(false);
+                          }
+                        }}
+                        onFocus={() => { if (guestSuggestions.length > 0) setShowSuggestions(true); }}
+                        onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                      />
                     </FormControl>
+                    {showSuggestions && guestSuggestions.length > 0 && (
+                      <div className="absolute z-50 top-full left-0 right-0 mt-1 rounded-md border border-border bg-popover shadow-lg max-h-40 overflow-auto">
+                        {guestSuggestions.map((g) => (
+                          <button
+                            key={g.id}
+                            type="button"
+                            className="w-full text-left px-3 py-2 text-sm hover:bg-muted/50 flex items-center justify-between"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              form.setValue("guest_name", g.guest_name);
+                              if (g.phone) form.setValue("phone", g.phone);
+                              if (g.email) form.setValue("email", g.email);
+                              form.setValue("pets", g.pets);
+                              setShowSuggestions(false);
+                            }}
+                          >
+                            <span className="text-foreground">{g.guest_name}</span>
+                            <span className="text-xs text-muted-foreground">{g.phone || g.email || ""}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
