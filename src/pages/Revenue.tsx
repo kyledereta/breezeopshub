@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo } from "react"; // revenue-v2
 import { format, parseISO, startOfMonth, addMonths, startOfYear } from "date-fns";
 import { AppLayout } from "@/components/AppLayout";
 import { useBookings, type Booking } from "@/hooks/useBookings";
