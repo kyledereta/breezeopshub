@@ -1,6 +1,7 @@
-import { Calendar, Sun, ClipboardList, Wallet, BarChart3, Users, Settings, Waves } from "lucide-react";
+import { Calendar, Sun, ClipboardList, Wallet, BarChart3, Users, Settings } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import breezeLogo from "@/assets/breeze-logo.png";
 import {
   Sidebar,
   SidebarContent,
@@ -34,7 +35,7 @@ export function AppSidebar() {
       <SidebarContent>
         {/* Branding */}
         <div className="flex items-center gap-3 px-4 py-6 border-b border-sidebar-border">
-          <Waves className="h-7 w-7 text-primary shrink-0" />
+          <img src={breezeLogo} alt="Breeze Resort" className="h-8 w-8 shrink-0 rounded-full" />
           {!collapsed && (
             <div className="flex flex-col">
               <span className="font-display text-lg tracking-wide text-primary">
