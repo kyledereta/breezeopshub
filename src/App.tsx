@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index";
 import TodayPage from "./pages/Today";
 import BookingsPage from "./pages/Bookings";
+import BalancesPage from "./pages/Balances";
 import NotFound from "./pages/NotFound";
 import { AppLayout } from "@/components/AppLayout";
 
@@ -29,7 +30,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/today" element={<TodayPage />} />
           <Route path="/bookings" element={<BookingsPage />} />
-          <Route path="/balances" element={<PlaceholderPage title="Pending Balances" />} />
+          <Route path="/balances" element={<BalancesPage />} />
           <Route path="/revenue" element={<PlaceholderPage title="Revenue Dashboard" />} />
           <Route path="/guests" element={<PlaceholderPage title="Guest Database" />} />
           <Route path="/settings" element={<PlaceholderPage title="Settings" />} />
