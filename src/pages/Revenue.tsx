@@ -117,12 +117,28 @@ export default function RevenuePage() {
         {payload.map((p: any) => (
           <div key={p.dataKey} className="flex items-center gap-2 text-muted-foreground">
             <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }} />
-            <span>{p.name}: {p.dataKey === "revenue" ? `₱${p.value.toLocaleString()}` : p.dataKey === "occupancy" ? `${p.value}%` : p.value}</span>
+            <span>{p.name}: {
+              p.dataKey === "revenue" || p.dataKey === "adr" || p.dataKey === "revpar"
+                ? `₱${p.value.toLocaleString()}`
+                : p.dataKey === "occupancy"
+                  ? `${p.value}%`
+                  : p.value
+            }</span>
           </div>
         ))}
       </div>
     );
   };
+
+  // Enhanced monthly data with ADR and RevPAR
+  const enrichedMonthlyData = useMemo(() => {
+    return monthlyData.map((m) => ({
+      ...m,
+      occupancy: m.totalNights > 0 ? Math.round((m.occupiedNights / m.totalNights) * 100) : 0,
+      adr: m.occupiedNights > 0 ? Math.round(m.revenue / m.occupiedNights) : 0,
+      revpar: m.totalNights > 0 ? Math.round(m.revenue / m.totalNights) : 0,
+    }));
+  }, [monthlyData]);
 
   return (
     <AppLayout>
@@ -208,14 +224,27 @@ export default function RevenuePage() {
               </div>
             </div>
 
+            {/* ADR & RevPAR Trend */}
+            <div className="rounded-lg border border-border bg-card p-4">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-primary mb-4">ADR & RevPAR Trend (12 Months)</h3>
+              <ResponsiveContainer width="100%" height={240}>
+                <LineChart data={enrichedMonthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(156, 18%, 24%)" />
+                  <XAxis dataKey="label" tick={{ fill: "hsl(156, 10%, 55%)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: "hsl(156, 10%, 55%)", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `₱${(v / 1000).toFixed(0)}k`} />
+                  <RechartsTooltip content={<CustomTooltipContent />} />
+                  <Legend wrapperStyle={{ fontSize: 11, color: "hsl(156, 10%, 55%)" }} />
+                  <Line type="monotone" dataKey="adr" name="ADR" stroke={CHART_COLORS.primary} strokeWidth={2} dot={{ fill: CHART_COLORS.primary, r: 4 }} activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="revpar" name="RevPAR" stroke={CHART_COLORS.ocean} strokeWidth={2} dot={{ fill: CHART_COLORS.ocean, r: 3 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
             {/* Occupancy Trend */}
             <div className="rounded-lg border border-border bg-card p-4">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-primary mb-4">Occupancy Trend (12 Months)</h3>
               <ResponsiveContainer width="100%" height={240}>
-                <LineChart data={monthlyData.map((m) => ({
-                  ...m,
-                  occupancy: m.totalNights > 0 ? Math.round((m.occupiedNights / m.totalNights) * 100) : 0,
-                }))}>
+                <LineChart data={enrichedMonthlyData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(156, 18%, 24%)" />
                   <XAxis dataKey="label" tick={{ fill: "hsl(156, 10%, 55%)", fontSize: 11 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fill: "hsl(156, 10%, 55%)", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} domain={[0, 100]} />
