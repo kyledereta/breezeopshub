@@ -423,6 +423,10 @@ export default function TodayPage() {
                                     <Fan className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
                                   )}
                                 </div>
+                                <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
+                                  <span>{unit.max_pax} pax</span>
+                                  <span>₱{unit.nightly_rate.toLocaleString()}/night</span>
+                                </div>
                               </td>
                               {ua?.dayStatus.map((ds) => (
                                 <td key={ds.dateStr} className="text-center px-1 py-1.5">
