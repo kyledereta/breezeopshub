@@ -12,7 +12,7 @@ import {
   parseISO,
   differenceInDays,
 } from "date-fns";
-import { ChevronLeft, ChevronRight, Home, Tent, TreePalm, Crown, Fan } from "lucide-react";
+import { ChevronLeft, ChevronRight, Home, Tent, TreePalm, Crown, Fan, PawPrint, Users, Facebook, Instagram, Globe, MapPin, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUnits, groupUnitsByArea } from "@/hooks/useUnits";
 import { useBookings, type Booking } from "@/hooks/useBookings";
@@ -59,6 +59,31 @@ function getUnitIcon(name: string) {
   if (name.includes("Kubo")) return TreePalm;
   return Home;
 }
+
+// Booking source → icon mapping
+function getSourceIcon(source: string) {
+  switch (source) {
+    case "Facebook Direct": return Facebook;
+    case "Instagram": return Instagram;
+    case "Airbnb": return Globe;
+    case "Walk-in": return MapPin;
+    case "Referral": return Share2;
+    case "TikTok": return Globe;
+    default: return Globe;
+  }
+}
+
+function getSourceColor(source: string) {
+  switch (source) {
+    case "Facebook Direct": return "text-ocean";
+    case "Instagram": return "text-airbnb-pink";
+    case "Airbnb": return "text-airbnb-pink";
+    case "Walk-in": return "text-coral";
+    case "Referral": return "text-primary";
+    default: return "text-muted-foreground";
+  }
+}
+
 interface AvailabilityGridProps {
   onCellClick?: (unitId: string, date: Date) => void;
   onBookingClick?: (booking: Booking) => void;
@@ -395,12 +420,26 @@ function BookingTooltip({ booking }: { booking: Booking }) {
       className="bg-popover border border-border shadow-xl p-3 max-w-[240px]"
     >
       <div className="space-y-1.5">
-        <div className="font-medium text-sm text-foreground">{booking.guest_name}</div>
+        <div className="flex items-center gap-2">
+          {(() => {
+            const SourceIcon = getSourceIcon(booking.booking_source);
+            return <SourceIcon className={cn("h-3.5 w-3.5 shrink-0", getSourceColor(booking.booking_source))} />;
+          })()}
+          <span className="font-medium text-sm text-foreground">{booking.guest_name}</span>
+        </div>
         <div className="text-xs text-muted-foreground">
           {format(parseISO(booking.check_in), "MMM d")} → {format(parseISO(booking.check_out), "MMM d, yyyy")}
         </div>
         <div className="flex items-center gap-3 text-xs">
-          <span>{booking.pax} PAX</span>
+          <span className="flex items-center gap-1">
+            <Users className="h-3 w-3 text-muted-foreground" />
+            {booking.pax} PAX
+          </span>
+          {(booking as any).pets && (
+            <span className="flex items-center gap-1 text-warning-orange">
+              <PawPrint className="h-3 w-3" /> Pet
+            </span>
+          )}
           <span className={getStatusBadge(booking.payment_status)}>
             {booking.payment_status}
           </span>
@@ -425,6 +464,9 @@ function BookingTooltip({ booking }: { booking: Booking }) {
               Deposit {(booking as any).deposit_status}
             </span>
           )}
+        </div>
+        <div className="text-[10px] text-muted-foreground italic">
+          via {booking.booking_source}
         </div>
       </div>
     </TooltipContent>

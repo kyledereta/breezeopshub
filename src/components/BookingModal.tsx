@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -33,7 +33,9 @@ import { useUnits, groupUnitsByArea } from "@/hooks/useUnits";
 import { useCreateBooking, useUpdateBooking } from "@/hooks/useBookingMutations";
 import type { Booking } from "@/hooks/useBookings";
 import { Constants, type Database } from "@/integrations/supabase/types";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Upload, X, FileImage, PawPrint } from "lucide-react";
 
 type PaymentStatus = Database["public"]["Enums"]["payment_status"];
 type BookingStatus = Database["public"]["Enums"]["booking_status"];
@@ -55,6 +57,7 @@ const bookingSchema = z.object({
   phone: z.string().max(20).optional().or(z.literal("")),
   notes: z.string().max(500).optional().or(z.literal("")),
   utensil_rental: z.boolean(),
+  pets: z.boolean(),
   deposit_status: z.string(),
 }).refine((data) => data.check_out > data.check_in, {
   message: "Check-out must be after check-in",
@@ -83,6 +86,18 @@ export function BookingModal({
   const createBooking = useCreateBooking();
   const updateBooking = useUpdateBooking();
   const isEditing = !!booking;
+  const [idFiles, setIdFiles] = useState<File[]>([]);
+  const [existingIds, setExistingIds] = useState<string[]>([]);
+
+  // Load existing ID files when editing
+  useEffect(() => {
+    if (!open) { setIdFiles([]); setExistingIds([]); return; }
+    if (booking) {
+      supabase.storage.from("guest-ids").list(booking.id).then(({ data }) => {
+        if (data) setExistingIds(data.map((f) => `${booking.id}/${f.name}`));
+      });
+    }
+  }, [open, booking]);
 
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingSchema),
@@ -101,6 +116,7 @@ export function BookingModal({
       phone: "",
       notes: "",
       utensil_rental: false,
+      pets: false,
       deposit_status: "Pending",
     },
   });
@@ -125,6 +141,7 @@ export function BookingModal({
         phone: booking.phone ?? "",
         notes: booking.notes ?? "",
         utensil_rental: (booking as any).utensil_rental ?? false,
+        pets: (booking as any).pets ?? false,
         deposit_status: (booking as any).deposit_status ?? "Pending",
       });
     } else {
@@ -143,6 +160,7 @@ export function BookingModal({
         phone: "",
         notes: "",
         utensil_rental: false,
+        pets: false,
         deposit_status: "Pending",
       });
     }
@@ -165,8 +183,22 @@ export function BookingModal({
         phone: values.phone || null,
         notes: values.notes || null,
         utensil_rental: values.utensil_rental,
+        pets: values.pets,
         deposit_status: values.deposit_status as DepositStatus,
       };
+
+      // Upload ID files if any
+      let uploadedIds: string[] = [];
+      if (idFiles.length > 0) {
+        for (const file of idFiles) {
+          const filePath = `${isEditing ? booking.id : "temp"}/${Date.now()}-${file.name}`;
+          const { error: uploadError } = await supabase.storage
+            .from("guest-ids")
+            .upload(filePath, file);
+          if (uploadError) throw uploadError;
+          uploadedIds.push(filePath);
+        }
+      }
 
       if (isEditing) {
         await updateBooking.mutateAsync({ id: booking.id, ...payload });
@@ -435,7 +467,7 @@ export function BookingModal({
               <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">
                 Extras & Deposits
               </h3>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <FormField
                   control={form.control}
                   name="utensil_rental"
@@ -449,7 +481,27 @@ export function BookingModal({
                       </FormControl>
                       <div>
                         <FormLabel className="text-xs text-foreground">Utensil Rental</FormLabel>
-                        <p className="text-[10px] text-muted-foreground">₱500 per set</p>
+                        <p className="text-[10px] text-muted-foreground">₱500/set</p>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="pets"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center gap-3 space-y-0 rounded-lg border border-border p-3">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div>
+                        <FormLabel className="text-xs text-foreground">With Pets</FormLabel>
+                        <p className="text-[10px] text-muted-foreground">
+                          <PawPrint className="h-3 w-3 inline" /> Pet included
+                        </p>
                       </div>
                     </FormItem>
                   )}
@@ -477,6 +529,75 @@ export function BookingModal({
                   )}
                 />
               </div>
+            </div>
+
+            <Separator className="bg-border" />
+
+            {/* Guest ID Upload */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">
+                Guest ID
+              </h3>
+              {/* Existing files */}
+              {existingIds.length > 0 && (
+                <div className="space-y-1.5">
+                  {existingIds.map((path) => (
+                    <div key={path} className="flex items-center justify-between text-xs bg-background border border-border rounded-md px-3 py-2">
+                      <div className="flex items-center gap-2 text-muted-foreground truncate">
+                        <FileImage className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate">{path.split("/").pop()}</span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5 text-muted-foreground hover:text-destructive"
+                        onClick={async () => {
+                          await supabase.storage.from("guest-ids").remove([path]);
+                          setExistingIds((prev) => prev.filter((p) => p !== path));
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {/* New files */}
+              {idFiles.length > 0 && (
+                <div className="space-y-1.5">
+                  {idFiles.map((file, i) => (
+                    <div key={i} className="flex items-center justify-between text-xs bg-background border border-border rounded-md px-3 py-2">
+                      <div className="flex items-center gap-2 text-muted-foreground truncate">
+                        <FileImage className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate">{file.name}</span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5 text-muted-foreground hover:text-destructive"
+                        onClick={() => setIdFiles((prev) => prev.filter((_, j) => j !== i))}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <label className="flex items-center justify-center gap-2 border border-dashed border-border rounded-lg py-3 cursor-pointer hover:border-primary/50 transition-colors text-xs text-muted-foreground">
+                <Upload className="h-4 w-4" />
+                <span>Upload ID photo</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files) setIdFiles((prev) => [...prev, ...Array.from(e.target.files!)]);
+                  }}
+                />
+              </label>
             </div>
 
             <Separator className="bg-border" />
