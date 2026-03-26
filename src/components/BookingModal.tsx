@@ -37,6 +37,7 @@ import { toast } from "sonner";
 type PaymentStatus = Database["public"]["Enums"]["payment_status"];
 type BookingStatus = Database["public"]["Enums"]["booking_status"];
 type BookingSource = Database["public"]["Enums"]["booking_source"];
+type DepositStatus = Database["public"]["Enums"]["deposit_status"];
 
 const bookingSchema = z.object({
   guest_name: z.string().trim().min(1, "Guest name is required").max(100),
@@ -52,6 +53,8 @@ const bookingSchema = z.object({
   email: z.string().email().max(255).optional().or(z.literal("")),
   phone: z.string().max(20).optional().or(z.literal("")),
   notes: z.string().max(500).optional().or(z.literal("")),
+  utensil_rental: z.boolean(),
+  deposit_status: z.string(),
 }).refine((data) => data.check_out > data.check_in, {
   message: "Check-out must be after check-in",
   path: ["check_out"],
@@ -96,6 +99,8 @@ export function BookingModal({
       email: "",
       phone: "",
       notes: "",
+      utensil_rental: false,
+      deposit_status: "Pending",
     },
   });
 
@@ -118,6 +123,8 @@ export function BookingModal({
         email: booking.email ?? "",
         phone: booking.phone ?? "",
         notes: booking.notes ?? "",
+        utensil_rental: (booking as any).utensil_rental ?? false,
+        deposit_status: (booking as any).deposit_status ?? "Pending",
       });
     } else {
       form.reset({
@@ -134,6 +141,8 @@ export function BookingModal({
         email: "",
         phone: "",
         notes: "",
+        utensil_rental: false,
+        deposit_status: "Pending",
       });
     }
   }, [open, booking, defaultUnitId, defaultDate, form]);
@@ -154,6 +163,8 @@ export function BookingModal({
         email: values.email || null,
         phone: values.phone || null,
         notes: values.notes || null,
+        utensil_rental: values.utensil_rental,
+        deposit_status: values.deposit_status as DepositStatus,
       };
 
       if (isEditing) {
