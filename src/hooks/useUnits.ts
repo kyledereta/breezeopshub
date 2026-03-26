@@ -24,10 +24,11 @@ const AREA_ORDER = ["Owner's Villa", "Beach Area", "Pool Area"];
 
 // Sort priority within Beach Area
 const BEACH_SORT_ORDER: Record<string, number> = {
-  "Beach Kubo": 1,
-  "Big Kubo": 2,
-  "Teepee Kubo": 3,
-  "Beach Villa": 4,
+  "AC Beach Kubo": 1,
+  "Fan Kubo": 2,
+  "Big Kubo": 3,
+  "Teepee Kubo": 4,
+  "Beach Villa": 5,
 };
 
 function getUnitSortKey(name: string): number {

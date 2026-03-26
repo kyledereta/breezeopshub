@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { format, parseISO } from "date-fns";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
@@ -5,7 +6,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useGuestBookings, type Guest } from "@/hooks/useGuests";
-import { CalendarCheck, Phone, Mail, MapPin, PawPrint, Star } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { CalendarCheck, Phone, Mail, MapPin, PawPrint, Star, IdCard } from "lucide-react";
 
 const TIER_COLORS: Record<string, string> = {
   "New Guest": "bg-muted text-muted-foreground",
@@ -27,6 +29,25 @@ interface GuestProfileSheetProps {
 
 export function GuestProfileSheet({ guest, open, onOpenChange }: GuestProfileSheetProps) {
   const { data: bookings = [], isLoading } = useGuestBookings(guest?.id);
+  const [idUrls, setIdUrls] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!guest || !open || bookings.length === 0) { setIdUrls([]); return; }
+    const loadIds = async () => {
+      const urls: string[] = [];
+      for (const b of bookings) {
+        const { data: files } = await supabase.storage.from("guest-ids").list((b as any).id);
+        if (files && files.length > 0) {
+          for (const f of files) {
+            const { data } = supabase.storage.from("guest-ids").getPublicUrl(`${(b as any).id}/${f.name}`);
+            if (data?.publicUrl) urls.push(data.publicUrl);
+          }
+        }
+      }
+      setIdUrls(urls);
+    };
+    loadIds();
+  }, [guest, open, bookings]);
 
   if (!guest) return null;
 
@@ -96,6 +117,26 @@ export function GuestProfileSheet({ guest, open, onOpenChange }: GuestProfileShe
           <div className="rounded-lg border border-border p-3 mb-4">
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Notes</div>
             <div className="text-sm text-foreground">{guest.notes}</div>
+          </div>
+        )}
+
+        {/* Guest IDs */}
+        {idUrls.length > 0 && (
+          <div className="mb-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-primary mb-2 flex items-center gap-1">
+              <IdCard className="h-3.5 w-3.5" /> Guest IDs
+            </h3>
+            <div className="grid grid-cols-2 gap-2">
+              {idUrls.map((url, i) => (
+                <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+                  <img
+                    src={url}
+                    alt={`Guest ID ${i + 1}`}
+                    className="rounded-lg border border-border w-full h-24 object-cover hover:opacity-80 transition-opacity"
+                  />
+                </a>
+              ))}
+            </div>
           </div>
         )}
 
