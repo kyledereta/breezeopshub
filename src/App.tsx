@@ -15,13 +15,6 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const PlaceholderPage = ({ title }: { title: string }) => (
-  <AppLayout>
-    <div className="flex items-center justify-center h-[calc(100vh-3rem)]">
-      <h1 className="text-3xl font-display text-foreground">{title}</h1>
-    </div>
-  </AppLayout>
-);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
