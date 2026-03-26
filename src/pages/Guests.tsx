@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Search, Plus, Users, Eye } from "lucide-react";
+import { Search, Plus, Users, Eye, Download } from "lucide-react";
+import { downloadCsv } from "@/lib/csvExport";
 import { GuestModal } from "@/components/GuestModal";
 import { GuestProfileSheet } from "@/components/GuestProfileSheet";
 
@@ -42,13 +43,30 @@ export default function GuestsPage() {
       <div className="flex flex-col h-[calc(100vh-3rem)]">
         <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border shrink-0">
           <h1 className="text-xl sm:text-3xl font-display text-foreground tracking-wide">Guest Database</h1>
-          <Button
-            size="sm"
-            className="bg-primary text-primary-foreground hover:bg-primary/90"
-            onClick={() => { setEditingGuest(null); setModalOpen(true); }}
-          >
-            <Plus className="h-4 w-4 mr-1" /> Add Guest
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-xs"
+              onClick={() => {
+                const headers = ["Name", "Phone", "Email", "Location", "Stays", "Tier", "Segment"];
+                const rows = filtered.map((g) => [
+                  g.guest_name, g.phone || "", g.email || "", g.location || "",
+                  String(g.total_stays), g.parang_dati_tier, g.guest_segment || "",
+                ]);
+                downloadCsv("guests.csv", headers, rows);
+              }}
+            >
+              <Download className="h-3.5 w-3.5 mr-1" /> Export
+            </Button>
+            <Button
+              size="sm"
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+              onClick={() => { setEditingGuest(null); setModalOpen(true); }}
+            >
+              <Plus className="h-4 w-4 mr-1" /> Add Guest
+            </Button>
+          </div>
         </div>
 
         {/* Search & Stats */}

@@ -8,8 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search } from "lucide-react";
+import { Search, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { downloadCsv } from "@/lib/csvExport";
 import { Constants } from "@/integrations/supabase/types";
 
 function getPaymentBadgeClass(status: string) {
@@ -85,8 +87,24 @@ export default function BookingsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border shrink-0 gap-1">
           <h1 className="text-xl sm:text-3xl font-display text-foreground tracking-wide">All Bookings</h1>
-          <span className="text-xs sm:text-sm text-muted-foreground">{filteredBookings.length} bookings</span>
-        </div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-xs"
+              onClick={() => {
+                const headers = ["Ref", "Guest", "Unit", "Check-in", "Check-out", "Pax", "Total", "Downpayment", "Payment", "Status", "Source"];
+                const rows = filteredBookings.map((b) => [
+                  b.booking_ref, b.guest_name, unitMap.get(b.unit_id ?? "") ?? "", b.check_in, b.check_out,
+                  String(b.pax), String(b.total_amount), String(b.deposit_paid), b.payment_status, b.booking_status, b.booking_source,
+                ]);
+                downloadCsv("bookings.csv", headers, rows);
+              }}
+            >
+              <Download className="h-3.5 w-3.5 mr-1" /> Export
+            </Button>
+            <span className="text-xs sm:text-sm text-muted-foreground">{filteredBookings.length} bookings</span>
+          </div>
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 border-b border-border shrink-0">
