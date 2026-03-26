@@ -23,17 +23,17 @@ import { cn } from "@/lib/utils";
 function getBookingColor(booking: Booking): string {
   switch (booking.payment_status) {
     case "Fully Paid":
-      return "bg-primary/80 border-primary"; // gold
+      return "bg-primary/80";
     case "Airbnb Paid":
-      return "bg-airbnb-pink/70 border-airbnb-pink"; // pink
+      return "bg-airbnb-pink/70";
     case "Partial DP":
-      return "bg-warning-orange/60 border-warning-orange"; // orange
+      return "bg-warning-orange/60";
     case "Unpaid":
-      return "bg-destructive/60 border-destructive"; // red
+      return "bg-destructive/60";
     case "Refunded":
-      return "bg-muted border-muted-foreground";
+      return "bg-muted";
     default:
-      return "bg-muted border-border";
+      return "bg-muted";
   }
 }
 
