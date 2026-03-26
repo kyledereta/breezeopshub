@@ -414,6 +414,26 @@ export default function TodayPage() {
               </Section>
             </div>
 
+            {/* Upcoming Arrivals - Next 3 Days */}
+            {upcomingArrivals.length > 0 && (
+              <div className="rounded-lg border border-border bg-card overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
+                  <div className="flex items-center gap-2">
+                    <ArrowRight className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium text-foreground">Upcoming Arrivals</span>
+                    <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-medium">
+                      Next 3 days
+                    </span>
+                  </div>
+                </div>
+                <div className="p-2 space-y-1.5">
+                  {upcomingArrivals.map((b) => (
+                    <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} onEdit={() => setEditingBooking(b)} />
+                  ))}
+                </div>
+              </div>
+            )}
+
             {pendingBalances.length > 0 && (
               <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-destructive mb-3 flex items-center gap-2">
