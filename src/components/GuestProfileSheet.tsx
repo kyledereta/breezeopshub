@@ -29,6 +29,25 @@ interface GuestProfileSheetProps {
 
 export function GuestProfileSheet({ guest, open, onOpenChange }: GuestProfileSheetProps) {
   const { data: bookings = [], isLoading } = useGuestBookings(guest?.id);
+  const [idUrls, setIdUrls] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!guest || !open || bookings.length === 0) { setIdUrls([]); return; }
+    const loadIds = async () => {
+      const urls: string[] = [];
+      for (const b of bookings) {
+        const { data: files } = await supabase.storage.from("guest-ids").list((b as any).id);
+        if (files && files.length > 0) {
+          for (const f of files) {
+            const { data } = supabase.storage.from("guest-ids").getPublicUrl(`${(b as any).id}/${f.name}`);
+            if (data?.publicUrl) urls.push(data.publicUrl);
+          }
+        }
+      }
+      setIdUrls(urls);
+    };
+    loadIds();
+  }, [guest, open, bookings]);
 
   if (!guest) return null;
 
