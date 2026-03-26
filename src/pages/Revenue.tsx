@@ -91,9 +91,20 @@ export default function RevenuePage() {
   // Summary stats
   const currentMonth = format(new Date(), "yyyy-MM");
   const currentMonthData = monthlyData.find((m) => m.month === currentMonth);
-  const totalRevenue = allBookings.filter((b) => b.booking_status !== "Cancelled").reduce((s, b) => s + b.total_amount, 0);
+  const activeBookings = allBookings.filter((b) => b.booking_status !== "Cancelled");
+  const totalRevenue = activeBookings.reduce((s, b) => s + b.total_amount, 0);
   const currentOccupancy = currentMonthData && currentMonthData.totalNights > 0
     ? Math.round((currentMonthData.occupiedNights / currentMonthData.totalNights) * 100)
+    : 0;
+
+  // ADR: Total revenue ÷ occupied room-nights (this month)
+  const currentADR = currentMonthData && currentMonthData.occupiedNights > 0
+    ? Math.round(currentMonthData.revenue / currentMonthData.occupiedNights)
+    : 0;
+
+  // RevPAR: Total revenue ÷ total available room-nights (this month)
+  const currentRevPAR = currentMonthData && currentMonthData.totalNights > 0
+    ? Math.round(currentMonthData.revenue / currentMonthData.totalNights)
     : 0;
 
   const isLoading = bookingsLoading || unitsLoading;
