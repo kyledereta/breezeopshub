@@ -11,8 +11,11 @@ import {
   isWithinInterval,
   parseISO,
   differenceInDays,
+  isWeekend,
+  getDay,
 } from "date-fns";
-import { ChevronLeft, ChevronRight, Home, Tent, TreePalm, Crown, Fan, PawPrint, Users, Facebook, Instagram, Globe, MapPin, Share2, UtensilsCrossed } from "lucide-react";
+import { ChevronLeft, ChevronRight, Home, Tent, TreePalm, Crown, Fan, PawPrint, Users, Facebook, Instagram, Globe, MapPin, Share2, UtensilsCrossed, TrendingUp } from "lucide-react";
+import { getPHHolidaysForMonth } from "@/lib/phHolidays";
 import { Button } from "@/components/ui/button";
 import { useUnits, groupUnitsByArea } from "@/hooks/useUnits";
 import { useBookings, type Booking } from "@/hooks/useBookings";
@@ -111,6 +114,22 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
 
   const groupedUnits = useMemo(() => groupUnitsByArea(units), [units]);
 
+  // PH Holidays for current month
+  const holidayMap = useMemo(
+    () => getPHHolidaysForMonth(currentMonth.getFullYear(), currentMonth.getMonth()),
+    [currentMonth]
+  );
+
+  // Helper: is this a peak/markup day (weekend or holiday)
+  const isMarkupDay = useCallback(
+    (day: Date) => {
+      const dayOfWeek = getDay(day);
+      // Friday, Saturday, Sunday or holiday
+      return dayOfWeek === 5 || dayOfWeek === 6 || dayOfWeek === 0 || holidayMap.has(format(day, "yyyy-MM-dd"));
+    },
+    [holidayMap]
+  );
+
   // Build lookup: unitId+dateStr → booking
   const bookingMap = useMemo(() => {
     const map = new Map<string, Booking>();
@@ -201,26 +220,71 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
       <div className="flex-1 overflow-auto">
         <table className="w-full border-collapse text-xs font-sans">
           <thead className="sticky top-0 z-20">
+            {/* Holidays row */}
+            <tr className="bg-background">
+              <th className="sticky left-0 z-30 bg-background border-b border-r border-border px-3 py-1 text-left text-[9px] text-muted-foreground font-medium min-w-[160px] w-[160px] uppercase tracking-wider">
+                Holidays
+              </th>
+              {days.map((day) => {
+                const dateStr = format(day, "yyyy-MM-dd");
+                const holiday = holidayMap.get(dateStr);
+                const weekend = isWeekend(day);
+                return (
+                  <th
+                    key={day.toISOString() + "-hol"}
+                    className={cn(
+                      "border-b border-r border-border px-0 py-1 text-center min-w-[36px] w-[36px]",
+                      weekend && "bg-muted/30",
+                      isToday(day) && "bg-primary/20"
+                    )}
+                  >
+                    {holiday && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="text-[8px] text-coral font-semibold cursor-default leading-none">
+                            🇵🇭
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="text-xs">
+                          {holiday.name}
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                  </th>
+                );
+              })}
+            </tr>
+
             {/* Day numbers row */}
             <tr className="bg-background">
               <th className="sticky left-0 z-30 bg-background border-b border-r border-border px-3 py-2 text-left text-muted-foreground font-medium min-w-[160px] w-[160px]">
                 Unit
               </th>
-              {days.map((day) => (
-                <th
-                  key={day.toISOString()}
-                  className={cn(
-                    "border-b border-r border-border px-0 py-1.5 text-center min-w-[36px] w-[36px] font-medium",
-                    isToday(day) ? "bg-primary/20 text-primary" : "text-muted-foreground"
-                  )}
-                  ref={isToday(day) ? todayRef : undefined}
-                >
-                  <div className="text-[10px] leading-none mb-0.5">
-                    {format(day, "EEE").charAt(0)}
-                  </div>
-                  <div>{format(day, "d")}</div>
-                </th>
-              ))}
+              {days.map((day) => {
+                const weekend = isWeekend(day);
+                const markup = isMarkupDay(day);
+                return (
+                  <th
+                    key={day.toISOString()}
+                    className={cn(
+                      "border-b border-r border-border px-0 py-1.5 text-center min-w-[36px] w-[36px] font-medium",
+                      weekend && "bg-muted/30",
+                      isToday(day) ? "bg-primary/20 text-primary" : "text-muted-foreground"
+                    )}
+                    ref={isToday(day) ? todayRef : undefined}
+                  >
+                    <div className="text-[10px] leading-none mb-0.5">
+                      {format(day, "EEE").charAt(0)}
+                    </div>
+                    <div className="flex items-center justify-center gap-px">
+                      {format(day, "d")}
+                      {markup && (
+                        <TrendingUp className="h-2 w-2 text-primary/70 shrink-0" />
+                      )}
+                    </div>
+                  </th>
+                );
+              })}
             </tr>
 
             {/* Summary: Occupied */}
@@ -233,6 +297,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
                   key={date.toISOString()}
                   className={cn(
                     "border-b border-r border-border text-center py-1",
+                    isWeekend(date) && "bg-muted/20",
                     isToday(date) && "bg-primary/10"
                   )}
                 >
@@ -259,6 +324,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
                   key={date.toISOString()}
                   className={cn(
                     "border-b border-r border-border text-center py-1",
+                    isWeekend(date) && "bg-muted/20",
                     isToday(date) && "bg-primary/10"
                   )}
                 >
@@ -385,7 +451,8 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
                           key={key}
                           className={cn(
                             "border-b border-r border-border cursor-pointer hover:bg-primary/10 transition-colors",
-                            isToday(day) && "bg-primary/5"
+                            isToday(day) && "bg-primary/5",
+                            isWeekend(day) && "bg-muted/15"
                           )}
                           onClick={() => onCellClick?.(unit.id, day)}
                         />
@@ -412,6 +479,15 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-sm bg-destructive/60" /> Unpaid
+        </span>
+        <span className="flex items-center gap-1.5 border-l border-border pl-3">
+          <TrendingUp className="h-3 w-3 text-primary/70" /> Peak / Markup
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="text-[10px]">🇵🇭</span> Holiday
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded-sm bg-muted/30" /> Weekend
         </span>
       </div>
     </div>
