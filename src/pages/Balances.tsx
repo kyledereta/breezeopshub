@@ -45,9 +45,9 @@ export default function BalancesPage() {
     <AppLayout>
       <div className="flex flex-col h-[calc(100vh-3rem)]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
-          <h1 className="text-3xl font-display text-foreground tracking-wide">Pending Balances</h1>
-          <span className="text-sm text-muted-foreground">{pendingBookings.length} bookings</span>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border shrink-0 gap-1">
+          <h1 className="text-xl sm:text-3xl font-display text-foreground tracking-wide">Pending Balances</h1>
+          <span className="text-xs sm:text-sm text-muted-foreground">{pendingBookings.length} bookings</span>
         </div>
 
         {isLoading ? (
@@ -57,7 +57,7 @@ export default function BalancesPage() {
         ) : (
           <div className="flex flex-col flex-1 overflow-hidden">
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 px-6 py-4 border-b border-border shrink-0">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 px-4 sm:px-6 py-4 border-b border-border shrink-0">
               <div className="rounded-lg border border-border bg-card p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <Wallet className="h-4 w-4 text-destructive" />

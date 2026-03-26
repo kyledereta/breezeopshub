@@ -100,10 +100,10 @@ export default function TodayPage() {
     <AppLayout>
       <div className="flex flex-col h-[calc(100vh-3rem)]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border shrink-0 gap-1">
           <div>
-            <h1 className="text-3xl font-display text-foreground tracking-wide">Today's Operations</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
+            <h1 className="text-xl sm:text-3xl font-display text-foreground tracking-wide">Today's Operations</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               {format(new Date(), "EEEE, MMMM d, yyyy")}
             </p>
           </div>
@@ -114,9 +114,9 @@ export default function TodayPage() {
             <span className="text-muted-foreground text-sm">Loading...</span>
           </div>
         ) : (
-          <div className="flex-1 overflow-auto p-6 space-y-6">
+          <div className="flex-1 overflow-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
             {/* Stats Row */}
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
               <StatCard icon={Home} label="Occupancy" value={`${occupancyRate}%`} sub={`${inHouse.length} of ${units.length} units`} />
               <StatCard icon={Users} label="Guests In-House" value={totalPaxInHouse.toString()} sub={`${inHouse.length} bookings`} />
               <StatCard icon={LogIn} label="Arrivals Today" value={checkIns.length.toString()} sub={`${checkIns.reduce((s, b) => s + b.pax, 0)} guests`} />
@@ -124,7 +124,7 @@ export default function TodayPage() {
             </div>
 
             {/* Sections */}
-            <div className="grid grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
               {/* Check-ins */}
               <Section icon={LogIn} title="Arrivals" count={checkIns.length} color="text-primary">
                 {checkIns.length === 0 ? (
