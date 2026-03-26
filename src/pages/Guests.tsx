@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Search, Plus, Users, Eye, Download } from "lucide-react";
+import { Search, Plus, Users, Eye, Download, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { downloadCsv } from "@/lib/csvExport";
 import { GuestModal } from "@/components/GuestModal";
 import { GuestProfileSheet } from "@/components/GuestProfileSheet";
@@ -19,24 +19,76 @@ const TIER_COLORS: Record<string, string> = {
   "VIP 5+": "bg-chart-1/20 text-chart-1",
 };
 
+type SortKey = "guest_name" | "total_stays" | "parang_dati_tier" | "location" | "guest_segment";
+type SortDir = "asc" | "desc";
+
+const TIER_ORDER: Record<string, number> = {
+  "New Guest": 0,
+  "Returning": 1,
+  "Loyal 3+": 2,
+  "VIP 5+": 3,
+};
+
 export default function GuestsPage() {
   const { data: guests = [], isLoading } = useGuests();
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
   const [profileGuest, setProfileGuest] = useState<Guest | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>("guest_name");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
+
+  const SortIcon = ({ col }: { col: SortKey }) => {
+    if (sortKey !== col) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />;
+    return sortDir === "asc"
+      ? <ArrowUp className="h-3 w-3 ml-1" />
+      : <ArrowDown className="h-3 w-3 ml-1" />;
+  };
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return guests;
-    const q = search.toLowerCase();
-    return guests.filter(
-      (g) =>
-        g.guest_name.toLowerCase().includes(q) ||
-        g.phone?.toLowerCase().includes(q) ||
-        g.email?.toLowerCase().includes(q) ||
-        g.location?.toLowerCase().includes(q)
-    );
-  }, [guests, search]);
+    let list = guests;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (g) =>
+          g.guest_name.toLowerCase().includes(q) ||
+          g.phone?.toLowerCase().includes(q) ||
+          g.email?.toLowerCase().includes(q) ||
+          g.location?.toLowerCase().includes(q)
+      );
+    }
+    const sorted = [...list].sort((a, b) => {
+      let cmp = 0;
+      switch (sortKey) {
+        case "guest_name":
+          cmp = a.guest_name.localeCompare(b.guest_name);
+          break;
+        case "total_stays":
+          cmp = a.total_stays - b.total_stays;
+          break;
+        case "parang_dati_tier":
+          cmp = (TIER_ORDER[a.parang_dati_tier] ?? 0) - (TIER_ORDER[b.parang_dati_tier] ?? 0);
+          break;
+        case "location":
+          cmp = (a.location || "").localeCompare(b.location || "");
+          break;
+        case "guest_segment":
+          cmp = (a.guest_segment || "").localeCompare(b.guest_segment || "");
+          break;
+      }
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return sorted;
+  }, [guests, search, sortKey, sortDir]);
 
   return (
     <AppLayout>
@@ -96,13 +148,38 @@ export default function GuestsPage() {
             <Table>
               <TableHeader>
                 <TableRow className="border-border hover:bg-transparent">
-                  <TableHead className="text-muted-foreground">Name</TableHead>
+                  <TableHead
+                    className="text-muted-foreground cursor-pointer select-none"
+                    onClick={() => toggleSort("guest_name")}
+                  >
+                    <span className="flex items-center">Name <SortIcon col="guest_name" /></span>
+                  </TableHead>
                   <TableHead className="text-muted-foreground">Phone</TableHead>
                   <TableHead className="text-muted-foreground">Email</TableHead>
-                  <TableHead className="text-muted-foreground">Location</TableHead>
-                  <TableHead className="text-muted-foreground text-center">Stays</TableHead>
-                  <TableHead className="text-muted-foreground">Tier</TableHead>
-                  <TableHead className="text-muted-foreground">Segment</TableHead>
+                  <TableHead
+                    className="text-muted-foreground cursor-pointer select-none"
+                    onClick={() => toggleSort("location")}
+                  >
+                    <span className="flex items-center">Location <SortIcon col="location" /></span>
+                  </TableHead>
+                  <TableHead
+                    className="text-muted-foreground text-center cursor-pointer select-none"
+                    onClick={() => toggleSort("total_stays")}
+                  >
+                    <span className="flex items-center justify-center">Stays <SortIcon col="total_stays" /></span>
+                  </TableHead>
+                  <TableHead
+                    className="text-muted-foreground cursor-pointer select-none"
+                    onClick={() => toggleSort("parang_dati_tier")}
+                  >
+                    <span className="flex items-center">Tier <SortIcon col="parang_dati_tier" /></span>
+                  </TableHead>
+                  <TableHead
+                    className="text-muted-foreground cursor-pointer select-none"
+                    onClick={() => toggleSort("guest_segment")}
+                  >
+                    <span className="flex items-center">Segment <SortIcon col="guest_segment" /></span>
+                  </TableHead>
                   <TableHead className="text-muted-foreground text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
