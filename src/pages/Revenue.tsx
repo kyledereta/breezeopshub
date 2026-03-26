@@ -138,11 +138,13 @@ export default function RevenuePage() {
         ) : (
           <div className="flex-1 overflow-auto p-6 space-y-6">
             {/* Stats */}
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-6 gap-4">
               <StatCard icon={Banknote} label="This Month" value={`₱${(currentMonthData?.revenue ?? 0).toLocaleString()}`} sub={`${currentMonthData?.bookings ?? 0} bookings`} />
-              <StatCard icon={TrendingUp} label="All-Time Revenue" value={`₱${totalRevenue.toLocaleString()}`} sub={`${allBookings.filter((b) => b.booking_status !== "Cancelled").length} total bookings`} />
-              <StatCard icon={CalendarCheck} label="Occupancy (This Month)" value={`${currentOccupancy}%`} sub={`${currentMonthData?.occupiedNights ?? 0} unit-nights`} />
-              <StatCard icon={Users} label="Top Source" value={sourceData[0]?.name ?? "—"} sub={sourceData[0] ? `₱${sourceData[0].revenue.toLocaleString()} · ${sourceData[0].count} bookings` : ""} />
+              <StatCard icon={TrendingUp} label="All-Time Revenue" value={`₱${totalRevenue.toLocaleString()}`} sub={`${activeBookings.length} total bookings`} />
+              <StatCard icon={CalendarCheck} label="Occupancy Rate" value={`${currentOccupancy}%`} sub={`${currentMonthData?.occupiedNights ?? 0} of ${currentMonthData?.totalNights ?? 0} unit-nights`} />
+              <StatCard icon={Banknote} label="ADR" value={`₱${currentADR.toLocaleString()}`} sub="Avg revenue per occupied room" />
+              <StatCard icon={TrendingUp} label="RevPAR" value={`₱${currentRevPAR.toLocaleString()}`} sub="Revenue per available room" />
+              <StatCard icon={Users} label="Top Source" value={sourceData[0]?.name ?? "—"} sub={sourceData[0] ? `₱${sourceData[0].revenue.toLocaleString()}` : ""} />
             </div>
 
             {/* Charts Row */}
