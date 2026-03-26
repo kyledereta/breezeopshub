@@ -1,0 +1,456 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.4"
+  }
+  public: {
+    Tables: {
+      bookings: {
+        Row: {
+          booking_ref: string
+          booking_source: Database["public"]["Enums"]["booking_source"]
+          booking_status: Database["public"]["Enums"]["booking_status"]
+          check_in: string
+          check_out: string
+          created_at: string
+          deposit_paid: number
+          discount_given: number
+          discount_reason: string | null
+          email: string | null
+          extension_fee: number
+          guest_id: string | null
+          guest_name: string
+          id: string
+          key_deposit: boolean
+          notes: string | null
+          pax: number
+          payment_status: Database["public"]["Enums"]["payment_status"]
+          phone: string | null
+          referral_code: string | null
+          total_amount: number
+          unit_id: string | null
+          updated_at: string
+          wristband_deposit: boolean
+        }
+        Insert: {
+          booking_ref: string
+          booking_source?: Database["public"]["Enums"]["booking_source"]
+          booking_status?: Database["public"]["Enums"]["booking_status"]
+          check_in: string
+          check_out: string
+          created_at?: string
+          deposit_paid?: number
+          discount_given?: number
+          discount_reason?: string | null
+          email?: string | null
+          extension_fee?: number
+          guest_id?: string | null
+          guest_name: string
+          id?: string
+          key_deposit?: boolean
+          notes?: string | null
+          pax?: number
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          phone?: string | null
+          referral_code?: string | null
+          total_amount?: number
+          unit_id?: string | null
+          updated_at?: string
+          wristband_deposit?: boolean
+        }
+        Update: {
+          booking_ref?: string
+          booking_source?: Database["public"]["Enums"]["booking_source"]
+          booking_status?: Database["public"]["Enums"]["booking_status"]
+          check_in?: string
+          check_out?: string
+          created_at?: string
+          deposit_paid?: number
+          discount_given?: number
+          discount_reason?: string | null
+          email?: string | null
+          extension_fee?: number
+          guest_id?: string | null
+          guest_name?: string
+          id?: string
+          key_deposit?: boolean
+          notes?: string | null
+          pax?: number
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          phone?: string | null
+          referral_code?: string | null
+          total_amount?: number
+          unit_id?: string | null
+          updated_at?: string
+          wristband_deposit?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_guest_id_fkey"
+            columns: ["guest_id"]
+            isOneToOne: false
+            referencedRelation: "guests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guests: {
+        Row: {
+          birthday_month: number | null
+          created_at: string
+          email: string | null
+          guest_name: string
+          guest_segment: Database["public"]["Enums"]["guest_segment"] | null
+          id: string
+          location: string | null
+          marketing_consent: boolean
+          notes: string | null
+          parang_dati_tier: Database["public"]["Enums"]["parang_dati_tier"]
+          pets: boolean
+          phone: string | null
+          referral_code: string | null
+          total_stays: number
+          updated_at: string
+        }
+        Insert: {
+          birthday_month?: number | null
+          created_at?: string
+          email?: string | null
+          guest_name: string
+          guest_segment?: Database["public"]["Enums"]["guest_segment"] | null
+          id?: string
+          location?: string | null
+          marketing_consent?: boolean
+          notes?: string | null
+          parang_dati_tier?: Database["public"]["Enums"]["parang_dati_tier"]
+          pets?: boolean
+          phone?: string | null
+          referral_code?: string | null
+          total_stays?: number
+          updated_at?: string
+        }
+        Update: {
+          birthday_month?: number | null
+          created_at?: string
+          email?: string | null
+          guest_name?: string
+          guest_segment?: Database["public"]["Enums"]["guest_segment"] | null
+          id?: string
+          location?: string | null
+          marketing_consent?: boolean
+          notes?: string | null
+          parang_dati_tier?: Database["public"]["Enums"]["parang_dati_tier"]
+          pets?: boolean
+          phone?: string | null
+          referral_code?: string | null
+          total_stays?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      monthly_targets: {
+        Row: {
+          created_at: string
+          id: string
+          month: string
+          target_occupancy: number
+          target_revenue: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          month: string
+          target_occupancy?: number
+          target_revenue?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          month?: string
+          target_occupancy?: number
+          target_revenue?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pricing_multipliers: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          multiplier: number
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          multiplier?: number
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          multiplier?: number
+          name?: string
+        }
+        Relationships: []
+      }
+      units: {
+        Row: {
+          area: string
+          created_at: string
+          extension_fee: number
+          has_ac: boolean
+          id: string
+          max_pax: number
+          name: string
+          nightly_rate: number
+          notes: string | null
+          peak_rate: number
+        }
+        Insert: {
+          area: string
+          created_at?: string
+          extension_fee?: number
+          has_ac?: boolean
+          id?: string
+          max_pax: number
+          name: string
+          nightly_rate: number
+          notes?: string | null
+          peak_rate: number
+        }
+        Update: {
+          area?: string
+          created_at?: string
+          extension_fee?: number
+          has_ac?: boolean
+          id?: string
+          max_pax?: number
+          name?: string
+          nightly_rate?: number
+          notes?: string | null
+          peak_rate?: number
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      booking_source:
+        | "Facebook Direct"
+        | "Airbnb"
+        | "Walk-in"
+        | "Referral"
+        | "Instagram"
+        | "TikTok"
+        | "Other"
+      booking_status:
+        | "Inquiry"
+        | "Confirmed"
+        | "Checked In"
+        | "Checked Out"
+        | "Cancelled"
+        | "Rescheduled"
+        | "Hold"
+      guest_segment:
+        | "Local Family"
+        | "Couple"
+        | "Balikbayan OFW"
+        | "Corporate Group"
+        | "Walk-in"
+      parang_dati_tier: "New Guest" | "Returning" | "Loyal 3+" | "VIP 5+"
+      payment_status:
+        | "Unpaid"
+        | "Partial DP"
+        | "Fully Paid"
+        | "Airbnb Paid"
+        | "Refunded"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      booking_source: [
+        "Facebook Direct",
+        "Airbnb",
+        "Walk-in",
+        "Referral",
+        "Instagram",
+        "TikTok",
+        "Other",
+      ],
+      booking_status: [
+        "Inquiry",
+        "Confirmed",
+        "Checked In",
+        "Checked Out",
+        "Cancelled",
+        "Rescheduled",
+        "Hold",
+      ],
+      guest_segment: [
+        "Local Family",
+        "Couple",
+        "Balikbayan OFW",
+        "Corporate Group",
+        "Walk-in",
+      ],
+      parang_dati_tier: ["New Guest", "Returning", "Loyal 3+", "VIP 5+"],
+      payment_status: [
+        "Unpaid",
+        "Partial DP",
+        "Fully Paid",
+        "Airbnb Paid",
+        "Refunded",
+      ],
+    },
+  },
+} as const
