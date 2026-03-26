@@ -480,6 +480,15 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-sm bg-destructive/60" /> Unpaid
         </span>
+        <span className="flex items-center gap-1.5 border-l border-border pl-3">
+          <TrendingUp className="h-3 w-3 text-primary/70" /> Peak / Markup
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="text-[10px]">🇵🇭</span> Holiday
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded-sm bg-muted/30" /> Weekend
+        </span>
       </div>
     </div>
   );
