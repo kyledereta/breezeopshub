@@ -68,6 +68,8 @@ export default {
         "gold-light": "hsl(var(--gold-light))",
         coral: "hsl(var(--coral))",
         ocean: "hsl(var(--ocean))",
+        "airbnb-pink": "hsl(var(--airbnb-pink))",
+        "warning-orange": "hsl(var(--warning-orange))",
         cream: "hsl(var(--cream))",
         navy: "hsl(var(--navy))",
       },

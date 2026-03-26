@@ -25,9 +25,9 @@ function getBookingColor(booking: Booking): string {
     case "Fully Paid":
       return "bg-primary/80 border-primary"; // gold
     case "Airbnb Paid":
-      return "bg-ocean/80 border-ocean"; // blue
+      return "bg-airbnb-pink/70 border-airbnb-pink"; // pink
     case "Partial DP":
-      return "bg-coral/60 border-coral"; // coral
+      return "bg-warning-orange/60 border-warning-orange"; // orange
     case "Unpaid":
       return "bg-destructive/60 border-destructive"; // red
     case "Refunded":
@@ -40,10 +40,11 @@ function getBookingColor(booking: Booking): string {
 function getStatusBadge(status: string) {
   switch (status) {
     case "Fully Paid":
-    case "Airbnb Paid":
       return "text-primary";
+    case "Airbnb Paid":
+      return "text-airbnb-pink";
     case "Partial DP":
-      return "text-coral";
+      return "text-warning-orange";
     case "Unpaid":
       return "text-destructive";
     default:
@@ -276,8 +277,10 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
                           </span>
                         )}
                       </div>
-                      <div className="text-[9px] text-muted-foreground ml-5">
-                        {unit.max_pax} PAX · ₱{unit.nightly_rate.toLocaleString()}
+                      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground ml-5">
+                        <span>{unit.max_pax} pax</span>
+                        <span className="text-border">·</span>
+                        <span className="text-primary/80 font-medium">₱{unit.nightly_rate.toLocaleString()}/night</span>
                       </div>
                     </td>
                     {days.map((day) => {
@@ -372,10 +375,10 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
           <span className="w-3 h-3 rounded-sm bg-primary/80" /> Fully Paid
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-sm bg-ocean/80" /> Airbnb
+          <span className="w-3 h-3 rounded-sm bg-airbnb-pink/70" /> Airbnb
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-sm bg-coral/60" /> Partial DP
+          <span className="w-3 h-3 rounded-sm bg-warning-orange/60" /> Partial DP
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-sm bg-destructive/60" /> Unpaid
