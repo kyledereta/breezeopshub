@@ -323,9 +323,10 @@ export default function TodayPage() {
           </div>
         ) : (
           <div className="flex-1 overflow-auto p-4 sm:p-6 space-y-4">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
               <StatCard icon={Home} label="Occupancy" value={`${occupancyRate}%`} sub={`${inHouse.length} / ${units.length} units`} />
               <StatCard icon={Users} label="In-House" value={`${totalPaxInHouse} pax`} sub={`${inHouse.length} bookings`} />
+              <StatCard icon={DollarSign} label="Today's Revenue" value={`₱${todayRevenue.toLocaleString()}`} sub={`${checkIns.length} arrivals`} onClick={() => navigate("/revenue")} />
               <StatCard
                 icon={AlertCircle}
                 label="Pending"
@@ -336,6 +337,32 @@ export default function TodayPage() {
               />
               <StatCard icon={Users} label="Guests" value={String(guests.length)} onClick={() => navigate("/guests")} />
             </div>
+
+            {/* Overbooking Warnings */}
+            {overbookings.length > 0 && (
+              <div className="rounded-lg border border-warning-orange/50 bg-warning-orange/5 p-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-warning-orange mb-3 flex items-center gap-2">
+                  <AlertTriangle className="h-3.5 w-3.5" /> Overbooking Alert ({overbookings.length} {overbookings.length === 1 ? "unit" : "units"})
+                </h3>
+                <div className="space-y-2">
+                  {overbookings.map(({ unitId, bookings: conflicts }) => (
+                    <div key={unitId} className="text-sm">
+                      <span className="font-medium text-foreground">{unitMap.get(unitId) ?? "Unknown Unit"}</span>
+                      <span className="text-muted-foreground ml-1 text-xs">— {conflicts.length} overlapping bookings:</span>
+                      <div className="ml-4 mt-1 space-y-0.5">
+                        {conflicts.map((b) => (
+                          <div key={b.id} className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span className="text-foreground font-medium">{b.guest_name}</span>
+                            <span>{format(parseISO(b.check_in), "MMM d")} → {format(parseISO(b.check_out), "MMM d")}</span>
+                            <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", getStatusBadgeClass(b.booking_status))}>{b.booking_status}</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
               <GripVertical className="h-3 w-3" />
