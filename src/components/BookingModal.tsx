@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -33,7 +33,9 @@ import { useUnits, groupUnitsByArea } from "@/hooks/useUnits";
 import { useCreateBooking, useUpdateBooking } from "@/hooks/useBookingMutations";
 import type { Booking } from "@/hooks/useBookings";
 import { Constants, type Database } from "@/integrations/supabase/types";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Upload, X, FileImage, PawPrint } from "lucide-react";
 
 type PaymentStatus = Database["public"]["Enums"]["payment_status"];
 type BookingStatus = Database["public"]["Enums"]["booking_status"];
@@ -55,6 +57,7 @@ const bookingSchema = z.object({
   phone: z.string().max(20).optional().or(z.literal("")),
   notes: z.string().max(500).optional().or(z.literal("")),
   utensil_rental: z.boolean(),
+  pets: z.boolean(),
   deposit_status: z.string(),
 }).refine((data) => data.check_out > data.check_in, {
   message: "Check-out must be after check-in",
@@ -101,6 +104,7 @@ export function BookingModal({
       phone: "",
       notes: "",
       utensil_rental: false,
+      pets: false,
       deposit_status: "Pending",
     },
   });
@@ -125,6 +129,7 @@ export function BookingModal({
         phone: booking.phone ?? "",
         notes: booking.notes ?? "",
         utensil_rental: (booking as any).utensil_rental ?? false,
+        pets: (booking as any).pets ?? false,
         deposit_status: (booking as any).deposit_status ?? "Pending",
       });
     } else {
@@ -143,6 +148,7 @@ export function BookingModal({
         phone: "",
         notes: "",
         utensil_rental: false,
+        pets: false,
         deposit_status: "Pending",
       });
     }
@@ -165,8 +171,22 @@ export function BookingModal({
         phone: values.phone || null,
         notes: values.notes || null,
         utensil_rental: values.utensil_rental,
+        pets: values.pets,
         deposit_status: values.deposit_status as DepositStatus,
       };
+
+      // Upload ID files if any
+      let uploadedIds: string[] = [];
+      if (idFiles.length > 0) {
+        for (const file of idFiles) {
+          const filePath = `${isEditing ? booking.id : "temp"}/${Date.now()}-${file.name}`;
+          const { error: uploadError } = await supabase.storage
+            .from("guest-ids")
+            .upload(filePath, file);
+          if (uploadError) throw uploadError;
+          uploadedIds.push(filePath);
+        }
+      }
 
       if (isEditing) {
         await updateBooking.mutateAsync({ id: booking.id, ...payload });
