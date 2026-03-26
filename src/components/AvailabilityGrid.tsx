@@ -223,7 +223,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
                   <span
                     className={cn(
                       "text-sm font-semibold",
-                      available > 10 ? "text-emerald-400" : available > 5 ? "text-primary" : "text-coral"
+                      available > 10 ? "text-gold-light" : available > 5 ? "text-primary" : "text-coral"
                     )}
                   >
                     {available}
