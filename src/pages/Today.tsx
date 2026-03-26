@@ -215,6 +215,36 @@ export default function TodayPage() {
   const pendingTotal = pendingBalances.reduce((s, b) => s + (b.total_amount - b.deposit_paid), 0);
   const isLoading = bookingsLoading || unitsLoading;
 
+  const groupedUnits = useMemo(() => groupUnitsByArea(units), [units]);
+
+  // Compute available units for today and each day this week
+  const weekDays = useMemo(() => {
+    const today = new Date();
+    return eachDayOfInterval({ start: today, end: addDays(today, 6) });
+  }, []);
+
+  const unitAvailability = useMemo(() => {
+    // For each unit, check which days it's available
+    return units.map((unit) => {
+      const dayStatus = weekDays.map((day) => {
+        const dayStr = format(day, "yyyy-MM-dd");
+        const isOccupied = allBookings.some((b) => {
+          if (b.booking_status === "Cancelled") return false;
+          if (b.unit_id !== unit.id) return false;
+          const ci = parseISO(b.check_in);
+          const co = parseISO(b.check_out);
+          return isWithinInterval(day, { start: ci, end: co }) && !isSameDay(day, co);
+        });
+        return { date: day, dateStr: dayStr, available: !isOccupied };
+      });
+      const availableToday = dayStatus[0]?.available ?? true;
+      const availableDaysCount = dayStatus.filter((d) => d.available).length;
+      return { unit, dayStatus, availableToday, availableDaysCount };
+    });
+  }, [units, allBookings, weekDays]);
+
+  const availableTodayCount = unitAvailability.filter((u) => u.availableToday).length;
+
   return (
     <AppLayout>
       <div className="flex flex-col h-[calc(100vh-3rem)]">
