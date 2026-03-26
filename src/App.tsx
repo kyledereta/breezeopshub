@@ -5,21 +5,17 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import { AppLayout } from "@/components/AppLayout";
 
 const queryClient = new QueryClient();
 
-// Placeholder pages
-const PlaceholderPage = ({ title }: { title: string }) => {
-  // Lazy import layout
-  const { AppLayout } = require("@/components/AppLayout");
-  return (
-    <AppLayout>
-      <div className="flex items-center justify-center h-[calc(100vh-3rem)]">
-        <h1 className="text-3xl font-display text-foreground">{title}</h1>
-      </div>
-    </AppLayout>
-  );
-};
+const PlaceholderPage = ({ title }: { title: string }) => (
+  <AppLayout>
+    <div className="flex items-center justify-center h-[calc(100vh-3rem)]">
+      <h1 className="text-3xl font-display text-foreground">{title}</h1>
+    </div>
+  </AppLayout>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
