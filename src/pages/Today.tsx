@@ -41,9 +41,11 @@ interface GuestCardProps {
   booking: Booking;
   unitName: string;
   draggable?: boolean;
+  onEdit?: () => void;
 }
 
-function GuestCard({ booking, unitName, draggable }: GuestCardProps) {
+function GuestCard({ booking, unitName, draggable, onEdit }: GuestCardProps) {
+  const [wasDragged, setWasDragged] = useState(false);
   return (
     <div
       draggable={draggable}
