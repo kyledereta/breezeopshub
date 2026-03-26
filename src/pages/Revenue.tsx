@@ -143,8 +143,8 @@ export default function RevenuePage() {
   return (
     <AppLayout>
       <div className="flex flex-col h-[calc(100vh-3rem)]">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
-          <h1 className="text-3xl font-display text-foreground tracking-wide">Revenue Dashboard</h1>
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border shrink-0">
+          <h1 className="text-xl sm:text-3xl font-display text-foreground tracking-wide">Revenue Dashboard</h1>
         </div>
 
         {isLoading ? (
@@ -152,9 +152,9 @@ export default function RevenuePage() {
             <span className="text-muted-foreground text-sm">Loading...</span>
           </div>
         ) : (
-          <div className="flex-1 overflow-auto p-6 space-y-6">
+          <div className="flex-1 overflow-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
             {/* Stats */}
-            <div className="grid grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
               <StatCard icon={Banknote} label="This Month" value={`₱${(currentMonthData?.revenue ?? 0).toLocaleString()}`} sub={`${currentMonthData?.bookings ?? 0} bookings`} />
               <StatCard icon={TrendingUp} label="All-Time Revenue" value={`₱${totalRevenue.toLocaleString()}`} sub={`${activeBookings.length} total bookings`} />
               <StatCard icon={CalendarCheck} label="Occupancy Rate" value={`${currentOccupancy}%`} sub={`${currentMonthData?.occupiedNights ?? 0} of ${currentMonthData?.totalNights ?? 0} unit-nights`} />
@@ -164,9 +164,9 @@ export default function RevenuePage() {
             </div>
 
             {/* Charts Row */}
-            <div className="grid grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               {/* Monthly Revenue */}
-              <div className="col-span-2 rounded-lg border border-border bg-card p-4">
+              <div className="lg:col-span-2 rounded-lg border border-border bg-card p-4">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-primary mb-4">Monthly Revenue (12 Months)</h3>
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={monthlyData}>

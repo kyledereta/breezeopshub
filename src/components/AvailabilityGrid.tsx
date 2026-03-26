@@ -156,25 +156,25 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
-        <h1 className="text-3xl font-display text-foreground tracking-wide">Availability</h1>
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border shrink-0 gap-2">
+        <h1 className="text-xl sm:text-3xl font-display text-foreground tracking-wide">Availability</h1>
+        <div className="flex items-center gap-1 sm:gap-2">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-            className="text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground h-8 w-8"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="text-sm font-sans font-medium text-foreground min-w-[140px] text-center">
+          <span className="text-xs sm:text-sm font-sans font-medium text-foreground min-w-[110px] sm:min-w-[140px] text-center">
             {format(currentMonth, "MMMM yyyy")}
           </span>
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-            className="text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground h-8 w-8"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -182,7 +182,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
             variant="outline"
             size="sm"
             onClick={() => setCurrentMonth(new Date())}
-            className="ml-2 text-xs border-border text-muted-foreground hover:text-foreground"
+            className="ml-1 sm:ml-2 text-xs border-border text-muted-foreground hover:text-foreground"
           >
             Today
           </Button>

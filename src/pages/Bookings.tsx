@@ -83,14 +83,14 @@ export default function BookingsPage() {
     <AppLayout onNewBooking={openNew}>
       <div className="flex flex-col h-[calc(100vh-3rem)]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
-          <h1 className="text-3xl font-display text-foreground tracking-wide">All Bookings</h1>
-          <span className="text-sm text-muted-foreground">{filteredBookings.length} bookings</span>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border shrink-0 gap-1">
+          <h1 className="text-xl sm:text-3xl font-display text-foreground tracking-wide">All Bookings</h1>
+          <span className="text-xs sm:text-sm text-muted-foreground">{filteredBookings.length} bookings</span>
         </div>
 
         {/* Filters */}
-        <div className="flex items-center gap-3 px-6 py-3 border-b border-border shrink-0">
-          <div className="relative flex-1 max-w-xs">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 border-b border-border shrink-0">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search guest, ref, unit..."
@@ -99,28 +99,30 @@ export default function BookingsPage() {
               className="pl-9 bg-background border-border"
             />
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[150px] bg-background border-border">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent className="bg-popover border-border">
-              <SelectItem value="all">All Statuses</SelectItem>
-              {Constants.public.Enums.booking_status.map((s) => (
-                <SelectItem key={s} value={s}>{s}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={paymentFilter} onValueChange={setPaymentFilter}>
-            <SelectTrigger className="w-[150px] bg-background border-border">
-              <SelectValue placeholder="Payment" />
-            </SelectTrigger>
-            <SelectContent className="bg-popover border-border">
-              <SelectItem value="all">All Payments</SelectItem>
-              {Constants.public.Enums.payment_status.map((s) => (
-                <SelectItem key={s} value={s}>{s}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-[150px] bg-background border-border">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent className="bg-popover border-border">
+                <SelectItem value="all">All Statuses</SelectItem>
+                {Constants.public.Enums.booking_status.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+              <SelectTrigger className="w-full sm:w-[150px] bg-background border-border">
+                <SelectValue placeholder="Payment" />
+              </SelectTrigger>
+              <SelectContent className="bg-popover border-border">
+                <SelectItem value="all">All Payments</SelectItem>
+                {Constants.public.Enums.payment_status.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Table */}
