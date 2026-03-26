@@ -50,6 +50,9 @@ function GuestCard({ booking, unitName }: GuestCardProps) {
           <span>{booking.pax} PAX</span>
           <span>₱{booking.total_amount.toLocaleString()}</span>
         </div>
+        <div className="text-[10px] text-muted-foreground mt-0.5">
+          {format(parseISO(booking.check_in), "MMM d")} → {format(parseISO(booking.check_out), "MMM d, yyyy")}
+        </div>
       </div>
       <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 shrink-0", getStatusBadgeClass(booking.booking_status))}>
         {booking.booking_status}
