@@ -672,6 +672,72 @@ export function BookingModal({
                   )}
                 />
               </div>
+              {/* Discount */}
+              <div className="space-y-2">
+                <div className="grid grid-cols-3 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="discount_type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Discount Type</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="bg-background border-border">
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-popover border-border">
+                            <SelectItem value="fixed">Fixed (₱)</SelectItem>
+                            <SelectItem value="percentage">Percentage (%)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="discount_given"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">
+                          Discount {watchDiscountType === "percentage" ? "(%)" : "(₱)"}
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="number"
+                            min={0}
+                            max={watchDiscountType === "percentage" ? 100 : undefined}
+                            step={watchDiscountType === "percentage" ? 1 : 100}
+                            className="bg-background border-border"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="discount_reason"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Reason</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Optional" className="bg-background border-border" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                {watchDiscountGiven > 0 && watchDiscountType === "percentage" && (
+                  <p className="text-xs text-muted-foreground">
+                    = ₱{Math.round((form.getValues("total_amount") * watchDiscountGiven) / 100).toLocaleString()} off
+                  </p>
+                )}
+              </div>
             </div>
 
             <Separator className="bg-border" />
