@@ -455,12 +455,7 @@ function BookingTooltip({ booking }: { booking: Booking }) {
             <Users className="h-3 w-3 text-muted-foreground" />
             {booking.pax} PAX
           </span>
-          {booking.utensil_rental && (
-            <span className="flex items-center gap-1 text-primary">
-              <UtensilsCrossed className="h-3 w-3" /> Utensils
-            </span>
-          )}
-          {booking.pets && (
+          {(booking as any).pets && (
             <span className="flex items-center gap-1 text-warning-orange">
               <PawPrint className="h-3 w-3" /> Pet
             </span>
