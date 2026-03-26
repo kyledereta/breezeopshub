@@ -1,5 +1,5 @@
 import { useMemo, useState, useCallback } from "react";
-import { format, parseISO, addDays, eachDayOfInterval, isWithinInterval, isSameDay } from "date-fns";
+import { format, parseISO, addDays, eachDayOfInterval, isWithinInterval, isSameDay, startOfMonth, endOfMonth } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import { useBookings, type Booking } from "@/hooks/useBookings";
