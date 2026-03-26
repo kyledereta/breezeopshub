@@ -413,6 +413,19 @@ function BookingTooltip({ booking }: { booking: Booking }) {
             Deposit: ₱{booking.deposit_paid.toLocaleString()}
           </div>
         )}
+        <div className="flex items-center gap-2 flex-wrap">
+          {(booking as any).utensil_rental && (
+            <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-medium">Utensils</span>
+          )}
+          {(booking as any).deposit_status && (booking as any).deposit_status !== "Pending" && (
+            <span className={cn(
+              "text-[9px] px-1.5 py-0.5 rounded font-medium",
+              (booking as any).deposit_status === "Returned" ? "bg-ocean/20 text-ocean" : "bg-destructive/20 text-destructive"
+            )}>
+              Deposit {(booking as any).deposit_status}
+            </span>
+          )}
+        </div>
       </div>
     </TooltipContent>
   );

@@ -23,6 +23,7 @@ export type Database = {
           check_out: string
           created_at: string
           deposit_paid: number
+          deposit_status: Database["public"]["Enums"]["deposit_status"]
           discount_given: number
           discount_reason: string | null
           email: string | null
@@ -39,6 +40,7 @@ export type Database = {
           total_amount: number
           unit_id: string | null
           updated_at: string
+          utensil_rental: boolean
           wristband_deposit: boolean
         }
         Insert: {
@@ -49,6 +51,7 @@ export type Database = {
           check_out: string
           created_at?: string
           deposit_paid?: number
+          deposit_status?: Database["public"]["Enums"]["deposit_status"]
           discount_given?: number
           discount_reason?: string | null
           email?: string | null
@@ -65,6 +68,7 @@ export type Database = {
           total_amount?: number
           unit_id?: string | null
           updated_at?: string
+          utensil_rental?: boolean
           wristband_deposit?: boolean
         }
         Update: {
@@ -75,6 +79,7 @@ export type Database = {
           check_out?: string
           created_at?: string
           deposit_paid?: number
+          deposit_status?: Database["public"]["Enums"]["deposit_status"]
           discount_given?: number
           discount_reason?: string | null
           email?: string | null
@@ -91,6 +96,7 @@ export type Database = {
           total_amount?: number
           unit_id?: string | null
           updated_at?: string
+          utensil_rental?: boolean
           wristband_deposit?: boolean
         }
         Relationships: [
@@ -278,6 +284,7 @@ export type Database = {
         | "Cancelled"
         | "Rescheduled"
         | "Hold"
+      deposit_status: "Pending" | "Returned" | "Deducted"
       guest_segment:
         | "Local Family"
         | "Couple"
@@ -436,6 +443,7 @@ export const Constants = {
         "Rescheduled",
         "Hold",
       ],
+      deposit_status: ["Pending", "Returned", "Deducted"],
       guest_segment: [
         "Local Family",
         "Couple",
