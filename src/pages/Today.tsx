@@ -1,5 +1,5 @@
 import { useMemo, useState, useCallback } from "react";
-import { format, parseISO, addDays, eachDayOfInterval, isWithinInterval, isSameDay } from "date-fns";
+import { format, parseISO, addDays, eachDayOfInterval, isWithinInterval, isSameDay, startOfMonth, endOfMonth } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import { useBookings, type Booking } from "@/hooks/useBookings";
@@ -9,6 +9,7 @@ import { useGuests } from "@/hooks/useGuests";
 import {
   LogIn, LogOut, Home, Users, BedDouble, GripVertical, Clock,
   AlertCircle, X, Pencil, Tent, TreePalm, Crown, Fan, Snowflake, CalendarDays,
+  DollarSign, AlertTriangle, ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -115,11 +116,21 @@ export default function TodayPage() {
     return m;
   }, [units]);
 
-  const { checkIns, baseCheckOuts, inHouse, pendingBalances } = useMemo(() => {
+  const { checkIns, baseCheckOuts, dueDepartures, inHouse, pendingBalances, todayRevenue, upcomingArrivals, overbookings } = useMemo(() => {
     const checkIns: Booking[] = [];
     const baseCheckOuts: Booking[] = [];
+    const dueDepartures: Booking[] = [];
     const inHouse: Booking[] = [];
     const pendingBalances: Booking[] = [];
+    const upcomingArrivals: Booking[] = [];
+    let todayRevenue = 0;
+
+    const today = new Date();
+    const monthStart = format(startOfMonth(today), "yyyy-MM-dd");
+    const monthEnd = format(endOfMonth(today), "yyyy-MM-dd");
+    const tomorrowStr = format(addDays(today, 1), "yyyy-MM-dd");
+    const day2Str = format(addDays(today, 2), "yyyy-MM-dd");
+    const day3Str = format(addDays(today, 3), "yyyy-MM-dd");
 
     for (const b of allBookings) {
       if (b.booking_status === "Cancelled") continue;
@@ -132,21 +143,66 @@ export default function TodayPage() {
       if (co === todayStr && b.booking_status === "Checked Out") {
         baseCheckOuts.push(b);
       }
+      // Guests due to depart today but still checked in
+      if (co === todayStr && b.booking_status === "Checked In") {
+        dueDepartures.push(b);
+      }
       if (b.booking_status === "Checked In" && ci <= todayStr && co >= todayStr) {
         inHouse.push(b);
       }
       if (b.payment_status === "Unpaid" || b.payment_status === "Partial DP") {
         pendingBalances.push(b);
       }
+      // Today's revenue: bookings checked in today (revenue attributed to check-in month)
+      if (ci === todayStr && (b.booking_status === "Checked In" || b.booking_status === "Checked Out" || b.booking_status === "Confirmed")) {
+        todayRevenue += b.total_amount;
+      }
+      // Upcoming arrivals: next 3 days
+      if ((ci === tomorrowStr || ci === day2Str || ci === day3Str) && b.booking_status !== "Checked In" && b.booking_status !== "Checked Out") {
+        upcomingArrivals.push(b);
+      }
     }
 
-    return { checkIns, baseCheckOuts, inHouse, pendingBalances };
+    // Overbooking detection: find units with 2+ overlapping active bookings
+    const overbookings: { unitId: string; bookings: Booking[] }[] = [];
+    const activeBookings = allBookings.filter(b => b.booking_status !== "Cancelled" && b.booking_status !== "Checked Out" && b.unit_id);
+    const unitBookingsMap = new Map<string, Booking[]>();
+    for (const b of activeBookings) {
+      const arr = unitBookingsMap.get(b.unit_id!) || [];
+      arr.push(b);
+      unitBookingsMap.set(b.unit_id!, arr);
+    }
+    for (const [unitId, bookings] of unitBookingsMap) {
+      if (bookings.length < 2) continue;
+      const conflicts: Booking[] = [];
+      for (let i = 0; i < bookings.length; i++) {
+        for (let j = i + 1; j < bookings.length; j++) {
+          const a = bookings[i], bk = bookings[j];
+          // Overlap: a.check_in < b.check_out AND b.check_in < a.check_out
+          if (a.check_in < bk.check_out && bk.check_in < a.check_out) {
+            if (!conflicts.includes(a)) conflicts.push(a);
+            if (!conflicts.includes(bk)) conflicts.push(bk);
+          }
+        }
+      }
+      if (conflicts.length > 0) overbookings.push({ unitId, bookings: conflicts });
+    }
+
+    return { checkIns, baseCheckOuts, dueDepartures, inHouse, pendingBalances, todayRevenue, upcomingArrivals, overbookings };
   }, [allBookings, todayStr]);
 
   const visibleDepartures = useMemo(() => {
     const byId = new Map<string, Booking>();
 
+    // Include already checked-out guests
     for (const booking of baseCheckOuts) {
+      if (!clearedDepartureIds.includes(booking.id)) {
+        byId.set(booking.id, booking);
+      }
+    }
+
+    // Include guests due to depart (still checked in, checkout is today)
+    for (const booking of dueDepartures) {
       if (!clearedDepartureIds.includes(booking.id)) {
         byId.set(booking.id, booking);
       }
@@ -160,7 +216,7 @@ export default function TodayPage() {
     }
 
     return Array.from(byId.values());
-  }, [allBookings, baseCheckOuts, manualDepartureIds, clearedDepartureIds]);
+  }, [allBookings, baseCheckOuts, dueDepartures, manualDepartureIds, clearedDepartureIds]);
 
   const handleDrop = useCallback(
     (zone: DropZone, e: React.DragEvent) => {
@@ -267,9 +323,10 @@ export default function TodayPage() {
           </div>
         ) : (
           <div className="flex-1 overflow-auto p-4 sm:p-6 space-y-4">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
               <StatCard icon={Home} label="Occupancy" value={`${occupancyRate}%`} sub={`${inHouse.length} / ${units.length} units`} />
               <StatCard icon={Users} label="In-House" value={`${totalPaxInHouse} pax`} sub={`${inHouse.length} bookings`} />
+              <StatCard icon={DollarSign} label="Today's Revenue" value={`₱${todayRevenue.toLocaleString()}`} sub={`${checkIns.length} arrivals`} onClick={() => navigate("/revenue")} />
               <StatCard
                 icon={AlertCircle}
                 label="Pending"
@@ -280,6 +337,32 @@ export default function TodayPage() {
               />
               <StatCard icon={Users} label="Guests" value={String(guests.length)} onClick={() => navigate("/guests")} />
             </div>
+
+            {/* Overbooking Warnings */}
+            {overbookings.length > 0 && (
+              <div className="rounded-lg border border-warning-orange/50 bg-warning-orange/5 p-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-warning-orange mb-3 flex items-center gap-2">
+                  <AlertTriangle className="h-3.5 w-3.5" /> Overbooking Alert ({overbookings.length} {overbookings.length === 1 ? "unit" : "units"})
+                </h3>
+                <div className="space-y-2">
+                  {overbookings.map(({ unitId, bookings: conflicts }) => (
+                    <div key={unitId} className="text-sm">
+                      <span className="font-medium text-foreground">{unitMap.get(unitId) ?? "Unknown Unit"}</span>
+                      <span className="text-muted-foreground ml-1 text-xs">— {conflicts.length} overlapping bookings:</span>
+                      <div className="ml-4 mt-1 space-y-0.5">
+                        {conflicts.map((b) => (
+                          <div key={b.id} className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span className="text-foreground font-medium">{b.guest_name}</span>
+                            <span>{format(parseISO(b.check_in), "MMM d")} → {format(parseISO(b.check_out), "MMM d")}</span>
+                            <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", getStatusBadgeClass(b.booking_status))}>{b.booking_status}</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
               <GripVertical className="h-3 w-3" />
@@ -330,6 +413,26 @@ export default function TodayPage() {
                 )}
               </Section>
             </div>
+
+            {/* Upcoming Arrivals - Next 3 Days */}
+            {upcomingArrivals.length > 0 && (
+              <div className="rounded-lg border border-border bg-card overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
+                  <div className="flex items-center gap-2">
+                    <ArrowRight className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium text-foreground">Upcoming Arrivals</span>
+                    <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-medium">
+                      Next 3 days
+                    </span>
+                  </div>
+                </div>
+                <div className="p-2 space-y-1.5">
+                  {upcomingArrivals.map((b) => (
+                    <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} onEdit={() => setEditingBooking(b)} />
+                  ))}
+                </div>
+              </div>
+            )}
 
             {pendingBalances.length > 0 && (
               <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
