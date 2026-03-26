@@ -20,8 +20,8 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <PasswordGate>
-        <BrowserRouter>
+      <BrowserRouter>
+        <PasswordGate>
           <Routes>
             <Route path="/" element={<TodayPage />} />
             <Route path="/availability" element={<Index />} />
@@ -32,8 +32,8 @@ const App = () => (
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
-      </PasswordGate>
+        </PasswordGate>
+      </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );
