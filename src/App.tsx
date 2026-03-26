@@ -3,8 +3,10 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
-import NotFound from "./pages/NotFound.tsx";
+import Index from "./pages/Index";
+import TodayPage from "./pages/Today";
+import BookingsPage from "./pages/Bookings";
+import NotFound from "./pages/NotFound";
 import { AppLayout } from "@/components/AppLayout";
 
 const queryClient = new QueryClient();
@@ -25,8 +27,8 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/today" element={<PlaceholderPage title="Today's Operations" />} />
-          <Route path="/bookings" element={<PlaceholderPage title="All Bookings" />} />
+          <Route path="/today" element={<TodayPage />} />
+          <Route path="/bookings" element={<BookingsPage />} />
           <Route path="/balances" element={<PlaceholderPage title="Pending Balances" />} />
           <Route path="/revenue" element={<PlaceholderPage title="Revenue Dashboard" />} />
           <Route path="/guests" element={<PlaceholderPage title="Guest Database" />} />
