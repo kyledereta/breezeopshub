@@ -1,14 +1,14 @@
 import { useMemo, useState, useCallback } from "react";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, addDays, eachDayOfInterval, isWithinInterval, isSameDay } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import { useBookings, type Booking } from "@/hooks/useBookings";
 import { useUpdateBooking } from "@/hooks/useBookingMutations";
-import { useUnits } from "@/hooks/useUnits";
+import { useUnits, groupUnitsByArea } from "@/hooks/useUnits";
 import { useGuests } from "@/hooks/useGuests";
 import {
   LogIn, LogOut, Home, Users, BedDouble, GripVertical, Clock,
-  AlertCircle, X, Pencil,
+  AlertCircle, X, Pencil, Tent, TreePalm, Crown, Fan, Snowflake, CalendarDays,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
