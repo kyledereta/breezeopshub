@@ -12,7 +12,7 @@ import {
   parseISO,
   differenceInDays,
 } from "date-fns";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Home, Tent, TreePalm, Crown, Fan } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUnits, groupUnitsByArea } from "@/hooks/useUnits";
 import { useBookings, type Booking } from "@/hooks/useBookings";
@@ -50,7 +50,14 @@ function getStatusBadge(status: string) {
       return "text-muted-foreground";
   }
 }
-
+// Get icon for unit based on name/type
+function getUnitIcon(name: string) {
+  if (name.includes("Villa") && name.includes("Owner")) return Crown;
+  if (name.includes("Villa")) return Home;
+  if (name.includes("Teepee")) return Tent;
+  if (name.includes("Kubo")) return TreePalm;
+  return Home;
+}
 interface AvailabilityGridProps {
   onCellClick?: (unitId: string, date: Date) => void;
   onBookingClick?: (booking: Booking) => void;
@@ -251,6 +258,10 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
                   <tr key={unit.id} className="hover:bg-muted/20 transition-colors">
                     <td className="sticky left-0 z-10 bg-background border-b border-r border-border px-3 py-2">
                       <div className="flex items-center gap-1.5">
+                        {(() => {
+                          const IconComp = getUnitIcon(unit.name);
+                          return <IconComp className="h-3.5 w-3.5 text-muted-foreground shrink-0" />;
+                        })()}
                         <span className="font-medium text-foreground text-xs truncate">
                           {unit.name}
                         </span>
@@ -259,8 +270,13 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
                             AC
                           </span>
                         )}
+                        {!unit.has_ac && (
+                          <span className="text-[8px] bg-muted text-muted-foreground px-1 py-0.5 rounded font-medium">
+                            Fan
+                          </span>
+                        )}
                       </div>
-                      <div className="text-[9px] text-muted-foreground">
+                      <div className="text-[9px] text-muted-foreground ml-5">
                         {unit.max_pax} PAX · ₱{unit.nightly_rate.toLocaleString()}
                       </div>
                     </td>
