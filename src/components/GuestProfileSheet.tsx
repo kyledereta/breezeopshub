@@ -120,6 +120,26 @@ export function GuestProfileSheet({ guest, open, onOpenChange }: GuestProfileShe
           </div>
         )}
 
+        {/* Guest IDs */}
+        {idUrls.length > 0 && (
+          <div className="mb-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-primary mb-2 flex items-center gap-1">
+              <IdCard className="h-3.5 w-3.5" /> Guest IDs
+            </h3>
+            <div className="grid grid-cols-2 gap-2">
+              {idUrls.map((url, i) => (
+                <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+                  <img
+                    src={url}
+                    alt={`Guest ID ${i + 1}`}
+                    className="rounded-lg border border-border w-full h-24 object-cover hover:opacity-80 transition-opacity"
+                  />
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
         <Separator className="my-4" />
 
         {/* Booking History */}
