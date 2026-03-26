@@ -86,6 +86,18 @@ export function BookingModal({
   const createBooking = useCreateBooking();
   const updateBooking = useUpdateBooking();
   const isEditing = !!booking;
+  const [idFiles, setIdFiles] = useState<File[]>([]);
+  const [existingIds, setExistingIds] = useState<string[]>([]);
+
+  // Load existing ID files when editing
+  useEffect(() => {
+    if (!open) { setIdFiles([]); setExistingIds([]); return; }
+    if (booking) {
+      supabase.storage.from("guest-ids").list(booking.id).then(({ data }) => {
+        if (data) setExistingIds(data.map((f) => `${booking.id}/${f.name}`));
+      });
+    }
+  }, [open, booking]);
 
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingSchema),
