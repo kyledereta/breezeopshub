@@ -35,6 +35,7 @@ export type Database = {
           notes: string | null
           pax: number
           payment_status: Database["public"]["Enums"]["payment_status"]
+          pets: boolean
           phone: string | null
           referral_code: string | null
           total_amount: number
@@ -63,6 +64,7 @@ export type Database = {
           notes?: string | null
           pax?: number
           payment_status?: Database["public"]["Enums"]["payment_status"]
+          pets?: boolean
           phone?: string | null
           referral_code?: string | null
           total_amount?: number
@@ -91,6 +93,7 @@ export type Database = {
           notes?: string | null
           pax?: number
           payment_status?: Database["public"]["Enums"]["payment_status"]
+          pets?: boolean
           phone?: string | null
           referral_code?: string | null
           total_amount?: number
