@@ -53,6 +53,10 @@ const bookingSchema = z.object({
   deposit_paid: z.coerce.number().min(0),
   deposit_deducted_amount: z.coerce.number().min(0),
   utensil_rental_fee: z.coerce.number().min(0),
+  extra_pax_fee: z.coerce.number().min(0),
+  discount_given: z.coerce.number().min(0),
+  discount_type: z.string(),
+  discount_reason: z.string().max(200).optional().or(z.literal("")),
   payment_status: z.string(),
   booking_status: z.string(),
   booking_source: z.string(),
@@ -118,6 +122,10 @@ export function BookingModal({
       deposit_paid: 0,
       deposit_deducted_amount: 0,
       utensil_rental_fee: 0,
+      extra_pax_fee: 0,
+      discount_given: 0,
+      discount_type: "fixed",
+      discount_reason: "",
       payment_status: "Unpaid",
       booking_status: "Inquiry",
       booking_source: "Other",
@@ -135,6 +143,13 @@ export function BookingModal({
   const watchUnitId = form.watch("unit_id");
   const watchCheckIn = form.watch("check_in");
   const watchCheckOut = form.watch("check_out");
+  const watchPax = form.watch("pax");
+  const watchDiscountType = form.watch("discount_type");
+  const watchDiscountGiven = form.watch("discount_given");
+
+  // Get selected unit's max_pax
+  const selectedUnit = useMemo(() => units.find((u) => u.id === watchUnitId), [units, watchUnitId]);
+  const extraPax = selectedUnit ? Math.max(0, watchPax - selectedUnit.max_pax) : 0;
 
   // Check for booking conflicts
   useEffect(() => {
@@ -191,6 +206,10 @@ export function BookingModal({
         deposit_paid: booking.deposit_paid,
         deposit_deducted_amount: (booking as any).deposit_deducted_amount ?? 0,
         utensil_rental_fee: (booking as any).utensil_rental_fee ?? 0,
+        extra_pax_fee: (booking as any).extra_pax_fee ?? 0,
+        discount_given: booking.discount_given ?? 0,
+        discount_type: (booking as any).discount_type ?? "fixed",
+        discount_reason: booking.discount_reason ?? "",
         payment_status: booking.payment_status,
         booking_status: booking.booking_status,
         booking_source: booking.booking_source,
@@ -212,6 +231,10 @@ export function BookingModal({
         deposit_paid: 0,
         deposit_deducted_amount: 0,
         utensil_rental_fee: 0,
+        extra_pax_fee: 0,
+        discount_given: 0,
+        discount_type: "fixed",
+        discount_reason: "",
         payment_status: "Unpaid",
         booking_status: "Inquiry",
         booking_source: "Other",
@@ -246,6 +269,10 @@ export function BookingModal({
         pets: values.pets,
         deposit_status: values.deposit_status as DepositStatus,
         deposit_deducted_amount: values.deposit_status === "Deducted" ? values.deposit_deducted_amount : 0,
+        extra_pax_fee: values.extra_pax_fee,
+        discount_given: values.discount_given,
+        discount_type: values.discount_type,
+        discount_reason: values.discount_reason || null,
       };
 
       // Upload ID files if any
@@ -519,6 +546,27 @@ export function BookingModal({
                   )}
                 />
               </div>
+              {/* Extra PAX fee */}
+              {extraPax > 0 && (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
+                  <p className="text-xs text-primary font-medium">
+                    +{extraPax} extra guest{extraPax > 1 ? "s" : ""} beyond {selectedUnit?.max_pax} max PAX
+                  </p>
+                  <FormField
+                    control={form.control}
+                    name="extra_pax_fee"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Extra PAX Fee (₱)</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
             </div>
 
             <Separator className="bg-border" />
@@ -623,6 +671,72 @@ export function BookingModal({
                     </FormItem>
                   )}
                 />
+              </div>
+              {/* Discount */}
+              <div className="space-y-2">
+                <div className="grid grid-cols-3 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="discount_type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Discount Type</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="bg-background border-border">
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-popover border-border">
+                            <SelectItem value="fixed">Fixed (₱)</SelectItem>
+                            <SelectItem value="percentage">Percentage (%)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="discount_given"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">
+                          Discount {watchDiscountType === "percentage" ? "(%)" : "(₱)"}
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="number"
+                            min={0}
+                            max={watchDiscountType === "percentage" ? 100 : undefined}
+                            step={watchDiscountType === "percentage" ? 1 : 100}
+                            className="bg-background border-border"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="discount_reason"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Reason</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Optional" className="bg-background border-border" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                {watchDiscountGiven > 0 && watchDiscountType === "percentage" && (
+                  <p className="text-xs text-muted-foreground">
+                    = ₱{Math.round((form.getValues("total_amount") * watchDiscountGiven) / 100).toLocaleString()} off
+                  </p>
+                )}
               </div>
             </div>
 
