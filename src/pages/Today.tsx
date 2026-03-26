@@ -1,11 +1,13 @@
-import { useMemo } from "react";
-import { format, parseISO, isToday as isTodayFn } from "date-fns";
+import { useMemo, useState, useCallback } from "react";
+import { format, parseISO } from "date-fns";
 import { AppLayout } from "@/components/AppLayout";
 import { useBookings, type Booking } from "@/hooks/useBookings";
+import { useUpdateBooking } from "@/hooks/useBookingMutations";
 import { useUnits } from "@/hooks/useUnits";
-import { LogIn, LogOut, Home, Users, BedDouble, Banknote } from "lucide-react";
+import { LogIn, LogOut, Home, Users, BedDouble, Banknote, GripVertical, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 function getPaymentBadgeClass(status: string) {
   switch (status) {
@@ -21,6 +23,7 @@ function getStatusBadgeClass(status: string) {
   switch (status) {
     case "Confirmed": return "bg-primary/20 text-primary border-primary/30";
     case "Checked In": return "bg-ocean/20 text-ocean border-ocean/30";
+    case "Checked Out": return "bg-coral/20 text-coral border-coral/30";
     case "Inquiry": return "bg-warning-orange/20 text-warning-orange border-warning-orange/30";
     case "Hold": return "bg-muted text-muted-foreground border-border";
     default: return "bg-muted text-muted-foreground border-border";
@@ -30,11 +33,25 @@ function getStatusBadgeClass(status: string) {
 interface GuestCardProps {
   booking: Booking;
   unitName: string;
+  draggable?: boolean;
 }
 
-function GuestCard({ booking, unitName }: GuestCardProps) {
+function GuestCard({ booking, unitName, draggable }: GuestCardProps) {
   return (
-    <div className="flex items-center justify-between p-3 rounded-lg bg-background border border-border hover:border-primary/30 transition-colors">
+    <div
+      draggable={draggable}
+      onDragStart={(e) => {
+        e.dataTransfer.setData("bookingId", booking.id);
+        e.dataTransfer.effectAllowed = "move";
+      }}
+      className={cn(
+        "flex items-center justify-between p-3 rounded-lg bg-background border border-border hover:border-primary/30 transition-colors",
+        draggable && "cursor-grab active:cursor-grabbing"
+      )}
+    >
+      {draggable && (
+        <GripVertical className="h-4 w-4 text-muted-foreground shrink-0 mr-2" />
+      )}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="font-medium text-sm text-foreground truncate">{booking.guest_name}</span>
@@ -61,10 +78,14 @@ function GuestCard({ booking, unitName }: GuestCardProps) {
   );
 }
 
+type DropZone = "arrivals" | "inhouse" | "departures";
+
 export default function TodayPage() {
   const todayStr = format(new Date(), "yyyy-MM-dd");
   const { data: allBookings = [], isLoading: bookingsLoading } = useBookings();
   const { data: units = [], isLoading: unitsLoading } = useUnits();
+  const updateBooking = useUpdateBooking();
+  const [dragOver, setDragOver] = useState<DropZone | null>(null);
 
   const unitMap = useMemo(() => {
     const m = new Map<string, string>();
@@ -82,17 +103,70 @@ export default function TodayPage() {
       const ci = b.check_in;
       const co = b.check_out;
 
-      if (ci === todayStr) checkIns.push(b);
-      if (co === todayStr) checkOuts.push(b);
-      if (ci <= todayStr && co > todayStr) inHouse.push(b);
+      // Arrivals: check_in is today AND status is Confirmed/Inquiry/Hold (not yet checked in)
+      if (ci === todayStr && b.booking_status !== "Checked In" && b.booking_status !== "Checked Out") {
+        checkIns.push(b);
+      }
+      // Departures: check_out is today OR status is Checked Out today
+      if (co === todayStr && b.booking_status === "Checked Out") {
+        checkOuts.push(b);
+      }
+      // In-House: currently checked in (status is "Checked In")
+      if (b.booking_status === "Checked In" && ci <= todayStr && co >= todayStr) {
+        inHouse.push(b);
+      }
     }
 
     return { checkIns, checkOuts, inHouse };
   }, [allBookings, todayStr]);
 
+  const handleDrop = useCallback(
+    (zone: DropZone, e: React.DragEvent) => {
+      e.preventDefault();
+      setDragOver(null);
+      const bookingId = e.dataTransfer.getData("bookingId");
+      if (!bookingId) return;
+
+      let newStatus: string | null = null;
+      if (zone === "inhouse") newStatus = "Checked In";
+      else if (zone === "departures") newStatus = "Checked Out";
+      else if (zone === "arrivals") newStatus = "Confirmed";
+
+      if (!newStatus) return;
+
+      const booking = allBookings.find((b) => b.id === bookingId);
+      if (!booking || booking.booking_status === newStatus) return;
+
+      updateBooking.mutate(
+        { id: bookingId, booking_status: newStatus as any },
+        {
+          onSuccess: () => {
+            toast.success(`${booking.guest_name} → ${newStatus}`);
+          },
+          onError: (err) => {
+            toast.error(`Failed to update: ${err.message}`);
+          },
+        }
+      );
+    },
+    [allBookings, updateBooking]
+  );
+
+  const handleDragOver = useCallback((zone: DropZone, e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOver(zone);
+  }, []);
+
+  const handleDragLeave = useCallback(() => {
+    setDragOver(null);
+  }, []);
+
   const totalPaxInHouse = inHouse.reduce((sum, b) => sum + b.pax, 0);
   const occupancyRate = units.length > 0 ? Math.round((inHouse.length / units.length) * 100) : 0;
-  const revenueToday = checkIns.reduce((sum, b) => sum + b.total_amount, 0);
+  const revenueToday = [...checkIns, ...inHouse.filter(b => b.check_in === todayStr)].reduce(
+    (sum, b) => sum + b.total_amount, 0
+  );
 
   const isLoading = bookingsLoading || unitsLoading;
 
@@ -107,6 +181,10 @@ export default function TodayPage() {
               {format(new Date(), "EEEE, MMMM d, yyyy")}
             </p>
           </div>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Clock className="h-3.5 w-3.5" />
+            <span>Check-in: 1:00 PM · Check-out: 11:00 AM</span>
+          </div>
         </div>
 
         {isLoading ? (
@@ -120,35 +198,74 @@ export default function TodayPage() {
               <StatCard icon={Home} label="Occupancy" value={`${occupancyRate}%`} sub={`${inHouse.length} of ${units.length} units`} />
               <StatCard icon={Users} label="Guests In-House" value={totalPaxInHouse.toString()} sub={`${inHouse.length} bookings`} />
               <StatCard icon={LogIn} label="Arrivals Today" value={checkIns.length.toString()} sub={`${checkIns.reduce((s, b) => s + b.pax, 0)} guests`} />
-              <StatCard icon={Banknote} label="Revenue (Arrivals)" value={`₱${revenueToday.toLocaleString()}`} sub={`${checkIns.length} bookings`} />
+              <StatCard icon={Banknote} label="Revenue (Today)" value={`₱${revenueToday.toLocaleString()}`} sub="arrivals" />
             </div>
+
+            {/* Drag hint */}
+            <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+              <GripVertical className="h-3 w-3" />
+              Drag guests between columns to update status
+            </p>
 
             {/* Sections */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-              {/* Check-ins */}
-              <Section icon={LogIn} title="Arrivals" count={checkIns.length} color="text-primary">
+              {/* Arrivals */}
+              <Section
+                icon={LogIn}
+                title="Arrivals"
+                count={checkIns.length}
+                color="text-primary"
+                isDropTarget={dragOver === "arrivals"}
+                onDrop={(e) => handleDrop("arrivals", e)}
+                onDragOver={(e) => handleDragOver("arrivals", e)}
+                onDragLeave={handleDragLeave}
+              >
                 {checkIns.length === 0 ? (
                   <EmptyState text="No arrivals today" />
                 ) : (
-                  checkIns.map((b) => <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} />)
+                  checkIns.map((b) => (
+                    <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable />
+                  ))
                 )}
               </Section>
 
-              {/* Check-outs */}
-              <Section icon={LogOut} title="Departures" count={checkOuts.length} color="text-coral">
-                {checkOuts.length === 0 ? (
-                  <EmptyState text="No departures today" />
-                ) : (
-                  checkOuts.map((b) => <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} />)
-                )}
-              </Section>
-
-              {/* In-house */}
-              <Section icon={Home} title="In-House" count={inHouse.length} color="text-ocean">
+              {/* In-House */}
+              <Section
+                icon={Home}
+                title="In-House"
+                count={inHouse.length}
+                color="text-ocean"
+                isDropTarget={dragOver === "inhouse"}
+                onDrop={(e) => handleDrop("inhouse", e)}
+                onDragOver={(e) => handleDragOver("inhouse", e)}
+                onDragLeave={handleDragLeave}
+              >
                 {inHouse.length === 0 ? (
                   <EmptyState text="No guests in-house" />
                 ) : (
-                  inHouse.map((b) => <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} />)
+                  inHouse.map((b) => (
+                    <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable />
+                  ))
+                )}
+              </Section>
+
+              {/* Departures */}
+              <Section
+                icon={LogOut}
+                title="Departures"
+                count={checkOuts.length}
+                color="text-coral"
+                isDropTarget={dragOver === "departures"}
+                onDrop={(e) => handleDrop("departures", e)}
+                onDragOver={(e) => handleDragOver("departures", e)}
+                onDragLeave={handleDragLeave}
+              >
+                {checkOuts.length === 0 ? (
+                  <EmptyState text="No departures today" />
+                ) : (
+                  checkOuts.map((b) => (
+                    <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable />
+                  ))
                 )}
               </Section>
             </div>
@@ -172,9 +289,29 @@ function StatCard({ icon: Icon, label, value, sub }: { icon: any; label: string;
   );
 }
 
-function Section({ icon: Icon, title, count, color, children }: { icon: any; title: string; count: number; color: string; children: React.ReactNode }) {
+interface SectionProps {
+  icon: any;
+  title: string;
+  count: number;
+  color: string;
+  children: React.ReactNode;
+  isDropTarget?: boolean;
+  onDrop?: (e: React.DragEvent) => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDragLeave?: () => void;
+}
+
+function Section({ icon: Icon, title, count, color, children, isDropTarget, onDrop, onDragOver, onDragLeave }: SectionProps) {
   return (
-    <div className="rounded-lg border border-border bg-card overflow-hidden">
+    <div
+      className={cn(
+        "rounded-lg border bg-card overflow-hidden transition-colors",
+        isDropTarget ? "border-primary/50 bg-primary/5 ring-1 ring-primary/20" : "border-border"
+      )}
+      onDrop={onDrop}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+    >
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <div className="flex items-center gap-2">
           <Icon className={cn("h-4 w-4", color)} />
@@ -184,7 +321,7 @@ function Section({ icon: Icon, title, count, color, children }: { icon: any; tit
           {count}
         </span>
       </div>
-      <div className="p-3 space-y-2 max-h-[400px] overflow-y-auto">
+      <div className="p-3 space-y-2 max-h-[400px] overflow-y-auto min-h-[80px]">
         {children}
       </div>
     </div>
