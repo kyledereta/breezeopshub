@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import TodayPage from "./pages/Today";
 import BookingsPage from "./pages/Bookings";
 import BalancesPage from "./pages/Balances";
+import RevenuePage from "./pages/Revenue";
 import NotFound from "./pages/NotFound";
 import { AppLayout } from "@/components/AppLayout";
 
