@@ -7,7 +7,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
   ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend,
 } from "recharts";
-import { Banknote, TrendingUp, CalendarCheck, Users } from "lucide-react";
+import { Banknote, TrendingUp, CalendarCheck, Users, UtensilsCrossed, ShieldMinus } from "lucide-react";
 
 const CHART_COLORS = {
   primary: "hsl(38, 55%, 51%)",
@@ -93,6 +93,8 @@ export default function RevenuePage() {
   const currentMonthData = monthlyData.find((m) => m.month === currentMonth);
   const activeBookings = allBookings.filter((b) => b.booking_status !== "Cancelled");
   const totalRevenue = activeBookings.reduce((s, b) => s + b.total_amount, 0);
+  const totalDepositDeducted = activeBookings.reduce((s, b) => s + ((b as any).deposit_deducted_amount ?? 0), 0);
+  const totalUtensilRevenue = activeBookings.reduce((s, b) => s + ((b as any).utensil_rental_fee ?? 0), 0);
   const currentOccupancy = currentMonthData && currentMonthData.totalNights > 0
     ? Math.round((currentMonthData.occupiedNights / currentMonthData.totalNights) * 100)
     : 0;
@@ -154,12 +156,14 @@ export default function RevenuePage() {
         ) : (
           <div className="flex-1 overflow-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
             {/* Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4">
               <StatCard icon={Banknote} label="This Month" value={`₱${(currentMonthData?.revenue ?? 0).toLocaleString()}`} sub={`${currentMonthData?.bookings ?? 0} bookings`} />
               <StatCard icon={TrendingUp} label="All-Time Revenue" value={`₱${totalRevenue.toLocaleString()}`} sub={`${activeBookings.length} total bookings`} />
               <StatCard icon={CalendarCheck} label="Occupancy Rate" value={`${currentOccupancy}%`} sub={`${currentMonthData?.occupiedNights ?? 0} of ${currentMonthData?.totalNights ?? 0} unit-nights`} />
               <StatCard icon={Banknote} label="ADR" value={`₱${currentADR.toLocaleString()}`} sub="Avg revenue per occupied room" />
               <StatCard icon={TrendingUp} label="RevPAR" value={`₱${currentRevPAR.toLocaleString()}`} sub="Revenue per available room" />
+              <StatCard icon={ShieldMinus} label="Deposit Deducted" value={`₱${totalDepositDeducted.toLocaleString()}`} sub="Total deducted from deposits" />
+              <StatCard icon={UtensilsCrossed} label="Utensil Revenue" value={`₱${totalUtensilRevenue.toLocaleString()}`} sub="Total utensil rental fees" />
               <StatCard icon={Users} label="Top Source" value={sourceData[0]?.name ?? "—"} sub={sourceData[0] ? `₱${sourceData[0].revenue.toLocaleString()}` : ""} />
             </div>
 
