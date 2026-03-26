@@ -546,6 +546,27 @@ export function BookingModal({
                   )}
                 />
               </div>
+              {/* Extra PAX fee */}
+              {extraPax > 0 && (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
+                  <p className="text-xs text-primary font-medium">
+                    +{extraPax} extra guest{extraPax > 1 ? "s" : ""} beyond {selectedUnit?.max_pax} max PAX
+                  </p>
+                  <FormField
+                    control={form.control}
+                    name="extra_pax_fee"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Extra PAX Fee (₱)</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
             </div>
 
             <Separator className="bg-border" />
