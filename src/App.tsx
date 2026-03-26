@@ -8,6 +8,7 @@ import TodayPage from "./pages/Today";
 import BookingsPage from "./pages/Bookings";
 import BalancesPage from "./pages/Balances";
 import RevenuePage from "./pages/Revenue";
+import GuestsPage from "./pages/Guests";
 import NotFound from "./pages/NotFound";
 import { AppLayout } from "@/components/AppLayout";
 
@@ -33,7 +34,7 @@ const App = () => (
           <Route path="/bookings" element={<BookingsPage />} />
           <Route path="/balances" element={<BalancesPage />} />
           <Route path="/revenue" element={<RevenuePage />} />
-          <Route path="/guests" element={<PlaceholderPage title="Guest Database" />} />
+          <Route path="/guests" element={<GuestsPage />} />
           <Route path="/settings" element={<PlaceholderPage title="Settings" />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
