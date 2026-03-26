@@ -132,6 +132,39 @@ export function BookingModal({
 
   const watchDepositStatus = form.watch("deposit_status");
   const watchUtensilRental = form.watch("utensil_rental");
+  const watchUnitId = form.watch("unit_id");
+  const watchCheckIn = form.watch("check_in");
+  const watchCheckOut = form.watch("check_out");
+
+  // Check for booking conflicts
+  useEffect(() => {
+    if (!watchUnitId || !watchCheckIn || !watchCheckOut) {
+      setConflictWarning(null);
+      return;
+    }
+    const checkConflict = async () => {
+      let query = supabase
+        .from("bookings")
+        .select("id, guest_name, check_in, check_out")
+        .eq("unit_id", watchUnitId)
+        .not("booking_status", "eq", "Cancelled")
+        .lt("check_in", watchCheckOut)
+        .gt("check_out", watchCheckIn);
+
+      if (booking) {
+        query = query.neq("id", booking.id);
+      }
+
+      const { data } = await query;
+      if (data && data.length > 0) {
+        const names = data.map((b) => b.guest_name).join(", ");
+        setConflictWarning(`⚠️ Overlaps with: ${names} (${data[0].check_in} → ${data[0].check_out})`);
+      } else {
+        setConflictWarning(null);
+      }
+    };
+    checkConflict();
+  }, [watchUnitId, watchCheckIn, watchCheckOut, booking]);
 
   // Auto-set utensil rental fee to ₱500 when toggled on
   useEffect(() => {
