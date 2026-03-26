@@ -194,7 +194,15 @@ export default function TodayPage() {
   const visibleDepartures = useMemo(() => {
     const byId = new Map<string, Booking>();
 
+    // Include already checked-out guests
     for (const booking of baseCheckOuts) {
+      if (!clearedDepartureIds.includes(booking.id)) {
+        byId.set(booking.id, booking);
+      }
+    }
+
+    // Include guests due to depart (still checked in, checkout is today)
+    for (const booking of dueDepartures) {
       if (!clearedDepartureIds.includes(booking.id)) {
         byId.set(booking.id, booking);
       }
@@ -208,7 +216,7 @@ export default function TodayPage() {
     }
 
     return Array.from(byId.values());
-  }, [allBookings, baseCheckOuts, manualDepartureIds, clearedDepartureIds]);
+  }, [allBookings, baseCheckOuts, dueDepartures, manualDepartureIds, clearedDepartureIds]);
 
   const handleDrop = useCallback(
     (zone: DropZone, e: React.DragEvent) => {
