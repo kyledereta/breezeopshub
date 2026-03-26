@@ -162,8 +162,8 @@ export default function RevenuePage() {
               <StatCard icon={CalendarCheck} label="Occupancy Rate" value={`${currentOccupancy}%`} sub={`${currentMonthData?.occupiedNights ?? 0} of ${currentMonthData?.totalNights ?? 0} unit-nights`} />
               <StatCard icon={Banknote} label="ADR" value={`₱${currentADR.toLocaleString()}`} sub="Avg revenue per occupied room" />
               <StatCard icon={TrendingUp} label="RevPAR" value={`₱${currentRevPAR.toLocaleString()}`} sub="Revenue per available room" />
-              <StatCard icon={ShieldMinus} label="Deposit Deducted" value={`₱${totalDepositDeducted.toLocaleString()}`} sub="Total deducted from deposits" />
-              <StatCard icon={UtensilsCrossed} label="Utensil Revenue" value={`₱${totalUtensilRevenue.toLocaleString()}`} sub="Total utensil rental fees" />
+              <StatCard icon={ShieldMinus} label="Security Deposit Deducted" value={`₱${totalDepositDeducted.toLocaleString()}`} sub="Deducted from security deposits" />
+              <StatCard icon={UtensilsCrossed} label="Utensil Rental" value={`₱${totalUtensilRevenue.toLocaleString()}`} sub="Total utensil rental fees" />
               <StatCard icon={Users} label="Top Source" value={sourceData[0]?.name ?? "—"} sub={sourceData[0] ? `₱${sourceData[0].revenue.toLocaleString()}` : ""} />
             </div>
 
