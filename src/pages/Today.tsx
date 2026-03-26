@@ -107,6 +107,8 @@ export default function TodayPage() {
   const [dragOver, setDragOver] = useState<DropZone | null>(null);
   const [manualDepartureIds, setManualDepartureIds] = useState<string[]>([]);
   const [clearedDepartureIds, setClearedDepartureIds] = useState<string[]>([]);
+  const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
+  const [clearedDepartureIds, setClearedDepartureIds] = useState<string[]>([]);
 
   const unitMap = useMemo(() => {
     const m = new Map<string, string>();
