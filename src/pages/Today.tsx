@@ -50,12 +50,17 @@ function GuestCard({ booking, unitName, draggable, onEdit }: GuestCardProps) {
     <div
       draggable={draggable}
       onDragStart={(e) => {
+        setWasDragged(true);
         e.dataTransfer.setData("bookingId", booking.id);
         e.dataTransfer.effectAllowed = "move";
       }}
+      onDragEnd={() => setTimeout(() => setWasDragged(false), 100)}
+      onClick={() => {
+        if (!wasDragged && onEdit) onEdit();
+      }}
       className={cn(
-        "flex items-center gap-2 rounded-lg bg-background border border-border hover:border-primary/30 transition-colors p-3",
-        draggable && "cursor-grab active:cursor-grabbing"
+        "flex items-center gap-2 rounded-lg bg-background border border-border hover:border-primary/30 transition-colors p-3 group",
+        draggable ? "cursor-grab active:cursor-grabbing" : onEdit ? "cursor-pointer" : ""
       )}
     >
       {draggable && (
@@ -83,6 +88,9 @@ function GuestCard({ booking, unitName, draggable, onEdit }: GuestCardProps) {
           </span>
         </div>
       </div>
+      {onEdit && (
+        <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+      )}
     </div>
   );
 }
