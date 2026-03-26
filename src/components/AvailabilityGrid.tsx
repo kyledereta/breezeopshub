@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import {
   format,
   startOfMonth,
@@ -100,6 +100,14 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
 
   const { data: units = [], isLoading: unitsLoading } = useUnits();
   const { data: bookings = [], isLoading: bookingsLoading } = useBookings(startStr, endStr);
+  const todayRef = useRef<HTMLTableCellElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const scrollToToday = useCallback(() => {
+    setTimeout(() => {
+      todayRef.current?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    }, 50);
+  }, []);
 
   const groupedUnits = useMemo(() => groupUnitsByArea(units), [units]);
 
@@ -181,7 +189,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setCurrentMonth(new Date())}
+            onClick={() => { setCurrentMonth(new Date()); scrollToToday(); }}
             className="ml-1 sm:ml-2 text-xs border-border text-muted-foreground hover:text-foreground"
           >
             Today
@@ -205,6 +213,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
                     "border-b border-r border-border px-0 py-1.5 text-center min-w-[36px] w-[36px] font-medium",
                     isToday(day) ? "bg-primary/20 text-primary" : "text-muted-foreground"
                   )}
+                  ref={isToday(day) ? todayRef : undefined}
                 >
                   <div className="text-[10px] leading-none mb-0.5">
                     {format(day, "EEE").charAt(0)}
