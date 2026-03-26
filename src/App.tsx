@@ -9,6 +9,7 @@ import BookingsPage from "./pages/Bookings";
 import BalancesPage from "./pages/Balances";
 import RevenuePage from "./pages/Revenue";
 import GuestsPage from "./pages/Guests";
+import SettingsPage from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import { AppLayout } from "@/components/AppLayout";
 
