@@ -35,7 +35,7 @@ export function AppSidebar() {
       <SidebarContent>
         {/* Branding */}
         <div className="flex items-center gap-3 px-4 py-6 border-b border-sidebar-border">
-          <img src={breezeLogo} alt="Breeze Resort" className="h-8 w-8 shrink-0 rounded-full" />
+          <img src={breezeLogo} alt="Breeze Resort" className="h-10 w-10 shrink-0" />
           {!collapsed && (
             <div className="flex flex-col">
               <span className="font-display text-lg tracking-wide text-primary">
