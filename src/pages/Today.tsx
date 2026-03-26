@@ -40,10 +40,9 @@ interface GuestCardProps {
   booking: Booking;
   unitName: string;
   draggable?: boolean;
-  compact?: boolean;
 }
 
-function GuestCard({ booking, unitName, draggable, compact }: GuestCardProps) {
+function GuestCard({ booking, unitName, draggable }: GuestCardProps) {
   return (
     <div
       draggable={draggable}
@@ -52,8 +51,7 @@ function GuestCard({ booking, unitName, draggable, compact }: GuestCardProps) {
         e.dataTransfer.effectAllowed = "move";
       }}
       className={cn(
-        "flex items-center gap-2 rounded-lg bg-background border border-border hover:border-primary/30 transition-colors",
-        compact ? "px-3 py-2" : "p-3",
+        "flex items-center gap-2 rounded-lg bg-background border border-border hover:border-primary/30 transition-colors p-3",
         draggable && "cursor-grab active:cursor-grabbing"
       )}
     >
@@ -96,7 +94,8 @@ export default function TodayPage() {
   const updateBooking = useUpdateBooking();
   const navigate = useNavigate();
   const [dragOver, setDragOver] = useState<DropZone | null>(null);
-  const [clearedDepartures, setClearedDepartures] = useState(false);
+  const [manualDepartureIds, setManualDepartureIds] = useState<string[]>([]);
+  const [clearedDepartureIds, setClearedDepartureIds] = useState<string[]>([]);
 
   const unitMap = useMemo(() => {
     const m = new Map<string, string>();
@@ -104,9 +103,9 @@ export default function TodayPage() {
     return m;
   }, [units]);
 
-  const { checkIns, checkOuts, inHouse, pendingBalances } = useMemo(() => {
+  const { checkIns, baseCheckOuts, inHouse, pendingBalances } = useMemo(() => {
     const checkIns: Booking[] = [];
-    const checkOuts: Booking[] = [];
+    const baseCheckOuts: Booking[] = [];
     const inHouse: Booking[] = [];
     const pendingBalances: Booking[] = [];
 
@@ -119,7 +118,7 @@ export default function TodayPage() {
         checkIns.push(b);
       }
       if (co === todayStr && b.booking_status === "Checked Out") {
-        checkOuts.push(b);
+        baseCheckOuts.push(b);
       }
       if (b.booking_status === "Checked In" && ci <= todayStr && co >= todayStr) {
         inHouse.push(b);
@@ -129,11 +128,27 @@ export default function TodayPage() {
       }
     }
 
-    return { checkIns, checkOuts, inHouse, pendingBalances };
+    return { checkIns, baseCheckOuts, inHouse, pendingBalances };
   }, [allBookings, todayStr]);
 
-  // Reset cleared state when new departures come in
-  const visibleDepartures = clearedDepartures ? [] : checkOuts;
+  const visibleDepartures = useMemo(() => {
+    const byId = new Map<string, Booking>();
+
+    for (const booking of baseCheckOuts) {
+      if (!clearedDepartureIds.includes(booking.id)) {
+        byId.set(booking.id, booking);
+      }
+    }
+
+    for (const bookingId of manualDepartureIds) {
+      const booking = allBookings.find((item) => item.id === bookingId);
+      if (booking && !clearedDepartureIds.includes(booking.id)) {
+        byId.set(booking.id, booking);
+      }
+    }
+
+    return Array.from(byId.values());
+  }, [allBookings, baseCheckOuts, manualDepartureIds, clearedDepartureIds]);
 
   const handleDrop = useCallback(
     (zone: DropZone, e: React.DragEvent) => {
@@ -152,8 +167,12 @@ export default function TodayPage() {
       const booking = allBookings.find((b) => b.id === bookingId);
       if (!booking || booking.booking_status === newStatus) return;
 
-      // Un-clear departures if dropping into it
-      if (zone === "departures") setClearedDepartures(false);
+      if (zone === "departures") {
+        setManualDepartureIds((prev) => (prev.includes(bookingId) ? prev : [...prev, bookingId]));
+        setClearedDepartureIds((prev) => prev.filter((id) => id !== bookingId));
+      } else {
+        setManualDepartureIds((prev) => prev.filter((id) => id !== bookingId));
+      }
 
       updateBooking.mutate(
         { id: bookingId, booking_status: newStatus as any },
@@ -166,6 +185,11 @@ export default function TodayPage() {
     [allBookings, updateBooking]
   );
 
+  const handleClearDepartures = useCallback(() => {
+    setClearedDepartureIds((prev) => Array.from(new Set([...prev, ...visibleDepartures.map((b) => b.id)])));
+    setManualDepartureIds([]);
+  }, [visibleDepartures]);
+
   const handleDragOver = useCallback((zone: DropZone, e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
@@ -177,13 +201,11 @@ export default function TodayPage() {
   const totalPaxInHouse = inHouse.reduce((sum, b) => sum + b.pax, 0);
   const occupancyRate = units.length > 0 ? Math.round((inHouse.length / units.length) * 100) : 0;
   const pendingTotal = pendingBalances.reduce((s, b) => s + (b.total_amount - b.deposit_paid), 0);
-
   const isLoading = bookingsLoading || unitsLoading;
 
   return (
     <AppLayout>
       <div className="flex flex-col h-[calc(100vh-3rem)]">
-        {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border shrink-0 gap-1">
           <div>
             <h1 className="text-xl sm:text-3xl font-display text-foreground tracking-wide">Dashboard</h1>
@@ -203,7 +225,6 @@ export default function TodayPage() {
           </div>
         ) : (
           <div className="flex-1 overflow-auto p-4 sm:p-6 space-y-4">
-            {/* Stats Row */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <StatCard icon={Home} label="Occupancy" value={`${occupancyRate}%`} sub={`${inHouse.length} / ${units.length} units`} />
               <StatCard icon={Users} label="In-House" value={`${totalPaxInHouse} pax`} sub={`${inHouse.length} bookings`} />
@@ -218,13 +239,11 @@ export default function TodayPage() {
               <StatCard icon={Users} label="Guests" value={String(guests.length)} onClick={() => navigate("/guests")} />
             </div>
 
-            {/* Drag hint */}
             <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
               <GripVertical className="h-3 w-3" />
               Drag guests between columns to update status
             </p>
 
-            {/* Drag-drop Sections */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Section
                 icon={LogIn} title="Arrivals" count={checkIns.length} color="text-primary"
@@ -255,22 +274,21 @@ export default function TodayPage() {
               </Section>
 
               <Section
-                icon={LogOut} title="Departures" count={checkOuts.length} color="text-coral"
+                icon={LogOut} title="Departures" count={visibleDepartures.length} color="text-coral"
                 isDropTarget={dragOver === "departures"}
                 onDrop={(e) => handleDrop("departures", e)}
                 onDragOver={(e) => handleDragOver("departures", e)}
                 onDragLeave={handleDragLeave}
-                onClear={checkOuts.length > 0 && !clearedDepartures ? () => setClearedDepartures(true) : undefined}
+                onClear={visibleDepartures.length > 0 ? handleClearDepartures : undefined}
               >
                 {visibleDepartures.length === 0 ? (
-                  <EmptyState text={clearedDepartures ? "Cleared" : "No departures today"} />
+                  <EmptyState text="No departures yet" />
                 ) : (
                   visibleDepartures.map((b) => <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} />)
                 )}
               </Section>
             </div>
 
-            {/* Pending Balances */}
             {pendingBalances.length > 0 && (
               <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-destructive mb-3 flex items-center gap-2">
@@ -340,7 +358,9 @@ function Section({ icon: Icon, title, count, color, children, isDropTarget, onDr
         "rounded-lg border bg-card overflow-hidden transition-colors",
         isDropTarget ? "border-primary/50 bg-primary/5 ring-1 ring-primary/20" : "border-border"
       )}
-      onDrop={onDrop} onDragOver={onDragOver} onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
     >
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
         <div className="flex items-center gap-2">
@@ -350,6 +370,7 @@ function Section({ icon: Icon, title, count, color, children, isDropTarget, onDr
         </div>
         {onClear && (
           <Button
+            type="button"
             variant="ghost"
             size="sm"
             className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground gap-1"
