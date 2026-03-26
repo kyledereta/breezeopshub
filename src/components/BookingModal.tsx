@@ -1,0 +1,463 @@
+import { useEffect, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { format } from "date-fns";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { useUnits, groupUnitsByArea } from "@/hooks/useUnits";
+import { useCreateBooking, useUpdateBooking } from "@/hooks/useBookingMutations";
+import type { Booking } from "@/hooks/useBookings";
+import { Constants, type Database } from "@/integrations/supabase/types";
+import { toast } from "sonner";
+
+type PaymentStatus = Database["public"]["Enums"]["payment_status"];
+type BookingStatus = Database["public"]["Enums"]["booking_status"];
+type BookingSource = Database["public"]["Enums"]["booking_source"];
+
+const bookingSchema = z.object({
+  guest_name: z.string().trim().min(1, "Guest name is required").max(100),
+  unit_id: z.string().min(1, "Select a unit"),
+  check_in: z.string().min(1, "Check-in date is required"),
+  check_out: z.string().min(1, "Check-out date is required"),
+  pax: z.coerce.number().min(1).max(50),
+  total_amount: z.coerce.number().min(0),
+  deposit_paid: z.coerce.number().min(0),
+  payment_status: z.string(),
+  booking_status: z.string(),
+  booking_source: z.string(),
+  email: z.string().email().max(255).optional().or(z.literal("")),
+  phone: z.string().max(20).optional().or(z.literal("")),
+  notes: z.string().max(500).optional().or(z.literal("")),
+}).refine((data) => data.check_out > data.check_in, {
+  message: "Check-out must be after check-in",
+  path: ["check_out"],
+});
+
+type BookingFormValues = z.infer<typeof bookingSchema>;
+
+interface BookingModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  booking?: Booking | null;
+  defaultUnitId?: string;
+  defaultDate?: Date;
+}
+
+export function BookingModal({
+  open,
+  onOpenChange,
+  booking,
+  defaultUnitId,
+  defaultDate,
+}: BookingModalProps) {
+  const { data: units = [] } = useUnits();
+  const groupedUnits = useMemo(() => groupUnitsByArea(units), [units]);
+  const createBooking = useCreateBooking();
+  const updateBooking = useUpdateBooking();
+  const isEditing = !!booking;
+
+  const form = useForm<BookingFormValues>({
+    resolver: zodResolver(bookingSchema),
+    defaultValues: {
+      guest_name: "",
+      unit_id: "",
+      check_in: "",
+      check_out: "",
+      pax: 1,
+      total_amount: 0,
+      deposit_paid: 0,
+      payment_status: "Unpaid",
+      booking_status: "Inquiry",
+      booking_source: "Other",
+      email: "",
+      phone: "",
+      notes: "",
+    },
+  });
+
+  // Reset form when modal opens with new data
+  useEffect(() => {
+    if (!open) return;
+
+    if (booking) {
+      form.reset({
+        guest_name: booking.guest_name,
+        unit_id: booking.unit_id ?? "",
+        check_in: booking.check_in,
+        check_out: booking.check_out,
+        pax: booking.pax,
+        total_amount: booking.total_amount,
+        deposit_paid: booking.deposit_paid,
+        payment_status: booking.payment_status,
+        booking_status: booking.booking_status,
+        booking_source: booking.booking_source,
+        email: booking.email ?? "",
+        phone: booking.phone ?? "",
+        notes: booking.notes ?? "",
+      });
+    } else {
+      form.reset({
+        guest_name: "",
+        unit_id: defaultUnitId ?? "",
+        check_in: defaultDate ? format(defaultDate, "yyyy-MM-dd") : "",
+        check_out: "",
+        pax: 1,
+        total_amount: 0,
+        deposit_paid: 0,
+        payment_status: "Unpaid",
+        booking_status: "Inquiry",
+        booking_source: "Other",
+        email: "",
+        phone: "",
+        notes: "",
+      });
+    }
+  }, [open, booking, defaultUnitId, defaultDate, form]);
+
+  async function onSubmit(values: BookingFormValues) {
+    try {
+      const payload = {
+        guest_name: values.guest_name,
+        unit_id: values.unit_id,
+        check_in: values.check_in,
+        check_out: values.check_out,
+        pax: values.pax,
+        total_amount: values.total_amount,
+        deposit_paid: values.deposit_paid,
+        payment_status: values.payment_status as PaymentStatus,
+        booking_status: values.booking_status as BookingStatus,
+        booking_source: values.booking_source as BookingSource,
+        email: values.email || null,
+        phone: values.phone || null,
+        notes: values.notes || null,
+      };
+
+      if (isEditing) {
+        await updateBooking.mutateAsync({ id: booking.id, ...payload });
+        toast.success("Booking updated");
+      } else {
+        await createBooking.mutateAsync(payload);
+        toast.success("Booking created");
+      }
+      onOpenChange(false);
+    } catch (err: any) {
+      toast.error(err.message ?? "Something went wrong");
+    }
+  }
+
+  const isPending = createBooking.isPending || updateBooking.isPending;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="bg-card border-border max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="font-display text-xl text-foreground">
+            {isEditing ? "Edit Booking" : "New Booking"}
+          </DialogTitle>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* Guest Info */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">
+                Guest Info
+              </h3>
+              <FormField
+                control={form.control}
+                name="guest_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs text-muted-foreground">Guest Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Full name" className="bg-background border-border" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Email</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="email" placeholder="Optional" className="bg-background border-border" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Phone</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Optional" className="bg-background border-border" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            <Separator className="bg-border" />
+
+            {/* Stay Details */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">
+                Stay Details
+              </h3>
+              <FormField
+                control={form.control}
+                name="unit_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs text-muted-foreground">Unit</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="bg-background border-border">
+                          <SelectValue placeholder="Select a unit" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-popover border-border">
+                        {groupedUnits.map(({ area, units: areaUnits }) => (
+                          <div key={area}>
+                            <div className="px-2 py-1.5 text-[10px] uppercase tracking-wider text-primary font-semibold">
+                              {area}
+                            </div>
+                            {areaUnits.map((unit) => (
+                              <SelectItem key={unit.id} value={unit.id}>
+                                {unit.name} · {unit.max_pax} PAX · ₱{unit.nightly_rate.toLocaleString()}
+                              </SelectItem>
+                            ))}
+                          </div>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="grid grid-cols-3 gap-3">
+                <FormField
+                  control={form.control}
+                  name="check_in"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Check-in</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="date" className="bg-background border-border" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="check_out"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Check-out</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="date" className="bg-background border-border" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="pax"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">PAX</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="number" min={1} max={50} className="bg-background border-border" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            <Separator className="bg-border" />
+
+            {/* Booking & Payment */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">
+                Booking & Payment
+              </h3>
+              <div className="grid grid-cols-3 gap-3">
+                <FormField
+                  control={form.control}
+                  name="booking_status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Status</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="bg-background border-border">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-popover border-border">
+                          {Constants.public.Enums.booking_status.map((s) => (
+                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="payment_status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Payment</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="bg-background border-border">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-popover border-border">
+                          {Constants.public.Enums.payment_status.map((s) => (
+                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="booking_source"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Source</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="bg-background border-border">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-popover border-border">
+                          {Constants.public.Enums.booking_source.map((s) => (
+                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="total_amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Total Amount (₱)</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="deposit_paid"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Deposit Paid (₱)</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            <Separator className="bg-border" />
+
+            {/* Notes */}
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs text-muted-foreground">Notes</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      placeholder="Special requests, reminders..."
+                      className="bg-background border-border resize-none h-20"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Actions */}
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => onOpenChange(false)}
+                className="text-muted-foreground"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isPending}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                {isPending ? "Saving..." : isEditing ? "Update Booking" : "Create Booking"}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
