@@ -58,8 +58,7 @@ function getUnitIcon(name: string) {
   if (name.includes("Kubo")) return TreePalm;
   return Home;
 }
-
-
+interface AvailabilityGridProps {
   onCellClick?: (unitId: string, date: Date) => void;
   onBookingClick?: (booking: Booking) => void;
 }
