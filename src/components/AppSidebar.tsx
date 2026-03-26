@@ -1,0 +1,78 @@
+import { Calendar, Sun, ClipboardList, Wallet, BarChart3, Users, Settings, Waves } from "lucide-react";
+import { NavLink } from "@/components/NavLink";
+import { useLocation } from "react-router-dom";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@/components/ui/sidebar";
+
+const navItems = [
+  { title: "Availability", url: "/", icon: Calendar },
+  { title: "Today", url: "/today", icon: Sun },
+  { title: "Bookings", url: "/bookings", icon: ClipboardList },
+  { title: "Pending Balances", url: "/balances", icon: Wallet },
+  { title: "Revenue", url: "/revenue", icon: BarChart3 },
+  { title: "Guests", url: "/guests", icon: Users },
+  { title: "Settings", url: "/settings", icon: Settings },
+];
+
+export function AppSidebar() {
+  const { state } = useSidebar();
+  const collapsed = state === "collapsed";
+  const location = useLocation();
+
+  const isActive = (path: string) => location.pathname === path;
+
+  return (
+    <Sidebar collapsible="icon">
+      <SidebarContent>
+        {/* Branding */}
+        <div className="flex items-center gap-3 px-4 py-6 border-b border-sidebar-border">
+          <Waves className="h-7 w-7 text-primary shrink-0" />
+          {!collapsed && (
+            <div className="flex flex-col">
+              <span className="font-display text-lg tracking-wide text-primary">
+                Breeze Resort
+              </span>
+              <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                Liwliwa · Zambales
+              </span>
+            </div>
+          )}
+        </div>
+
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {navItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(item.url)}
+                    tooltip={item.title}
+                  >
+                    <NavLink
+                      to={item.url}
+                      end
+                      className="hover:bg-sidebar-accent/50"
+                      activeClassName="bg-sidebar-accent text-primary font-medium"
+                    >
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      {!collapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+    </Sidebar>
+  );
+}
