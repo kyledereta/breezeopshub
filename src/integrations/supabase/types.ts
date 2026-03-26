@@ -27,8 +27,10 @@ export type Database = {
           deposit_status: Database["public"]["Enums"]["deposit_status"]
           discount_given: number
           discount_reason: string | null
+          discount_type: string
           email: string | null
           extension_fee: number
+          extra_pax_fee: number
           guest_id: string | null
           guest_name: string
           id: string
@@ -58,8 +60,10 @@ export type Database = {
           deposit_status?: Database["public"]["Enums"]["deposit_status"]
           discount_given?: number
           discount_reason?: string | null
+          discount_type?: string
           email?: string | null
           extension_fee?: number
+          extra_pax_fee?: number
           guest_id?: string | null
           guest_name: string
           id?: string
@@ -89,8 +93,10 @@ export type Database = {
           deposit_status?: Database["public"]["Enums"]["deposit_status"]
           discount_given?: number
           discount_reason?: string | null
+          discount_type?: string
           email?: string | null
           extension_fee?: number
+          extra_pax_fee?: number
           guest_id?: string | null
           guest_name?: string
           id?: string
