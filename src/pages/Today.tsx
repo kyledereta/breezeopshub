@@ -382,7 +382,7 @@ export default function TodayPage() {
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="bg-muted/30">
-                      <th className="text-left px-3 py-2 text-muted-foreground font-medium min-w-[140px]">Unit</th>
+                      <th className="text-left px-3 py-2 text-muted-foreground font-medium min-w-[140px] sticky left-0 z-10 bg-muted/30">Unit</th>
                       {weekDays.map((day) => (
                         <th key={day.toISOString()} className="text-center px-2 py-2 text-muted-foreground font-medium min-w-[52px]">
                           <div className="text-[10px] leading-none">{format(day, "EEE")}</div>
@@ -397,7 +397,7 @@ export default function TodayPage() {
                         <tr key={area}>
                           <td
                             colSpan={weekDays.length + 1}
-                            className="bg-secondary/50 px-3 py-1 text-[10px] uppercase tracking-[0.15em] text-primary font-semibold border-t border-border"
+                            className="bg-secondary/50 px-3 py-1 text-[10px] uppercase tracking-[0.15em] text-primary font-semibold border-t border-border sticky left-0"
                           >
                             {area}
                           </td>
@@ -406,7 +406,7 @@ export default function TodayPage() {
                           const ua = unitAvailability.find((u) => u.unit.id === unit.id);
                           return (
                             <tr key={unit.id} className="border-t border-border hover:bg-muted/20 transition-colors">
-                              <td className="px-3 py-1.5">
+                              <td className="px-3 py-1.5 sticky left-0 z-10 bg-card">
                                 <div className="flex items-center gap-1.5">
                                   {(() => {
                                     const Icon = unit.name.includes("Villa") && unit.name.includes("Owner") ? Crown
