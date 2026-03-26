@@ -462,7 +462,7 @@ export function BookingModal({
                   name="deposit_paid"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Deposit Paid (₱)</FormLabel>
+                      <FormLabel className="text-xs text-muted-foreground">Downpayment (₱)</FormLabel>
                       <FormControl>
                         <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
                       </FormControl>
@@ -524,7 +524,7 @@ export function BookingModal({
                   name="deposit_status"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Deposit Status</FormLabel>
+                      <FormLabel className="text-xs text-muted-foreground">Security Deposit</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger className="bg-background border-border">
@@ -548,7 +548,7 @@ export function BookingModal({
                   name="deposit_deducted_amount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Amount Deducted from Deposit (₱)</FormLabel>
+                      <FormLabel className="text-xs text-muted-foreground">Amount Deducted from Security Deposit (₱)</FormLabel>
                       <FormControl>
                         <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
                       </FormControl>
