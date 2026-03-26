@@ -35,7 +35,7 @@ import type { Booking } from "@/hooks/useBookings";
 import { Constants, type Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Upload, X, FileImage, PawPrint } from "lucide-react";
+import { Upload, X, FileImage, PawPrint, AlertTriangle } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 type PaymentStatus = Database["public"]["Enums"]["payment_status"];
@@ -92,6 +92,7 @@ export function BookingModal({
   const isEditing = !!booking;
   const [idFiles, setIdFiles] = useState<File[]>([]);
   const [existingIds, setExistingIds] = useState<string[]>([]);
+  const [conflictWarning, setConflictWarning] = useState<string | null>(null);
   const [guestSuggestions, setGuestSuggestions] = useState<{ id: string; guest_name: string; phone: string | null; email: string | null; pets: boolean }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
@@ -131,6 +132,39 @@ export function BookingModal({
 
   const watchDepositStatus = form.watch("deposit_status");
   const watchUtensilRental = form.watch("utensil_rental");
+  const watchUnitId = form.watch("unit_id");
+  const watchCheckIn = form.watch("check_in");
+  const watchCheckOut = form.watch("check_out");
+
+  // Check for booking conflicts
+  useEffect(() => {
+    if (!watchUnitId || !watchCheckIn || !watchCheckOut) {
+      setConflictWarning(null);
+      return;
+    }
+    const checkConflict = async () => {
+      let query = supabase
+        .from("bookings")
+        .select("id, guest_name, check_in, check_out")
+        .eq("unit_id", watchUnitId)
+        .not("booking_status", "eq", "Cancelled")
+        .lt("check_in", watchCheckOut)
+        .gt("check_out", watchCheckIn);
+
+      if (booking) {
+        query = query.neq("id", booking.id);
+      }
+
+      const { data } = await query;
+      if (data && data.length > 0) {
+        const names = data.map((b) => b.guest_name).join(", ");
+        setConflictWarning(`⚠️ Overlaps with: ${names} (${data[0].check_in} → ${data[0].check_out})`);
+      } else {
+        setConflictWarning(null);
+      }
+    };
+    checkConflict();
+  }, [watchUnitId, watchCheckIn, watchCheckOut, booking]);
 
   // Auto-set utensil rental fee to ₱500 when toggled on
   useEffect(() => {
@@ -438,6 +472,12 @@ export function BookingModal({
                   </FormItem>
                 )}
               />
+              {conflictWarning && (
+                <div className="flex items-center gap-2 rounded-lg border border-warning-orange/50 bg-warning-orange/10 px-3 py-2">
+                  <AlertTriangle className="h-4 w-4 text-warning-orange shrink-0" />
+                  <p className="text-xs text-warning-orange">{conflictWarning}</p>
+                </div>
+              )}
               <div className="grid grid-cols-3 gap-3">
                 <FormField
                   control={form.control}

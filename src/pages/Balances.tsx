@@ -5,8 +5,10 @@ import { useBookings, type Booking } from "@/hooks/useBookings";
 import { useUnits } from "@/hooks/useUnits";
 import { BookingModal } from "@/components/BookingModal";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Wallet, AlertTriangle } from "lucide-react";
+import { Wallet, AlertTriangle, Download } from "lucide-react";
+import { downloadCsv } from "@/lib/csvExport";
 import { cn } from "@/lib/utils";
 
 function getPaymentBadgeClass(status: string) {
@@ -47,7 +49,25 @@ export default function BalancesPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border shrink-0 gap-1">
           <h1 className="text-xl sm:text-3xl font-display text-foreground tracking-wide">Pending Balances</h1>
-          <span className="text-xs sm:text-sm text-muted-foreground">{pendingBookings.length} bookings</span>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-xs"
+              onClick={() => {
+                const headers = ["Guest", "Ref", "Unit", "Check-in", "Check-out", "Total", "Deposit", "Balance", "Payment Status"];
+                const rows = pendingBookings.map((b) => [
+                  b.guest_name, b.booking_ref, unitMap.get(b.unit_id ?? "") ?? "",
+                  b.check_in, b.check_out, String(b.total_amount), String(b.deposit_paid),
+                  String(b.total_amount - b.deposit_paid), b.payment_status,
+                ]);
+                downloadCsv("pending-balances.csv", headers, rows);
+              }}
+            >
+              <Download className="h-3.5 w-3.5 mr-1" /> Export
+            </Button>
+            <span className="text-xs sm:text-sm text-muted-foreground">{pendingBookings.length} bookings</span>
+          </div>
         </div>
 
         {isLoading ? (

@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { PasswordGate } from "@/components/PasswordGate";
 import TodayPage from "./pages/Today";
 import Index from "./pages/Index";
 import BookingsPage from "./pages/Bookings";
@@ -19,18 +20,20 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<TodayPage />} />
-          <Route path="/availability" element={<Index />} />
-          <Route path="/bookings" element={<BookingsPage />} />
-          <Route path="/balances" element={<BalancesPage />} />
-          <Route path="/revenue" element={<RevenuePage />} />
-          <Route path="/guests" element={<GuestsPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <PasswordGate>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<TodayPage />} />
+            <Route path="/availability" element={<Index />} />
+            <Route path="/bookings" element={<BookingsPage />} />
+            <Route path="/balances" element={<BalancesPage />} />
+            <Route path="/revenue" element={<RevenuePage />} />
+            <Route path="/guests" element={<GuestsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </PasswordGate>
     </TooltipProvider>
   </QueryClientProvider>
 );
