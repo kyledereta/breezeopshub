@@ -3,6 +3,8 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { GlobalSearch } from "@/components/GlobalSearch";
+import { NotificationBell } from "@/components/NotificationBell";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -15,8 +17,12 @@ export function AppLayout({ children, onNewBooking }: AppLayoutProps) {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-12 flex items-center border-b border-border px-4 shrink-0">
+          <header className="h-12 flex items-center justify-between border-b border-border px-4 shrink-0">
             <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
+            <div className="flex items-center gap-2">
+              <GlobalSearch />
+              <NotificationBell />
+            </div>
           </header>
           <main className="flex-1 overflow-auto">
             {children}
