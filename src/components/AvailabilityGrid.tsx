@@ -336,14 +336,12 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
                                 <td
                                   colSpan={Math.min(span, days.length - days.indexOf(day))}
                                   className={cn(
-                                    "border-b border-border cursor-pointer relative",
+                                    "cursor-pointer relative overflow-hidden",
                                     getBookingColor(booking)
                                   )}
                                   onClick={() => onBookingClick?.(booking)}
                                 >
-                                  <div className="px-1 py-1 truncate text-[10px] text-foreground font-medium">
-                                    {booking.guest_name}
-                                  </div>
+                                  <BookingCell booking={booking} />
                                 </td>
                               </TooltipTrigger>
                               <BookingTooltip booking={booking} />
@@ -359,14 +357,12 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
                               <td
                                 colSpan={Math.min(span, days.length - days.indexOf(day))}
                                 className={cn(
-                                  "border-b border-border cursor-pointer relative rounded-sm",
+                                  "cursor-pointer relative overflow-hidden rounded-sm",
                                   getBookingColor(booking)
                                 )}
                                 onClick={() => onBookingClick?.(booking)}
                               >
-                                <div className="px-1 py-1 truncate text-[10px] text-foreground font-medium">
-                                  {booking.guest_name}
-                                </div>
+                                <BookingCell booking={booking} />
                               </td>
                             </TooltipTrigger>
                             <BookingTooltip booking={booking} />
