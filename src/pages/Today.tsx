@@ -8,12 +8,13 @@ import { useUnits } from "@/hooks/useUnits";
 import { useGuests } from "@/hooks/useGuests";
 import {
   LogIn, LogOut, Home, Users, BedDouble, GripVertical, Clock,
-  AlertCircle, X,
+  AlertCircle, X, Pencil,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { BookingModal } from "@/components/BookingModal";
 
 function getPaymentBadgeClass(status: string) {
   switch (status) {
