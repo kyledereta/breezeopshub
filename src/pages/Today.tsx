@@ -357,6 +357,95 @@ export default function TodayPage() {
                 </div>
               </div>
             )}
+
+            {/* Available Units - Today & Week */}
+            <div className="rounded-lg border border-border bg-card overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
+                <div className="flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium text-foreground">Unit Availability</span>
+                  <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-medium">
+                    {availableTodayCount} free today
+                  </span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                  onClick={() => navigate("/availability")}
+                >
+                  Full grid →
+                </Button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="bg-muted/30">
+                      <th className="text-left px-3 py-2 text-muted-foreground font-medium min-w-[140px]">Unit</th>
+                      {weekDays.map((day) => (
+                        <th key={day.toISOString()} className="text-center px-2 py-2 text-muted-foreground font-medium min-w-[52px]">
+                          <div className="text-[10px] leading-none">{format(day, "EEE")}</div>
+                          <div className="mt-0.5">{format(day, "d")}</div>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {groupedUnits.map(({ area, units: areaUnits }) => (
+                      <>
+                        <tr key={area}>
+                          <td
+                            colSpan={weekDays.length + 1}
+                            className="bg-secondary/50 px-3 py-1 text-[10px] uppercase tracking-[0.15em] text-primary font-semibold border-t border-border"
+                          >
+                            {area}
+                          </td>
+                        </tr>
+                        {areaUnits.map((unit) => {
+                          const ua = unitAvailability.find((u) => u.unit.id === unit.id);
+                          return (
+                            <tr key={unit.id} className="border-t border-border hover:bg-muted/20 transition-colors">
+                              <td className="px-3 py-1.5">
+                                <div className="flex items-center gap-1.5">
+                                  {(() => {
+                                    const Icon = unit.name.includes("Villa") && unit.name.includes("Owner") ? Crown
+                                      : unit.name.includes("Villa") ? Home
+                                      : unit.name.includes("Teepee") ? Tent
+                                      : unit.name.includes("Kubo") ? TreePalm
+                                      : Home;
+                                    return <Icon className="h-3 w-3 text-muted-foreground shrink-0" />;
+                                  })()}
+                                  <span className="font-medium text-foreground truncate">{unit.name}</span>
+                                  {unit.has_ac ? (
+                                    <Snowflake className="h-2.5 w-2.5 text-ocean shrink-0" />
+                                  ) : (
+                                    <Fan className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
+                                  )}
+                                </div>
+                              </td>
+                              {ua?.dayStatus.map((ds) => (
+                                <td key={ds.dateStr} className="text-center px-1 py-1.5">
+                                  {ds.available ? (
+                                    <span className="inline-block w-6 h-6 rounded-md bg-primary/20 text-primary text-[10px] font-bold leading-6">
+                                      ✓
+                                    </span>
+                                  ) : (
+                                    <span className="inline-block w-6 h-6 rounded-md bg-destructive/15 text-destructive/60 text-[10px] font-bold leading-6">
+                                      ✕
+                                    </span>
+                                  )}
+                                </td>
+                              ))}
+                            </tr>
+                          );
+                        })}
+                      </>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         )}
 
