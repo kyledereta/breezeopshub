@@ -143,6 +143,13 @@ export function BookingModal({
   const watchUnitId = form.watch("unit_id");
   const watchCheckIn = form.watch("check_in");
   const watchCheckOut = form.watch("check_out");
+  const watchPax = form.watch("pax");
+  const watchDiscountType = form.watch("discount_type");
+  const watchDiscountGiven = form.watch("discount_given");
+
+  // Get selected unit's max_pax
+  const selectedUnit = useMemo(() => units.find((u) => u.id === watchUnitId), [units, watchUnitId]);
+  const extraPax = selectedUnit ? Math.max(0, watchPax - selectedUnit.max_pax) : 0;
 
   // Check for booking conflicts
   useEffect(() => {
