@@ -8,12 +8,13 @@ import { useUnits } from "@/hooks/useUnits";
 import { useGuests } from "@/hooks/useGuests";
 import {
   LogIn, LogOut, Home, Users, BedDouble, GripVertical, Clock,
-  AlertCircle, X,
+  AlertCircle, X, Pencil,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { BookingModal } from "@/components/BookingModal";
 
 function getPaymentBadgeClass(status: string) {
   switch (status) {
@@ -40,19 +41,26 @@ interface GuestCardProps {
   booking: Booking;
   unitName: string;
   draggable?: boolean;
+  onEdit?: () => void;
 }
 
-function GuestCard({ booking, unitName, draggable }: GuestCardProps) {
+function GuestCard({ booking, unitName, draggable, onEdit }: GuestCardProps) {
+  const [wasDragged, setWasDragged] = useState(false);
   return (
     <div
       draggable={draggable}
       onDragStart={(e) => {
+        setWasDragged(true);
         e.dataTransfer.setData("bookingId", booking.id);
         e.dataTransfer.effectAllowed = "move";
       }}
+      onDragEnd={() => setTimeout(() => setWasDragged(false), 100)}
+      onClick={() => {
+        if (!wasDragged && onEdit) onEdit();
+      }}
       className={cn(
-        "flex items-center gap-2 rounded-lg bg-background border border-border hover:border-primary/30 transition-colors p-3",
-        draggable && "cursor-grab active:cursor-grabbing"
+        "flex items-center gap-2 rounded-lg bg-background border border-border hover:border-primary/30 transition-colors p-3 group",
+        draggable ? "cursor-grab active:cursor-grabbing" : onEdit ? "cursor-pointer" : ""
       )}
     >
       {draggable && (
@@ -80,6 +88,9 @@ function GuestCard({ booking, unitName, draggable }: GuestCardProps) {
           </span>
         </div>
       </div>
+      {onEdit && (
+        <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+      )}
     </div>
   );
 }
@@ -96,6 +107,7 @@ export default function TodayPage() {
   const [dragOver, setDragOver] = useState<DropZone | null>(null);
   const [manualDepartureIds, setManualDepartureIds] = useState<string[]>([]);
   const [clearedDepartureIds, setClearedDepartureIds] = useState<string[]>([]);
+  const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
 
   const unitMap = useMemo(() => {
     const m = new Map<string, string>();
@@ -255,7 +267,7 @@ export default function TodayPage() {
                 {checkIns.length === 0 ? (
                   <EmptyState text="No arrivals today" />
                 ) : (
-                  checkIns.map((b) => <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable />)
+                  checkIns.map((b) => <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable onEdit={() => setEditingBooking(b)} />)
                 )}
               </Section>
 
@@ -269,7 +281,7 @@ export default function TodayPage() {
                 {inHouse.length === 0 ? (
                   <EmptyState text="No guests in-house" />
                 ) : (
-                  inHouse.map((b) => <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable />)
+                  inHouse.map((b) => <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable onEdit={() => setEditingBooking(b)} />)
                 )}
               </Section>
 
@@ -284,7 +296,7 @@ export default function TodayPage() {
                 {visibleDepartures.length === 0 ? (
                   <EmptyState text="No departures yet" />
                 ) : (
-                  visibleDepartures.map((b) => <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} />)
+                  visibleDepartures.map((b) => <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} onEdit={() => setEditingBooking(b)} />)
                 )}
               </Section>
             </div>
@@ -317,6 +329,12 @@ export default function TodayPage() {
             )}
           </div>
         )}
+
+        <BookingModal
+          open={!!editingBooking}
+          onOpenChange={(open) => { if (!open) setEditingBooking(null); }}
+          booking={editingBooking}
+        />
       </div>
     </AppLayout>
   );
