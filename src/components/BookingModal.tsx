@@ -31,8 +31,12 @@ import { Separator } from "@/components/ui/separator";
 import { useUnits, groupUnitsByArea } from "@/hooks/useUnits";
 import { useCreateBooking, useUpdateBooking } from "@/hooks/useBookingMutations";
 import type { Booking } from "@/hooks/useBookings";
-import { Constants } from "@/integrations/supabase/types";
+import { Constants, type Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+
+type PaymentStatus = Database["public"]["Enums"]["payment_status"];
+type BookingStatus = Database["public"]["Enums"]["booking_status"];
+type BookingSource = Database["public"]["Enums"]["booking_source"];
 
 const bookingSchema = z.object({
   guest_name: z.string().trim().min(1, "Guest name is required").max(100),
@@ -137,7 +141,16 @@ export function BookingModal({
   async function onSubmit(values: BookingFormValues) {
     try {
       const payload = {
-        ...values,
+        guest_name: values.guest_name,
+        unit_id: values.unit_id,
+        check_in: values.check_in,
+        check_out: values.check_out,
+        pax: values.pax,
+        total_amount: values.total_amount,
+        deposit_paid: values.deposit_paid,
+        payment_status: values.payment_status as PaymentStatus,
+        booking_status: values.booking_status as BookingStatus,
+        booking_source: values.booking_source as BookingSource,
         email: values.email || null,
         phone: values.phone || null,
         notes: values.notes || null,
