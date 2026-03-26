@@ -267,7 +267,7 @@ export default function TodayPage() {
                 {checkIns.length === 0 ? (
                   <EmptyState text="No arrivals today" />
                 ) : (
-                  checkIns.map((b) => <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable />)
+                  checkIns.map((b) => <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable onEdit={() => setEditingBooking(b)} />)
                 )}
               </Section>
 
@@ -281,7 +281,7 @@ export default function TodayPage() {
                 {inHouse.length === 0 ? (
                   <EmptyState text="No guests in-house" />
                 ) : (
-                  inHouse.map((b) => <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable />)
+                  inHouse.map((b) => <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable onEdit={() => setEditingBooking(b)} />)
                 )}
               </Section>
 
@@ -296,7 +296,7 @@ export default function TodayPage() {
                 {visibleDepartures.length === 0 ? (
                   <EmptyState text="No departures yet" />
                 ) : (
-                  visibleDepartures.map((b) => <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} />)
+                  visibleDepartures.map((b) => <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} onEdit={() => setEditingBooking(b)} />)
                 )}
               </Section>
             </div>
@@ -329,6 +329,12 @@ export default function TodayPage() {
             )}
           </div>
         )}
+
+        <BookingModal
+          open={!!editingBooking}
+          onOpenChange={(open) => { if (!open) setEditingBooking(null); }}
+          booking={editingBooking}
+        />
       </div>
     </AppLayout>
   );
