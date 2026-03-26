@@ -22,6 +22,7 @@ export type Database = {
           check_in: string
           check_out: string
           created_at: string
+          deposit_deducted_amount: number
           deposit_paid: number
           deposit_status: Database["public"]["Enums"]["deposit_status"]
           discount_given: number
@@ -42,6 +43,7 @@ export type Database = {
           unit_id: string | null
           updated_at: string
           utensil_rental: boolean
+          utensil_rental_fee: number
           wristband_deposit: boolean
         }
         Insert: {
@@ -51,6 +53,7 @@ export type Database = {
           check_in: string
           check_out: string
           created_at?: string
+          deposit_deducted_amount?: number
           deposit_paid?: number
           deposit_status?: Database["public"]["Enums"]["deposit_status"]
           discount_given?: number
@@ -71,6 +74,7 @@ export type Database = {
           unit_id?: string | null
           updated_at?: string
           utensil_rental?: boolean
+          utensil_rental_fee?: number
           wristband_deposit?: boolean
         }
         Update: {
@@ -80,6 +84,7 @@ export type Database = {
           check_in?: string
           check_out?: string
           created_at?: string
+          deposit_deducted_amount?: number
           deposit_paid?: number
           deposit_status?: Database["public"]["Enums"]["deposit_status"]
           discount_given?: number
@@ -100,6 +105,7 @@ export type Database = {
           unit_id?: string | null
           updated_at?: string
           utensil_rental?: boolean
+          utensil_rental_fee?: number
           wristband_deposit?: boolean
         }
         Relationships: [
