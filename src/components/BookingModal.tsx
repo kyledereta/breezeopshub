@@ -128,6 +128,16 @@ export function BookingModal({
   const watchDepositStatus = form.watch("deposit_status");
   const watchUtensilRental = form.watch("utensil_rental");
 
+  // Auto-set utensil rental fee to ₱500 when toggled on
+  useEffect(() => {
+    if (watchUtensilRental) {
+      const currentFee = form.getValues("utensil_rental_fee");
+      if (currentFee === 0) {
+        form.setValue("utensil_rental_fee", 500);
+      }
+    }
+  }, [watchUtensilRental, form]);
+
   // Reset form when modal opens with new data
   useEffect(() => {
     if (!open) return;
