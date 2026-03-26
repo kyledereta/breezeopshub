@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
+import { supabase } from "@/integrations/supabase/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
@@ -35,7 +36,7 @@ import type { Booking } from "@/hooks/useBookings";
 import { Constants, type Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Upload, X, FileImage, PawPrint } from "lucide-react";
+import { Upload, X, FileImage, PawPrint, AlertTriangle } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 type PaymentStatus = Database["public"]["Enums"]["payment_status"];
@@ -92,6 +93,7 @@ export function BookingModal({
   const isEditing = !!booking;
   const [idFiles, setIdFiles] = useState<File[]>([]);
   const [existingIds, setExistingIds] = useState<string[]>([]);
+  const [conflictWarning, setConflictWarning] = useState<string | null>(null);
   const [guestSuggestions, setGuestSuggestions] = useState<{ id: string; guest_name: string; phone: string | null; email: string | null; pets: boolean }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
