@@ -114,6 +114,22 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
 
   const groupedUnits = useMemo(() => groupUnitsByArea(units), [units]);
 
+  // PH Holidays for current month
+  const holidayMap = useMemo(
+    () => getPHHolidaysForMonth(currentMonth.getFullYear(), currentMonth.getMonth()),
+    [currentMonth]
+  );
+
+  // Helper: is this a peak/markup day (weekend or holiday)
+  const isMarkupDay = useCallback(
+    (day: Date) => {
+      const dayOfWeek = getDay(day);
+      // Friday, Saturday, Sunday or holiday
+      return dayOfWeek === 5 || dayOfWeek === 6 || dayOfWeek === 0 || holidayMap.has(format(day, "yyyy-MM-dd"));
+    },
+    [holidayMap]
+  );
+
   // Build lookup: unitId+dateStr → booking
   const bookingMap = useMemo(() => {
     const map = new Map<string, Booking>();
