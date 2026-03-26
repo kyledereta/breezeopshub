@@ -420,12 +420,26 @@ function BookingTooltip({ booking }: { booking: Booking }) {
       className="bg-popover border border-border shadow-xl p-3 max-w-[240px]"
     >
       <div className="space-y-1.5">
-        <div className="font-medium text-sm text-foreground">{booking.guest_name}</div>
+        <div className="flex items-center gap-2">
+          {(() => {
+            const SourceIcon = getSourceIcon(booking.booking_source);
+            return <SourceIcon className={cn("h-3.5 w-3.5 shrink-0", getSourceColor(booking.booking_source))} />;
+          })()}
+          <span className="font-medium text-sm text-foreground">{booking.guest_name}</span>
+        </div>
         <div className="text-xs text-muted-foreground">
           {format(parseISO(booking.check_in), "MMM d")} → {format(parseISO(booking.check_out), "MMM d, yyyy")}
         </div>
         <div className="flex items-center gap-3 text-xs">
-          <span>{booking.pax} PAX</span>
+          <span className="flex items-center gap-1">
+            <Users className="h-3 w-3 text-muted-foreground" />
+            {booking.pax} PAX
+          </span>
+          {(booking as any).pets && (
+            <span className="flex items-center gap-1 text-warning-orange">
+              <PawPrint className="h-3 w-3" /> Pet
+            </span>
+          )}
           <span className={getStatusBadge(booking.payment_status)}>
             {booking.payment_status}
           </span>
@@ -450,6 +464,9 @@ function BookingTooltip({ booking }: { booking: Booking }) {
               Deposit {(booking as any).deposit_status}
             </span>
           )}
+        </div>
+        <div className="text-[10px] text-muted-foreground italic">
+          via {booking.booking_source}
         </div>
       </div>
     </TooltipContent>
