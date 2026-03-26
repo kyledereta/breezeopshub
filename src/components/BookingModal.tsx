@@ -274,7 +274,6 @@ export function BookingModal({
         discount_type: values.discount_type,
         discount_reason: values.discount_reason || null,
       };
-      };
 
       // Upload ID files if any
       let uploadedIds: string[] = [];
