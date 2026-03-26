@@ -92,6 +92,8 @@ export function BookingModal({
   const isEditing = !!booking;
   const [idFiles, setIdFiles] = useState<File[]>([]);
   const [existingIds, setExistingIds] = useState<string[]>([]);
+  const [guestSuggestions, setGuestSuggestions] = useState<{ id: string; guest_name: string; phone: string | null; email: string | null; pets: boolean }[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   // Load existing ID files when editing
   useEffect(() => {
