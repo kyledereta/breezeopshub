@@ -50,6 +50,8 @@ const bookingSchema = z.object({
   pax: z.coerce.number().min(1).max(50),
   total_amount: z.coerce.number().min(0),
   deposit_paid: z.coerce.number().min(0),
+  deposit_deducted_amount: z.coerce.number().min(0),
+  utensil_rental_fee: z.coerce.number().min(0),
   payment_status: z.string(),
   booking_status: z.string(),
   booking_source: z.string(),
@@ -109,6 +111,8 @@ export function BookingModal({
       pax: 1,
       total_amount: 0,
       deposit_paid: 0,
+      deposit_deducted_amount: 0,
+      utensil_rental_fee: 0,
       payment_status: "Unpaid",
       booking_status: "Inquiry",
       booking_source: "Other",
@@ -120,6 +124,9 @@ export function BookingModal({
       deposit_status: "Pending",
     },
   });
+
+  const watchDepositStatus = form.watch("deposit_status");
+  const watchUtensilRental = form.watch("utensil_rental");
 
   // Reset form when modal opens with new data
   useEffect(() => {
@@ -134,6 +141,8 @@ export function BookingModal({
         pax: booking.pax,
         total_amount: booking.total_amount,
         deposit_paid: booking.deposit_paid,
+        deposit_deducted_amount: (booking as any).deposit_deducted_amount ?? 0,
+        utensil_rental_fee: (booking as any).utensil_rental_fee ?? 0,
         payment_status: booking.payment_status,
         booking_status: booking.booking_status,
         booking_source: booking.booking_source,
@@ -153,6 +162,8 @@ export function BookingModal({
         pax: 1,
         total_amount: 0,
         deposit_paid: 0,
+        deposit_deducted_amount: 0,
+        utensil_rental_fee: 0,
         payment_status: "Unpaid",
         booking_status: "Inquiry",
         booking_source: "Other",
@@ -183,8 +194,10 @@ export function BookingModal({
         phone: values.phone || null,
         notes: values.notes || null,
         utensil_rental: values.utensil_rental,
+        utensil_rental_fee: values.utensil_rental ? values.utensil_rental_fee : 0,
         pets: values.pets,
         deposit_status: values.deposit_status as DepositStatus,
+        deposit_deducted_amount: values.deposit_status === "Deducted" ? values.deposit_deducted_amount : 0,
       };
 
       // Upload ID files if any
@@ -529,6 +542,36 @@ export function BookingModal({
                   )}
                 />
               </div>
+              {watchDepositStatus === "Deducted" && (
+                <FormField
+                  control={form.control}
+                  name="deposit_deducted_amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Amount Deducted from Deposit (₱)</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              {watchUtensilRental && (
+                <FormField
+                  control={form.control}
+                  name="utensil_rental_fee"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Utensil Rental Fee (₱)</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
 
             <Separator className="bg-border" />
