@@ -36,6 +36,7 @@ import { Constants, type Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Upload, X, FileImage, PawPrint } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 type PaymentStatus = Database["public"]["Enums"]["payment_status"];
 type BookingStatus = Database["public"]["Enums"]["booking_status"];
@@ -223,13 +224,68 @@ export function BookingModal({
         }
       }
 
+      // Auto-link guest: find existing or create new guest record
+      let guestId: string | null = null;
+      try {
+        // Try to find by name (case-insensitive)
+        const { data: existingGuests } = await supabase
+          .from("guests")
+          .select("id")
+          .ilike("guest_name", values.guest_name.trim())
+          .limit(1);
+
+        if (existingGuests && existingGuests.length > 0) {
+          guestId = existingGuests[0].id;
+        } else {
+          // Create new guest
+          const { data: newGuest } = await supabase
+            .from("guests")
+            .insert({
+              guest_name: values.guest_name.trim(),
+              phone: values.phone || null,
+              email: values.email || null,
+              pets: values.pets,
+            })
+            .select("id")
+            .single();
+          if (newGuest) guestId = newGuest.id;
+        }
+      } catch {
+        // Non-critical: continue without linking
+      }
+
+      const fullPayload = { ...payload, guest_id: guestId };
+
       if (isEditing) {
-        await updateBooking.mutateAsync({ id: booking.id, ...payload });
+        await updateBooking.mutateAsync({ id: booking.id, ...fullPayload });
         toast.success("Booking updated");
       } else {
-        await createBooking.mutateAsync(payload);
+        await createBooking.mutateAsync(fullPayload);
         toast.success("Booking created");
       }
+
+      // Update guest total_stays and tier after checkout
+      if (guestId && values.booking_status === "Checked Out") {
+        try {
+          const { count } = await supabase
+            .from("bookings")
+            .select("id", { count: "exact", head: true })
+            .eq("guest_id", guestId)
+            .eq("booking_status", "Checked Out");
+          
+          const stays = count ?? 0;
+          const tier = stays >= 5 ? "VIP 5+" : stays >= 3 ? "Loyal 3+" : stays >= 2 ? "Returning" : "New Guest";
+          
+          await supabase
+            .from("guests")
+            .update({ total_stays: stays, parang_dati_tier: tier })
+            .eq("id", guestId);
+        } catch {
+          // Non-critical
+        }
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["guests"] });
       onOpenChange(false);
     } catch (err: any) {
       toast.error(err.message ?? "Something went wrong");
