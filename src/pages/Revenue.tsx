@@ -91,9 +91,20 @@ export default function RevenuePage() {
   // Summary stats
   const currentMonth = format(new Date(), "yyyy-MM");
   const currentMonthData = monthlyData.find((m) => m.month === currentMonth);
-  const totalRevenue = allBookings.filter((b) => b.booking_status !== "Cancelled").reduce((s, b) => s + b.total_amount, 0);
+  const activeBookings = allBookings.filter((b) => b.booking_status !== "Cancelled");
+  const totalRevenue = activeBookings.reduce((s, b) => s + b.total_amount, 0);
   const currentOccupancy = currentMonthData && currentMonthData.totalNights > 0
     ? Math.round((currentMonthData.occupiedNights / currentMonthData.totalNights) * 100)
+    : 0;
+
+  // ADR: Total revenue ÷ occupied room-nights (this month)
+  const currentADR = currentMonthData && currentMonthData.occupiedNights > 0
+    ? Math.round(currentMonthData.revenue / currentMonthData.occupiedNights)
+    : 0;
+
+  // RevPAR: Total revenue ÷ total available room-nights (this month)
+  const currentRevPAR = currentMonthData && currentMonthData.totalNights > 0
+    ? Math.round(currentMonthData.revenue / currentMonthData.totalNights)
     : 0;
 
   const isLoading = bookingsLoading || unitsLoading;
@@ -106,12 +117,28 @@ export default function RevenuePage() {
         {payload.map((p: any) => (
           <div key={p.dataKey} className="flex items-center gap-2 text-muted-foreground">
             <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }} />
-            <span>{p.name}: {p.dataKey === "revenue" ? `₱${p.value.toLocaleString()}` : p.dataKey === "occupancy" ? `${p.value}%` : p.value}</span>
+            <span>{p.name}: {
+              p.dataKey === "revenue" || p.dataKey === "adr" || p.dataKey === "revpar"
+                ? `₱${p.value.toLocaleString()}`
+                : p.dataKey === "occupancy"
+                  ? `${p.value}%`
+                  : p.value
+            }</span>
           </div>
         ))}
       </div>
     );
   };
+
+  // Enhanced monthly data with ADR and RevPAR
+  const enrichedMonthlyData = useMemo(() => {
+    return monthlyData.map((m) => ({
+      ...m,
+      occupancy: m.totalNights > 0 ? Math.round((m.occupiedNights / m.totalNights) * 100) : 0,
+      adr: m.occupiedNights > 0 ? Math.round(m.revenue / m.occupiedNights) : 0,
+      revpar: m.totalNights > 0 ? Math.round(m.revenue / m.totalNights) : 0,
+    }));
+  }, [monthlyData]);
 
   return (
     <AppLayout>
@@ -127,11 +154,13 @@ export default function RevenuePage() {
         ) : (
           <div className="flex-1 overflow-auto p-6 space-y-6">
             {/* Stats */}
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-6 gap-4">
               <StatCard icon={Banknote} label="This Month" value={`₱${(currentMonthData?.revenue ?? 0).toLocaleString()}`} sub={`${currentMonthData?.bookings ?? 0} bookings`} />
-              <StatCard icon={TrendingUp} label="All-Time Revenue" value={`₱${totalRevenue.toLocaleString()}`} sub={`${allBookings.filter((b) => b.booking_status !== "Cancelled").length} total bookings`} />
-              <StatCard icon={CalendarCheck} label="Occupancy (This Month)" value={`${currentOccupancy}%`} sub={`${currentMonthData?.occupiedNights ?? 0} unit-nights`} />
-              <StatCard icon={Users} label="Top Source" value={sourceData[0]?.name ?? "—"} sub={sourceData[0] ? `₱${sourceData[0].revenue.toLocaleString()} · ${sourceData[0].count} bookings` : ""} />
+              <StatCard icon={TrendingUp} label="All-Time Revenue" value={`₱${totalRevenue.toLocaleString()}`} sub={`${activeBookings.length} total bookings`} />
+              <StatCard icon={CalendarCheck} label="Occupancy Rate" value={`${currentOccupancy}%`} sub={`${currentMonthData?.occupiedNights ?? 0} of ${currentMonthData?.totalNights ?? 0} unit-nights`} />
+              <StatCard icon={Banknote} label="ADR" value={`₱${currentADR.toLocaleString()}`} sub="Avg revenue per occupied room" />
+              <StatCard icon={TrendingUp} label="RevPAR" value={`₱${currentRevPAR.toLocaleString()}`} sub="Revenue per available room" />
+              <StatCard icon={Users} label="Top Source" value={sourceData[0]?.name ?? "—"} sub={sourceData[0] ? `₱${sourceData[0].revenue.toLocaleString()}` : ""} />
             </div>
 
             {/* Charts Row */}
@@ -195,14 +224,27 @@ export default function RevenuePage() {
               </div>
             </div>
 
+            {/* ADR & RevPAR Trend */}
+            <div className="rounded-lg border border-border bg-card p-4">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-primary mb-4">ADR & RevPAR Trend (12 Months)</h3>
+              <ResponsiveContainer width="100%" height={240}>
+                <LineChart data={enrichedMonthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(156, 18%, 24%)" />
+                  <XAxis dataKey="label" tick={{ fill: "hsl(156, 10%, 55%)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: "hsl(156, 10%, 55%)", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `₱${(v / 1000).toFixed(0)}k`} />
+                  <RechartsTooltip content={<CustomTooltipContent />} />
+                  <Legend wrapperStyle={{ fontSize: 11, color: "hsl(156, 10%, 55%)" }} />
+                  <Line type="monotone" dataKey="adr" name="ADR" stroke={CHART_COLORS.primary} strokeWidth={2} dot={{ fill: CHART_COLORS.primary, r: 4 }} activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="revpar" name="RevPAR" stroke={CHART_COLORS.ocean} strokeWidth={2} dot={{ fill: CHART_COLORS.ocean, r: 3 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
             {/* Occupancy Trend */}
             <div className="rounded-lg border border-border bg-card p-4">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-primary mb-4">Occupancy Trend (12 Months)</h3>
               <ResponsiveContainer width="100%" height={240}>
-                <LineChart data={monthlyData.map((m) => ({
-                  ...m,
-                  occupancy: m.totalNights > 0 ? Math.round((m.occupiedNights / m.totalNights) * 100) : 0,
-                }))}>
+                <LineChart data={enrichedMonthlyData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(156, 18%, 24%)" />
                   <XAxis dataKey="label" tick={{ fill: "hsl(156, 10%, 55%)", fontSize: 11 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fill: "hsl(156, 10%, 55%)", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} domain={[0, 100]} />
