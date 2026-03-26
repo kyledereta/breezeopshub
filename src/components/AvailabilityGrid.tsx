@@ -12,7 +12,7 @@ import {
   parseISO,
   differenceInDays,
 } from "date-fns";
-import { ChevronLeft, ChevronRight, Home, Tent, TreePalm, Crown, Fan } from "lucide-react";
+import { ChevronLeft, ChevronRight, Home, Tent, TreePalm, Crown, Fan, PawPrint, Users, Facebook, Instagram, Globe, MapPin, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUnits, groupUnitsByArea } from "@/hooks/useUnits";
 import { useBookings, type Booking } from "@/hooks/useBookings";
