@@ -88,6 +88,7 @@ export function BookingModal({
   const groupedUnits = useMemo(() => groupUnitsByArea(units), [units]);
   const createBooking = useCreateBooking();
   const updateBooking = useUpdateBooking();
+  const queryClient = useQueryClient();
   const isEditing = !!booking;
   const [idFiles, setIdFiles] = useState<File[]>([]);
   const [existingIds, setExistingIds] = useState<string[]>([]);
