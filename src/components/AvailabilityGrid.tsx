@@ -12,7 +12,7 @@ import {
   parseISO,
   differenceInDays,
 } from "date-fns";
-import { ChevronLeft, ChevronRight, Home, Tent, TreePalm, Crown, Fan, PawPrint, Users, Facebook, Instagram, Globe, MapPin, Share2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Home, Tent, TreePalm, Crown, Fan, PawPrint, Users, Facebook, Instagram, Globe, MapPin, Share2, UtensilsCrossed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUnits, groupUnitsByArea } from "@/hooks/useUnits";
 import { useBookings, type Booking } from "@/hooks/useBookings";
@@ -23,17 +23,17 @@ import { cn } from "@/lib/utils";
 function getBookingColor(booking: Booking): string {
   switch (booking.payment_status) {
     case "Fully Paid":
-      return "bg-primary/80 border-primary"; // gold
+      return "bg-primary/80";
     case "Airbnb Paid":
-      return "bg-airbnb-pink/70 border-airbnb-pink"; // pink
+      return "bg-airbnb-pink/70";
     case "Partial DP":
-      return "bg-warning-orange/60 border-warning-orange"; // orange
+      return "bg-warning-orange/60";
     case "Unpaid":
-      return "bg-destructive/60 border-destructive"; // red
+      return "bg-destructive/60";
     case "Refunded":
-      return "bg-muted border-muted-foreground";
+      return "bg-muted";
     default:
-      return "bg-muted border-border";
+      return "bg-muted";
   }
 }
 
@@ -336,14 +336,12 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
                                 <td
                                   colSpan={Math.min(span, days.length - days.indexOf(day))}
                                   className={cn(
-                                    "border-b border-border cursor-pointer relative",
+                                    "cursor-pointer relative overflow-hidden",
                                     getBookingColor(booking)
                                   )}
                                   onClick={() => onBookingClick?.(booking)}
                                 >
-                                  <div className="px-1 py-1 truncate text-[10px] text-foreground font-medium">
-                                    {booking.guest_name}
-                                  </div>
+                                  <BookingCell booking={booking} />
                                 </td>
                               </TooltipTrigger>
                               <BookingTooltip booking={booking} />
@@ -359,14 +357,12 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
                               <td
                                 colSpan={Math.min(span, days.length - days.indexOf(day))}
                                 className={cn(
-                                  "border-b border-border cursor-pointer relative rounded-sm",
+                                  "cursor-pointer relative overflow-hidden rounded-sm",
                                   getBookingColor(booking)
                                 )}
                                 onClick={() => onBookingClick?.(booking)}
                               >
-                                <div className="px-1 py-1 truncate text-[10px] text-foreground font-medium">
-                                  {booking.guest_name}
-                                </div>
+                                <BookingCell booking={booking} />
                               </td>
                             </TooltipTrigger>
                             <BookingTooltip booking={booking} />
@@ -408,6 +404,30 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-sm bg-destructive/60" /> Unpaid
         </span>
+      </div>
+    </div>
+  );
+}
+
+function BookingCell({ booking }: { booking: Booking }) {
+  const SourceIcon = getSourceIcon(booking.booking_source);
+  return (
+    <div className="px-1.5 py-1 min-h-[40px] flex flex-col justify-center gap-0.5">
+      <div className="flex items-center gap-1 truncate">
+        <SourceIcon className={cn("h-3 w-3 shrink-0", getSourceColor(booking.booking_source))} />
+        <span className="text-[10px] text-foreground font-semibold truncate">{booking.guest_name}</span>
+      </div>
+      <div className="flex items-center gap-1.5 text-[9px] text-foreground/70">
+        <span className="flex items-center gap-0.5">
+          <Users className="h-2.5 w-2.5" />
+          {booking.pax}
+        </span>
+        {booking.pets && (
+          <PawPrint className="h-2.5 w-2.5 text-warning-orange" />
+        )}
+        {booking.utensil_rental && (
+          <UtensilsCrossed className="h-2.5 w-2.5 text-primary" />
+        )}
       </div>
     </div>
   );
