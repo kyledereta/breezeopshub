@@ -37,10 +37,11 @@ export default function RevenuePage() {
   // Build 12-month revenue + occupancy data
   const monthlyData = useMemo(() => {
     const now = new Date();
+    const yearStart = startOfYear(now);
     const months: { month: string; label: string; revenue: number; bookings: number; occupiedNights: number; totalNights: number }[] = [];
 
-    for (let i = 11; i >= 0; i--) {
-      const m = subMonths(startOfMonth(now), i);
+    for (let i = 0; i < 12; i++) {
+      const m = addMonths(yearStart, i);
       const mStr = format(m, "yyyy-MM");
       const label = format(m, "MMM");
       const daysInMonth = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
