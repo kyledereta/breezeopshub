@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { format, parseISO } from "date-fns";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
@@ -5,7 +6,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useGuestBookings, type Guest } from "@/hooks/useGuests";
-import { CalendarCheck, Phone, Mail, MapPin, PawPrint, Star } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { CalendarCheck, Phone, Mail, MapPin, PawPrint, Star, IdCard } from "lucide-react";
 
 const TIER_COLORS: Record<string, string> = {
   "New Guest": "bg-muted text-muted-foreground",
