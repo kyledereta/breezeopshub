@@ -328,10 +328,9 @@ export default function TodayPage() {
           </div>
         ) : (
           <div className="flex-1 overflow-auto p-4 sm:p-6 space-y-4">
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <StatCard icon={Home} label="Occupancy" value={`${occupancyRate}%`} sub={`${inHouse.length} / ${units.length} units`} />
               <StatCard icon={Users} label="In-House" value={`${totalPaxInHouse} pax`} sub={`${inHouse.length} bookings`} />
-              <StatCard icon={DollarSign} label="Today's Revenue" value={`₱${todayRevenue.toLocaleString()}`} sub={`${checkIns.length} arrivals`} onClick={() => navigate("/revenue")} />
               <StatCard
                 icon={AlertCircle}
                 label="Pending"

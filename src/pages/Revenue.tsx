@@ -7,7 +7,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
   ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend,
 } from "recharts";
-import { Banknote, TrendingUp, CalendarCheck, Users, UtensilsCrossed, ShieldMinus, Download } from "lucide-react";
+import { Banknote, TrendingUp, CalendarCheck, Users, UtensilsCrossed, ShieldMinus, Download, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { downloadCsv } from "@/lib/csvExport";
 
@@ -31,6 +31,7 @@ const SOURCE_COLORS: Record<string, string> = {
 };
 
 export default function RevenuePage() {
+  const todayStr = format(new Date(), "yyyy-MM-dd");
   const { data: allBookings = [], isLoading: bookingsLoading } = useBookings();
   const { data: units = [], isLoading: unitsLoading } = useUnits();
 
@@ -96,6 +97,10 @@ export default function RevenuePage() {
   const currentMonthData = monthlyData.find((m) => m.month === currentMonth);
   const activeBookings = allBookings.filter((b) => b.booking_status !== "Cancelled");
   const totalRevenue = activeBookings.reduce((s, b) => s + b.total_amount, 0);
+
+  // Today's revenue
+  const todayArrivals = activeBookings.filter((b) => b.check_in === todayStr);
+  const todayRevenue = todayArrivals.reduce((s, b) => s + b.total_amount, 0);
   const totalDepositDeducted = activeBookings.reduce((s, b) => s + ((b as any).deposit_deducted_amount ?? 0), 0);
   const totalUtensilRevenue = activeBookings.reduce((s, b) => s + ((b as any).utensil_rental_fee ?? 0), 0);
   const currentOccupancy = currentMonthData && currentMonthData.totalNights > 0
@@ -174,6 +179,7 @@ export default function RevenuePage() {
           <div className="flex-1 overflow-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
             {/* Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+              <StatCard icon={DollarSign} label="Today's Revenue" value={`₱${todayRevenue.toLocaleString()}`} sub={`${todayArrivals.length} arrivals`} />
               <StatCard icon={Banknote} label="This Month" value={`₱${(currentMonthData?.revenue ?? 0).toLocaleString()}`} sub={`${currentMonthData?.bookings ?? 0} bookings`} />
               <StatCard icon={TrendingUp} label="All-Time Revenue" value={`₱${totalRevenue.toLocaleString()}`} sub={`${activeBookings.length} total bookings`} />
               <StatCard icon={CalendarCheck} label="Occupancy Rate" value={`${currentOccupancy}%`} sub={`${currentMonthData?.occupiedNights ?? 0} of ${currentMonthData?.totalNights ?? 0} unit-nights`} />
