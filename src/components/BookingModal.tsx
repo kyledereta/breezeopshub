@@ -1623,7 +1623,7 @@ export function BookingModal({
                           <SelectTrigger className="bg-background border-border"><SelectValue /></SelectTrigger>
                         </FormControl>
                         <SelectContent className="bg-popover border-border">
-                          {[...Constants.public.Enums.payment_status, "Unpaid Extras"].map((s) => (
+                          {Constants.public.Enums.payment_status.filter(s => s !== "Unpaid Extras").map((s) => (
                             <SelectItem key={s} value={s}>{s}</SelectItem>
                           ))}
                         </SelectContent>
