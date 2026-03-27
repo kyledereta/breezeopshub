@@ -1324,9 +1324,15 @@ export function BookingModal({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">Utensil Rental Fee (₱)</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
-                        </FormControl>
+                        <div className="flex items-center gap-2">
+                          <FormControl>
+                            <Input {...field} type="number" min={0} step="any" className="bg-background border-border flex-1" />
+                          </FormControl>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="text-[9px] text-muted-foreground">{extrasPaidStatus.utensil_rental ? "Paid" : "Unpaid"}</span>
+                            <Switch checked={!!extrasPaidStatus.utensil_rental} onCheckedChange={() => toggleExtraPaid("utensil_rental")} className="scale-75" />
+                          </div>
+                        </div>
                       </FormItem>
                     )}
                   />
@@ -1338,9 +1344,15 @@ export function BookingModal({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">Karaoke Fee (₱)</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
-                        </FormControl>
+                        <div className="flex items-center gap-2">
+                          <FormControl>
+                            <Input {...field} type="number" min={0} step="any" className="bg-background border-border flex-1" />
+                          </FormControl>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="text-[9px] text-muted-foreground">{extrasPaidStatus.karaoke ? "Paid" : "Unpaid"}</span>
+                            <Switch checked={!!extrasPaidStatus.karaoke} onCheckedChange={() => toggleExtraPaid("karaoke")} className="scale-75" />
+                          </div>
+                        </div>
                       </FormItem>
                     )}
                   />
@@ -1352,9 +1364,15 @@ export function BookingModal({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">Kitchen Use Fee (₱)</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
-                        </FormControl>
+                        <div className="flex items-center gap-2">
+                          <FormControl>
+                            <Input {...field} type="number" min={0} step="any" className="bg-background border-border flex-1" />
+                          </FormControl>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="text-[9px] text-muted-foreground">{extrasPaidStatus.kitchen_use ? "Paid" : "Unpaid"}</span>
+                            <Switch checked={!!extrasPaidStatus.kitchen_use} onCheckedChange={() => toggleExtraPaid("kitchen_use")} className="scale-75" />
+                          </div>
+                        </div>
                       </FormItem>
                     )}
                   />
@@ -1366,9 +1384,15 @@ export function BookingModal({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">Number of Water Jugs</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="number" min={1} step={1} className="bg-background border-border" />
-                        </FormControl>
+                        <div className="flex items-center gap-2">
+                          <FormControl>
+                            <Input {...field} type="number" min={1} step={1} className="bg-background border-border flex-1" />
+                          </FormControl>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="text-[9px] text-muted-foreground">{extrasPaidStatus.water_jug ? "Paid" : "Unpaid"}</span>
+                            <Switch checked={!!extrasPaidStatus.water_jug} onCheckedChange={() => toggleExtraPaid("water_jug")} className="scale-75" />
+                          </div>
+                        </div>
                         <p className="text-[10px] text-muted-foreground">Total: ₱{((Number(field.value) || 0) * 100).toLocaleString()}</p>
                       </FormItem>
                     )}
@@ -1381,9 +1405,15 @@ export function BookingModal({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">Number of Towels</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="number" min={1} step={1} className="bg-background border-border" />
-                        </FormControl>
+                        <div className="flex items-center gap-2">
+                          <FormControl>
+                            <Input {...field} type="number" min={1} step={1} className="bg-background border-border flex-1" />
+                          </FormControl>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="text-[9px] text-muted-foreground">{extrasPaidStatus.towel_rent ? "Paid" : "Unpaid"}</span>
+                            <Switch checked={!!extrasPaidStatus.towel_rent} onCheckedChange={() => toggleExtraPaid("towel_rent")} className="scale-75" />
+                          </div>
+                        </div>
                         <p className="text-[10px] text-muted-foreground">Total: ₱{((Number(field.value) || 0) * 100).toLocaleString()}</p>
                       </FormItem>
                     )}
@@ -1396,9 +1426,15 @@ export function BookingModal({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">Bonfire Setup Fee (₱)</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
-                        </FormControl>
+                        <div className="flex items-center gap-2">
+                          <FormControl>
+                            <Input {...field} type="number" min={0} step="any" className="bg-background border-border flex-1" />
+                          </FormControl>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="text-[9px] text-muted-foreground">{extrasPaidStatus.bonfire ? "Paid" : "Unpaid"}</span>
+                            <Switch checked={!!extrasPaidStatus.bonfire} onCheckedChange={() => toggleExtraPaid("bonfire")} className="scale-75" />
+                          </div>
+                        </div>
                       </FormItem>
                     )}
                   />
@@ -1410,9 +1446,15 @@ export function BookingModal({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">Additional Pet Fee (₱)</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
-                        </FormControl>
+                        <div className="flex items-center gap-2">
+                          <FormControl>
+                            <Input {...field} type="number" min={0} step="any" className="bg-background border-border flex-1" />
+                          </FormControl>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="text-[9px] text-muted-foreground">{extrasPaidStatus.pet_fee ? "Paid" : "Unpaid"}</span>
+                            <Switch checked={!!extrasPaidStatus.pet_fee} onCheckedChange={() => toggleExtraPaid("pet_fee")} className="scale-75" />
+                          </div>
+                        </div>
                       </FormItem>
                     )}
                   />
