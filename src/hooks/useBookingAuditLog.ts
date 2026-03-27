@@ -36,8 +36,12 @@ export async function logBookingChanges(
     "guest_name", "unit_id", "check_in", "check_out", "pax",
     "total_amount", "deposit_paid", "payment_status", "booking_status",
     "booking_source", "email", "phone", "notes", "utensil_rental",
-    "utensil_rental_fee", "pets", "deposit_status", "deposit_deducted_amount",
+    "utensil_rental_fee", "pets", "pet_fee", "deposit_status", "deposit_deducted_amount",
     "extra_pax_fee", "discount_given", "discount_type", "discount_reason",
+    "karaoke", "karaoke_fee", "kitchen_use", "kitchen_use_fee",
+    "water_jug", "water_jug_qty", "water_jug_fee",
+    "towel_rent", "towel_rent_qty", "towel_rent_fee",
+    "bonfire", "bonfire_fee", "extension_fee", "security_deposit",
   ];
 
   const changes: { booking_id: string; field_name: string; old_value: string | null; new_value: string | null }[] = [];
