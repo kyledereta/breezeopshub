@@ -1395,19 +1395,21 @@ export function BookingModal({
                     )}
                   />
                 )}
-                {/* Daytour Fee */}
-                <FormField
-                  control={form.control}
-                  name="daytour_fee"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Daytour Fee (₱150/head × PAX)</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                {/* Daytour Fee (conditional on daytour toggle) */}
+                {watchDaytour && (
+                  <FormField
+                    control={form.control}
+                    name="daytour_fee"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Daytour Fee (₱150/head × {watchPax} PAX)</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                )}
                 {/* Other Extras */}
                 <div className="space-y-2">
                   <FormField
