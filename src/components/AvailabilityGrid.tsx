@@ -139,6 +139,21 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
 
   const groupedUnits = useMemo(() => groupUnitsByArea(units), [units]);
 
+  // Resort capacity summary for legend
+  const resortSummary = useMemo(() => {
+    const areas: { area: string; count: number; pax: number }[] = [];
+    let totalUnits = 0;
+    let totalPax = 0;
+    for (const group of groupedUnits) {
+      const count = group.units.length;
+      const pax = group.units.reduce((sum, u) => sum + u.max_pax, 0);
+      areas.push({ area: group.area, count, pax });
+      totalUnits += count;
+      totalPax += pax;
+    }
+    return { areas, totalUnits, totalPax };
+  }, [groupedUnits]);
+
   // PH Holidays for current month
   const holidayMap = useMemo(
     () => getPHHolidaysForMonth(currentMonth.getFullYear(), currentMonth.getMonth()),
