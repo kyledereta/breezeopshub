@@ -82,9 +82,12 @@ const bookingSchema = z.object({
   utensil_rental: z.boolean(),
   pets: z.boolean(),
   deposit_status: z.string(),
+  deposit_deducted_reason: z.string().max(300).optional().or(z.literal("")),
   karaoke: z.boolean(),
   karaoke_fee: z.coerce.number().min(0),
   pet_fee: z.coerce.number().min(0),
+  kitchen_use: z.boolean(),
+  kitchen_use_fee: z.coerce.number().min(0),
 }).refine((data) => data.check_out > data.check_in, {
   message: "Check-out must be after check-in",
   path: ["check_out"],
@@ -166,9 +169,12 @@ export function BookingModal({
       utensil_rental: false,
       pets: false,
       deposit_status: "Pending",
+      deposit_deducted_reason: "",
       karaoke: false,
       karaoke_fee: 0,
       pet_fee: 0,
+      kitchen_use: false,
+      kitchen_use_fee: 0,
     },
   });
 
@@ -182,6 +188,7 @@ export function BookingModal({
   const watchDiscountGiven = form.watch("discount_given");
   const watchKaraoke = form.watch("karaoke");
   const watchPets = form.watch("pets");
+  const watchKitchenUse = form.watch("kitchen_use");
 
   // Get selected unit's max_pax
   const selectedUnit = useMemo(() => units.find((u) => u.id === watchUnitId), [units, watchUnitId]);
@@ -252,6 +259,17 @@ export function BookingModal({
     }
   }, [watchKaraoke, form]);
 
+  // Auto-set kitchen use fee when toggled
+  useEffect(() => {
+    if (watchKitchenUse) {
+      if (form.getValues("kitchen_use_fee") === 0) {
+        form.setValue("kitchen_use_fee", 500);
+      }
+    } else {
+      form.setValue("kitchen_use_fee", 0);
+    }
+  }, [watchKitchenUse, form]);
+
   // Auto-set pet fee based on additional pet
   useEffect(() => {
     if (watchPets && additionalPet) {
@@ -291,9 +309,12 @@ export function BookingModal({
         utensil_rental: (booking as any).utensil_rental ?? false,
         pets: (booking as any).pets ?? false,
         deposit_status: (booking as any).deposit_status ?? "Pending",
+        deposit_deducted_reason: (booking as any).deposit_deducted_reason ?? "",
         karaoke: (booking as any).karaoke ?? false,
         karaoke_fee: (booking as any).karaoke_fee ?? 0,
         pet_fee: (booking as any).pet_fee ?? 0,
+        kitchen_use: (booking as any).kitchen_use ?? false,
+        kitchen_use_fee: (booking as any).kitchen_use_fee ?? 0,
       };
       form.reset(vals);
       originalValuesRef.current = { ...vals };
@@ -324,9 +345,12 @@ export function BookingModal({
         utensil_rental: false,
         pets: false,
         deposit_status: "Pending",
+        deposit_deducted_reason: "",
         karaoke: false,
         karaoke_fee: 0,
         pet_fee: 0,
+        kitchen_use: false,
+        kitchen_use_fee: 0,
       });
       setAdditionalUnitIds([]);
       setAdditionalPet(false);
@@ -355,6 +379,7 @@ export function BookingModal({
         pets: values.pets,
         deposit_status: values.deposit_status as DepositStatus,
         deposit_deducted_amount: values.deposit_status === "Deducted" ? values.deposit_deducted_amount : 0,
+        deposit_deducted_reason: values.deposit_status === "Deducted" ? (values.deposit_deducted_reason || null) : null,
         security_deposit: values.security_deposit,
         extra_pax_fee: values.extra_pax_fee,
         discount_given: values.discount_given,
@@ -363,6 +388,8 @@ export function BookingModal({
         karaoke: values.karaoke,
         karaoke_fee: values.karaoke ? values.karaoke_fee : 0,
         pet_fee: values.pets ? values.pet_fee : 0,
+        kitchen_use: values.kitchen_use,
+        kitchen_use_fee: values.kitchen_use ? values.kitchen_use_fee : 0,
       };
 
       // Upload ID files if any
@@ -1095,7 +1122,7 @@ export function BookingModal({
               <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">
                 Extras & Deposits
               </h3>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <FormField
                   control={form.control}
                   name="utensil_rental"
@@ -1130,6 +1157,24 @@ export function BookingModal({
                         <p className="text-[10px] text-muted-foreground">
                           <Music className="h-3 w-3 inline" /> ₱1,500
                         </p>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="kitchen_use"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center gap-3 space-y-0 rounded-lg border border-border p-3">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div>
+                        <FormLabel className="text-xs text-foreground">Kitchen Use</FormLabel>
+                        <p className="text-[10px] text-muted-foreground">₱500</p>
                       </div>
                     </FormItem>
                   )}
@@ -1221,6 +1266,23 @@ export function BookingModal({
                   />
                 )}
               </div>
+              {watchDepositStatus === "Deducted" && (
+                <FormField
+                  control={form.control}
+                  name="deposit_deducted_reason"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Deduction Reason</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="e.g. Damaged linens, broken fixture..." className="bg-background border-border" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              <div className="grid grid-cols-2 gap-3">
+              </div>
               {watchUtensilRental && (
                 <FormField
                   control={form.control}
@@ -1243,6 +1305,21 @@ export function BookingModal({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs text-muted-foreground">Karaoke Fee (₱)</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              {watchKitchenUse && (
+                <FormField
+                  control={form.control}
+                  name="kitchen_use_fee"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Kitchen Use Fee (₱)</FormLabel>
                       <FormControl>
                         <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
                       </FormControl>
