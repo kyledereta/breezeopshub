@@ -383,15 +383,13 @@ export function BookingModal({
     }
   }, [watchBonfire, form]);
 
-  // Auto-set daytour fee when toggled (150 × pax)
+  // Reset daytour fee when toggled off
   useEffect(() => {
-    if (watchDaytour) {
-      form.setValue("daytour_fee", 150 * (watchPax || 1));
-    } else {
+    if (!watchDaytour) {
       form.setValue("daytour_fee", 0);
       form.setValue("is_daytour_booking", false);
     }
-  }, [watchDaytour, watchPax, form]);
+  }, [watchDaytour, form]);
 
   // Auto-set pet fee based on additional pet
   useEffect(() => {
@@ -1518,7 +1516,7 @@ export function BookingModal({
                     name="daytour_fee"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs text-muted-foreground">Daytour Fee (₱150/head × {watchPax} PAX)</FormLabel>
+                        <FormLabel className="text-xs text-muted-foreground">Daytour Fee (₱/head × {watchPax} PAX)</FormLabel>
                         <div className="flex items-center gap-2">
                           <FormControl>
                             <Input {...field} type="number" min={0} step="any" className="bg-background border-border flex-1" />
