@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { format, parse } from "date-fns";
+import { format, parse, differenceInCalendarDays } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import {
   Dialog,
@@ -279,6 +279,51 @@ export function BookingModal({
       if (!watchPets) setAdditionalPet(false);
     }
   }, [watchPets, additionalPet, form]);
+
+  // Watch all fee fields for auto-total calculation
+  const watchUtensilFee = form.watch("utensil_rental_fee");
+  const watchKaraokeFee = form.watch("karaoke_fee");
+  const watchKitchenFee = form.watch("kitchen_use_fee");
+  const watchPetFee = form.watch("pet_fee");
+  const watchExtraPaxFee = form.watch("extra_pax_fee");
+
+  // Auto-calculate total amount based on nightly rate × nights + all extras - discount
+  useEffect(() => {
+    if (!selectedUnit || !watchCheckIn || !watchCheckOut) return;
+    try {
+      const checkInDate = parse(watchCheckIn, "yyyy-MM-dd", new Date());
+      const checkOutDate = parse(watchCheckOut, "yyyy-MM-dd", new Date());
+      const nights = differenceInCalendarDays(checkOutDate, checkInDate);
+      if (nights <= 0) return;
+
+      const base = selectedUnit.nightly_rate * nights;
+      const extras =
+        (watchUtensilRental ? Number(watchUtensilFee) || 0 : 0) +
+        (watchKaraoke ? Number(watchKaraokeFee) || 0 : 0) +
+        (watchKitchenUse ? Number(watchKitchenFee) || 0 : 0) +
+        (watchPets ? Number(watchPetFee) || 0 : 0) +
+        (Number(watchExtraPaxFee) || 0);
+
+      const discountAmount =
+        watchDiscountType === "percentage"
+          ? Math.round(((base + extras) * Number(watchDiscountGiven)) / 100)
+          : Number(watchDiscountGiven) || 0;
+
+      const total = Math.max(0, base + extras - discountAmount);
+      form.setValue("total_amount", total);
+    } catch {
+      // Invalid dates, skip
+    }
+  }, [
+    selectedUnit, watchCheckIn, watchCheckOut,
+    watchUtensilRental, watchUtensilFee,
+    watchKaraoke, watchKaraokeFee,
+    watchKitchenUse, watchKitchenFee,
+    watchPets, watchPetFee,
+    watchExtraPaxFee,
+    watchDiscountType, watchDiscountGiven,
+    form,
+  ]);
 
   // Reset form when modal opens with new data
   useEffect(() => {
@@ -946,6 +991,234 @@ export function BookingModal({
 
             <Separator className="bg-border" />
 
+            {/* Extras & Deposits */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">
+                Extras & Deposits
+              </h3>
+              <div className="grid grid-cols-3 gap-3">
+                <FormField
+                  control={form.control}
+                  name="utensil_rental"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center gap-3 space-y-0 rounded-lg border border-border p-3">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div>
+                        <FormLabel className="text-xs text-foreground">Utensil Rental</FormLabel>
+                        <p className="text-[10px] text-muted-foreground">₱500/set</p>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="karaoke"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center gap-3 space-y-0 rounded-lg border border-border p-3">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div>
+                        <FormLabel className="text-xs text-foreground">Karaoke</FormLabel>
+                        <p className="text-[10px] text-muted-foreground">
+                          <Music className="h-3 w-3 inline" /> ₱1,500
+                        </p>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="kitchen_use"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center gap-3 space-y-0 rounded-lg border border-border p-3">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div>
+                        <FormLabel className="text-xs text-foreground">Kitchen Use</FormLabel>
+                        <p className="text-[10px] text-muted-foreground">₱500</p>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="pets"
+                  render={({ field }) => (
+                    <FormItem className="space-y-0 rounded-lg border border-border p-3">
+                      <div className="flex items-center gap-3">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div>
+                          <FormLabel className="text-xs text-foreground">With Pets</FormLabel>
+                          <p className="text-[10px] text-muted-foreground">
+                            <PawPrint className="h-3 w-3 inline" /> Pet included
+                          </p>
+                        </div>
+                      </div>
+                      {watchPets && (
+                        <div className="mt-2 pt-2 border-t border-border flex items-center gap-2">
+                          <Checkbox
+                            checked={additionalPet}
+                            onCheckedChange={(v) => setAdditionalPet(!!v)}
+                          />
+                          <span className="text-xs text-muted-foreground">Additional pet (+₱300)</span>
+                        </div>
+                      )}
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="deposit_status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Security Deposit</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="bg-background border-border">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-popover border-border">
+                          <SelectItem value="Pending">Pending</SelectItem>
+                          <SelectItem value="Collected">Collected</SelectItem>
+                          <SelectItem value="Returned">Returned</SelectItem>
+                          <SelectItem value="Deducted">Deducted</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="security_deposit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Security Deposit Amount (₱)</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {watchDepositStatus === "Deducted" && (
+                  <FormField
+                    control={form.control}
+                    name="deposit_deducted_amount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Amount Deducted (₱)</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </div>
+              {watchDepositStatus === "Deducted" && (
+                <FormField
+                  control={form.control}
+                  name="deposit_deducted_reason"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Deduction Reason</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="e.g. Damaged linens, broken fixture..." className="bg-background border-border" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              {watchUtensilRental && (
+                <FormField
+                  control={form.control}
+                  name="utensil_rental_fee"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Utensil Rental Fee (₱)</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              {watchKaraoke && (
+                <FormField
+                  control={form.control}
+                  name="karaoke_fee"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Karaoke Fee (₱)</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              {watchKitchenUse && (
+                <FormField
+                  control={form.control}
+                  name="kitchen_use_fee"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Kitchen Use Fee (₱)</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              {watchPets && additionalPet && (
+                <FormField
+                  control={form.control}
+                  name="pet_fee"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Additional Pet Fee (₱)</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            </div>
+
+            <Separator className="bg-border" />
+
             {/* Booking & Payment */}
             <div className="space-y-3">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">
@@ -1113,236 +1386,6 @@ export function BookingModal({
                   </p>
                 )}
               </div>
-            </div>
-
-            <Separator className="bg-border" />
-
-            {/* Extras & Deposits */}
-            <div className="space-y-3">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">
-                Extras & Deposits
-              </h3>
-              <div className="grid grid-cols-3 gap-3">
-                <FormField
-                  control={form.control}
-                  name="utensil_rental"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center gap-3 space-y-0 rounded-lg border border-border p-3">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div>
-                        <FormLabel className="text-xs text-foreground">Utensil Rental</FormLabel>
-                        <p className="text-[10px] text-muted-foreground">₱500/set</p>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="karaoke"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center gap-3 space-y-0 rounded-lg border border-border p-3">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div>
-                        <FormLabel className="text-xs text-foreground">Karaoke</FormLabel>
-                        <p className="text-[10px] text-muted-foreground">
-                          <Music className="h-3 w-3 inline" /> ₱1,500
-                        </p>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="kitchen_use"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center gap-3 space-y-0 rounded-lg border border-border p-3">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div>
-                        <FormLabel className="text-xs text-foreground">Kitchen Use</FormLabel>
-                        <p className="text-[10px] text-muted-foreground">₱500</p>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="pets"
-                  render={({ field }) => (
-                    <FormItem className="space-y-0 rounded-lg border border-border p-3">
-                      <div className="flex items-center gap-3">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div>
-                          <FormLabel className="text-xs text-foreground">With Pets</FormLabel>
-                          <p className="text-[10px] text-muted-foreground">
-                            <PawPrint className="h-3 w-3 inline" /> Pet included
-                          </p>
-                        </div>
-                      </div>
-                      {watchPets && (
-                        <div className="mt-2 pt-2 border-t border-border flex items-center gap-2">
-                          <Checkbox
-                            checked={additionalPet}
-                            onCheckedChange={(v) => setAdditionalPet(!!v)}
-                          />
-                          <span className="text-xs text-muted-foreground">Additional pet (+₱300)</span>
-                        </div>
-                      )}
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="deposit_status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Security Deposit</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="bg-background border-border">
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-popover border-border">
-                          <SelectItem value="Pending">Pending</SelectItem>
-                          <SelectItem value="Collected">Collected</SelectItem>
-                          <SelectItem value="Returned">Returned</SelectItem>
-                          <SelectItem value="Deducted">Deducted</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="security_deposit"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Security Deposit Amount (₱)</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                {watchDepositStatus === "Deducted" && (
-                  <FormField
-                    control={form.control}
-                    name="deposit_deducted_amount"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs text-muted-foreground">Amount Deducted (₱)</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-              </div>
-              {watchDepositStatus === "Deducted" && (
-                <FormField
-                  control={form.control}
-                  name="deposit_deducted_reason"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Deduction Reason</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="e.g. Damaged linens, broken fixture..." className="bg-background border-border" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-              <div className="grid grid-cols-2 gap-3">
-              </div>
-              {watchUtensilRental && (
-                <FormField
-                  control={form.control}
-                  name="utensil_rental_fee"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Utensil Rental Fee (₱)</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-              {watchKaraoke && (
-                <FormField
-                  control={form.control}
-                  name="karaoke_fee"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Karaoke Fee (₱)</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-              {watchKitchenUse && (
-                <FormField
-                  control={form.control}
-                  name="kitchen_use_fee"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Kitchen Use Fee (₱)</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-              {watchPets && additionalPet && (
-                <FormField
-                  control={form.control}
-                  name="pet_fee"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Additional Pet Fee (₱)</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
             </div>
 
             <Separator className="bg-border" />
