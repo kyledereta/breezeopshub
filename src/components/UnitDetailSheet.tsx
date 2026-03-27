@@ -159,6 +159,11 @@ export function UnitDetailSheet({ open, onOpenChange, unit }: UnitDetailSheetPro
                   );
                 })}
               </div>
+              {(unit as any).status_updated_at && (
+                <p className="text-[10px] text-muted-foreground mt-2">
+                  Last updated: {format(parseISO((unit as any).status_updated_at), "MMM d, yyyy · h:mm a")}
+                </p>
+              )}
             </div>
 
             {/* Notes */}
