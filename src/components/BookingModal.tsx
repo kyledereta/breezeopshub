@@ -441,6 +441,11 @@ export function BookingModal({
         water_jug: (booking as any).water_jug ?? false,
         water_jug_qty: (booking as any).water_jug_qty ?? 0,
         water_jug_fee: (booking as any).water_jug_fee ?? 0,
+        towel_rent: (booking as any).towel_rent ?? false,
+        towel_rent_qty: (booking as any).towel_rent_qty ?? 0,
+        towel_rent_fee: (booking as any).towel_rent_fee ?? 0,
+        bonfire: (booking as any).bonfire ?? false,
+        bonfire_fee: (booking as any).bonfire_fee ?? 0,
       };
       form.reset(vals);
       originalValuesRef.current = { ...vals };
@@ -480,6 +485,11 @@ export function BookingModal({
         water_jug: false,
         water_jug_qty: 0,
         water_jug_fee: 0,
+        towel_rent: false,
+        towel_rent_qty: 0,
+        towel_rent_fee: 0,
+        bonfire: false,
+        bonfire_fee: 0,
       });
       setAdditionalUnitIds([]);
       setAdditionalPet(false);
@@ -522,6 +532,11 @@ export function BookingModal({
         water_jug: values.water_jug,
         water_jug_qty: values.water_jug ? values.water_jug_qty : 0,
         water_jug_fee: values.water_jug ? values.water_jug_fee : 0,
+        towel_rent: values.towel_rent,
+        towel_rent_qty: values.towel_rent ? values.towel_rent_qty : 0,
+        towel_rent_fee: values.towel_rent ? values.towel_rent_fee : 0,
+        bonfire: values.bonfire,
+        bonfire_fee: values.bonfire ? values.bonfire_fee : 0,
       };
 
       // Upload ID files if any
