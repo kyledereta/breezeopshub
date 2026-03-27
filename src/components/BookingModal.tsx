@@ -62,6 +62,7 @@ const bookingSchema = z.object({
   total_amount: z.coerce.number().min(0),
   deposit_paid: z.coerce.number().min(0),
   deposit_deducted_amount: z.coerce.number().min(0),
+  security_deposit: z.coerce.number().min(0),
   utensil_rental_fee: z.coerce.number().min(0),
   extra_pax_fee: z.coerce.number().min(0),
   discount_given: z.coerce.number().min(0),
@@ -132,6 +133,7 @@ export function BookingModal({
       total_amount: 0,
       deposit_paid: 0,
       deposit_deducted_amount: 0,
+      security_deposit: 0,
       utensil_rental_fee: 0,
       extra_pax_fee: 0,
       discount_given: 0,
@@ -202,6 +204,17 @@ export function BookingModal({
     }
   }, [watchUtensilRental, form]);
 
+  // Auto-set security deposit default based on unit type
+  useEffect(() => {
+    if (!selectedUnit || isEditing) return;
+    const name = selectedUnit.name.toLowerCase();
+    if (name.includes("villa")) {
+      form.setValue("security_deposit", 1000);
+    } else {
+      form.setValue("security_deposit", 500);
+    }
+  }, [selectedUnit, isEditing, form]);
+
   // Reset form when modal opens with new data
   useEffect(() => {
     if (!open) return;
@@ -216,6 +229,7 @@ export function BookingModal({
         total_amount: booking.total_amount,
         deposit_paid: booking.deposit_paid,
         deposit_deducted_amount: (booking as any).deposit_deducted_amount ?? 0,
+        security_deposit: (booking as any).security_deposit ?? 0,
         utensil_rental_fee: (booking as any).utensil_rental_fee ?? 0,
         extra_pax_fee: (booking as any).extra_pax_fee ?? 0,
         discount_given: booking.discount_given ?? 0,
@@ -244,6 +258,7 @@ export function BookingModal({
         total_amount: 0,
         deposit_paid: 0,
         deposit_deducted_amount: 0,
+        security_deposit: 0,
         utensil_rental_fee: 0,
         extra_pax_fee: 0,
         discount_given: 0,
@@ -283,6 +298,7 @@ export function BookingModal({
         pets: values.pets,
         deposit_status: values.deposit_status as DepositStatus,
         deposit_deducted_amount: values.deposit_status === "Deducted" ? values.deposit_deducted_amount : 0,
+        security_deposit: values.security_deposit,
         extra_pax_fee: values.extra_pax_fee,
         discount_given: values.discount_given,
         discount_type: values.discount_type,
@@ -873,6 +889,7 @@ export function BookingModal({
                         </FormControl>
                         <SelectContent className="bg-popover border-border">
                           <SelectItem value="Pending">Pending</SelectItem>
+                          <SelectItem value="Collected">Collected</SelectItem>
                           <SelectItem value="Returned">Returned</SelectItem>
                           <SelectItem value="Deducted">Deducted</SelectItem>
                         </SelectContent>
@@ -882,13 +899,13 @@ export function BookingModal({
                   )}
                 />
               </div>
-              {watchDepositStatus === "Deducted" && (
+              <div className="grid grid-cols-2 gap-3">
                 <FormField
                   control={form.control}
-                  name="deposit_deducted_amount"
+                  name="security_deposit"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Amount Deducted from Security Deposit (₱)</FormLabel>
+                      <FormLabel className="text-xs text-muted-foreground">Security Deposit Amount (₱)</FormLabel>
                       <FormControl>
                         <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
                       </FormControl>
@@ -896,7 +913,22 @@ export function BookingModal({
                     </FormItem>
                   )}
                 />
-              )}
+                {watchDepositStatus === "Deducted" && (
+                  <FormField
+                    control={form.control}
+                    name="deposit_deducted_amount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Amount Deducted (₱)</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </div>
               {watchUtensilRental && (
                 <FormField
                   control={form.control}
