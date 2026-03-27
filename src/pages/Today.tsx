@@ -43,9 +43,10 @@ interface GuestCardProps {
   unitName: string;
   draggable?: boolean;
   onEdit?: () => void;
+  noLateCheckout?: boolean;
 }
 
-function GuestCard({ booking, unitName, draggable, onEdit }: GuestCardProps) {
+function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout }: GuestCardProps) {
   const [wasDragged, setWasDragged] = useState(false);
   return (
     <div
@@ -61,6 +62,7 @@ function GuestCard({ booking, unitName, draggable, onEdit }: GuestCardProps) {
       }}
       className={cn(
         "flex items-center gap-2 rounded-lg bg-background border border-border hover:border-primary/30 transition-colors p-3 group",
+        noLateCheckout && "border-warning-orange/40",
         draggable ? "cursor-grab active:cursor-grabbing" : onEdit ? "cursor-pointer" : ""
       )}
     >
@@ -88,6 +90,12 @@ function GuestCard({ booking, unitName, draggable, onEdit }: GuestCardProps) {
             {format(parseISO(booking.check_in), "MMM d")} → {format(parseISO(booking.check_out), "MMM d")}
           </span>
         </div>
+        {noLateCheckout && (
+          <div className="flex items-center gap-1 mt-1 text-[10px] text-warning-orange font-medium">
+            <Clock className="h-3 w-3" />
+            No late check-out — next guest arriving tomorrow
+          </div>
+        )}
       </div>
       {onEdit && (
         <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
@@ -116,7 +124,7 @@ export default function TodayPage() {
     return m;
   }, [units]);
 
-  const { checkIns, baseCheckOuts, dueDepartures, inHouse, pendingBalances, todayRevenue, upcomingArrivals, overbookings } = useMemo(() => {
+  const { checkIns, baseCheckOuts, dueDepartures, inHouse, pendingBalances, todayRevenue, upcomingArrivals, overbookings, noLateCheckoutUnitIds } = useMemo(() => {
     const checkIns: Booking[] = [];
     const baseCheckOuts: Booking[] = [];
     const dueDepartures: Booking[] = [];
@@ -163,6 +171,15 @@ export default function TodayPage() {
       }
     }
 
+    // Detect units that have a booking arriving tomorrow (no late checkout allowed)
+    const noLateCheckoutUnitIds = new Set<string>();
+    for (const b of allBookings) {
+      if (b.booking_status === "Cancelled" || !b.unit_id) continue;
+      if (b.check_in === tomorrowStr) {
+        noLateCheckoutUnitIds.add(b.unit_id);
+      }
+    }
+
     // Overbooking detection: find units with 2+ overlapping active bookings
     const overbookings: { unitId: string; bookings: Booking[] }[] = [];
     const activeBookings = allBookings.filter(b => b.booking_status !== "Cancelled" && b.booking_status !== "Checked Out" && b.unit_id);
@@ -188,7 +205,7 @@ export default function TodayPage() {
       if (conflicts.length > 0) overbookings.push({ unitId, bookings: conflicts });
     }
 
-    return { checkIns, baseCheckOuts, dueDepartures, inHouse, pendingBalances, todayRevenue, upcomingArrivals, overbookings };
+    return { checkIns, baseCheckOuts, dueDepartures, inHouse, pendingBalances, todayRevenue, upcomingArrivals, overbookings, noLateCheckoutUnitIds };
   }, [allBookings, todayStr]);
 
   const visibleDepartures = useMemo(() => {
@@ -398,7 +415,7 @@ export default function TodayPage() {
                 {inHouse.length === 0 ? (
                   <EmptyState text="No guests in-house" />
                 ) : (
-                  inHouse.map((b) => <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable onEdit={() => setEditingBooking(b)} />)
+                  inHouse.map((b) => <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable onEdit={() => setEditingBooking(b)} noLateCheckout={!!b.unit_id && noLateCheckoutUnitIds.has(b.unit_id)} />)
                 )}
               </Section>
 
@@ -413,7 +430,7 @@ export default function TodayPage() {
                 {visibleDepartures.length === 0 ? (
                   <EmptyState text="No departures yet" />
                 ) : (
-                  visibleDepartures.map((b) => <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} onEdit={() => setEditingBooking(b)} />)
+                  visibleDepartures.map((b) => <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} onEdit={() => setEditingBooking(b)} noLateCheckout={!!b.unit_id && noLateCheckoutUnitIds.has(b.unit_id)} />)
                 )}
               </Section>
             </div>
