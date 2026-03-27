@@ -116,7 +116,7 @@ export default function TodayPage() {
     return m;
   }, [units]);
 
-  const { checkIns, baseCheckOuts, dueDepartures, inHouse, pendingBalances, todayRevenue, upcomingArrivals, overbookings } = useMemo(() => {
+  const { checkIns, baseCheckOuts, dueDepartures, inHouse, pendingBalances, todayRevenue, upcomingArrivals, overbookings, noLateCheckoutUnitIds } = useMemo(() => {
     const checkIns: Booking[] = [];
     const baseCheckOuts: Booking[] = [];
     const dueDepartures: Booking[] = [];
@@ -163,6 +163,15 @@ export default function TodayPage() {
       }
     }
 
+    // Detect units that have a booking arriving tomorrow (no late checkout allowed)
+    const noLateCheckoutUnitIds = new Set<string>();
+    for (const b of allBookings) {
+      if (b.booking_status === "Cancelled" || !b.unit_id) continue;
+      if (b.check_in === tomorrowStr) {
+        noLateCheckoutUnitIds.add(b.unit_id);
+      }
+    }
+
     // Overbooking detection: find units with 2+ overlapping active bookings
     const overbookings: { unitId: string; bookings: Booking[] }[] = [];
     const activeBookings = allBookings.filter(b => b.booking_status !== "Cancelled" && b.booking_status !== "Checked Out" && b.unit_id);
@@ -188,7 +197,7 @@ export default function TodayPage() {
       if (conflicts.length > 0) overbookings.push({ unitId, bookings: conflicts });
     }
 
-    return { checkIns, baseCheckOuts, dueDepartures, inHouse, pendingBalances, todayRevenue, upcomingArrivals, overbookings };
+    return { checkIns, baseCheckOuts, dueDepartures, inHouse, pendingBalances, todayRevenue, upcomingArrivals, overbookings, noLateCheckoutUnitIds };
   }, [allBookings, todayStr]);
 
   const visibleDepartures = useMemo(() => {
