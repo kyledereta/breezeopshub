@@ -148,6 +148,7 @@ export default function GuestsPage() {
             <Table>
               <TableHeader>
                 <TableRow className="border-border hover:bg-transparent">
+                  <TableHead className="text-muted-foreground">Ref</TableHead>
                   <TableHead
                     className="text-muted-foreground cursor-pointer select-none"
                     onClick={() => toggleSort("guest_name")}
@@ -186,7 +187,7 @@ export default function GuestsPage() {
               <TableBody>
                 {filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground py-12">
+                    <TableCell colSpan={9} className="text-center text-muted-foreground py-12">
                       {search ? "No guests match your search" : "No guests yet"}
                     </TableCell>
                   </TableRow>
@@ -197,6 +198,7 @@ export default function GuestsPage() {
                       className="border-border hover:bg-muted/30 cursor-pointer"
                       onClick={() => setProfileGuest(guest)}
                     >
+                      <TableCell className="text-xs text-muted-foreground font-mono">{(guest as any).guest_ref || "—"}</TableCell>
                       <TableCell className="font-medium text-foreground">{guest.guest_name}</TableCell>
                       <TableCell className="text-muted-foreground">{guest.phone || "—"}</TableCell>
                       <TableCell className="text-muted-foreground">{guest.email || "—"}</TableCell>
