@@ -102,6 +102,8 @@ export default function RevenuePage() {
     let extensionTotal = 0;
     let depositDeductedTotal = 0;
     let waterJugTotal = 0;
+    let towelRentTotal = 0;
+    let bonfireTotal = 0;
     let roomTotal = 0;
 
     for (const b of allBookings) {
@@ -114,7 +116,9 @@ export default function RevenuePage() {
       const extension = b.extension_fee ?? 0;
       const depositDeducted = b.deposit_deducted_amount ?? 0;
       const waterJug = (b as any).water_jug_fee ?? 0;
-      const ancillaries = utensil + (b.karaoke_fee ?? 0) + pet + kitchen + extraPax + extension + waterJug;
+      const towelRent = (b as any).towel_rent_fee ?? 0;
+      const bonfire = (b as any).bonfire_fee ?? 0;
+      const ancillaries = utensil + (b.karaoke_fee ?? 0) + pet + kitchen + extraPax + extension + waterJug + towelRent + bonfire;
       const room = Math.max(0, b.total_amount - ancillaries);
 
       utensilTotal += utensil;
@@ -125,6 +129,8 @@ export default function RevenuePage() {
       extensionTotal += extension;
       depositDeductedTotal += depositDeducted;
       waterJugTotal += waterJug;
+      towelRentTotal += towelRent;
+      bonfireTotal += bonfire;
       roomTotal += room;
     }
 
@@ -137,6 +143,8 @@ export default function RevenuePage() {
       { name: "Extra Pax", value: extraPaxTotal, color: "#8B8C89" },
       { name: "Extension Fee", value: extensionTotal, color: "#B08D57" },
       { name: "Water Jug", value: waterJugTotal, color: "#5BA3C4" },
+      { name: "Towel Rent", value: towelRentTotal, color: "#7B9EA8" },
+      { name: "Bonfire Setup", value: bonfireTotal, color: "#D4853C" },
       { name: "Deposit Deductions", value: depositDeductedTotal, color: "#C45B5B" },
     ];
     return items.filter((i) => i.value > 0);
