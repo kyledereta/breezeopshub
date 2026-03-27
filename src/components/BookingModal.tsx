@@ -889,6 +889,7 @@ export function BookingModal({
                         </FormControl>
                         <SelectContent className="bg-popover border-border">
                           <SelectItem value="Pending">Pending</SelectItem>
+                          <SelectItem value="Collected">Collected</SelectItem>
                           <SelectItem value="Returned">Returned</SelectItem>
                           <SelectItem value="Deducted">Deducted</SelectItem>
                         </SelectContent>
@@ -898,13 +899,13 @@ export function BookingModal({
                   )}
                 />
               </div>
-              {watchDepositStatus === "Deducted" && (
+              <div className="grid grid-cols-2 gap-3">
                 <FormField
                   control={form.control}
-                  name="deposit_deducted_amount"
+                  name="security_deposit"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Amount Deducted from Security Deposit (₱)</FormLabel>
+                      <FormLabel className="text-xs text-muted-foreground">Security Deposit Amount (₱)</FormLabel>
                       <FormControl>
                         <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
                       </FormControl>
@@ -912,7 +913,22 @@ export function BookingModal({
                     </FormItem>
                   )}
                 />
-              )}
+                {watchDepositStatus === "Deducted" && (
+                  <FormField
+                    control={form.control}
+                    name="deposit_deducted_amount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Amount Deducted (₱)</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </div>
               {watchUtensilRental && (
                 <FormField
                   control={form.control}
