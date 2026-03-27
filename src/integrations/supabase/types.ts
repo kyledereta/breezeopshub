@@ -53,6 +53,7 @@ export type Database = {
         Row: {
           bonfire: boolean
           bonfire_fee: number
+          booking_group_id: string | null
           booking_ref: string
           booking_source: Database["public"]["Enums"]["booking_source"]
           booking_status: Database["public"]["Enums"]["booking_status"]
@@ -74,6 +75,7 @@ export type Database = {
           guest_id: string | null
           guest_name: string
           id: string
+          is_primary: boolean
           karaoke: boolean
           karaoke_fee: number
           key_deposit: boolean
@@ -103,6 +105,7 @@ export type Database = {
         Insert: {
           bonfire?: boolean
           bonfire_fee?: number
+          booking_group_id?: string | null
           booking_ref: string
           booking_source?: Database["public"]["Enums"]["booking_source"]
           booking_status?: Database["public"]["Enums"]["booking_status"]
@@ -124,6 +127,7 @@ export type Database = {
           guest_id?: string | null
           guest_name: string
           id?: string
+          is_primary?: boolean
           karaoke?: boolean
           karaoke_fee?: number
           key_deposit?: boolean
@@ -153,6 +157,7 @@ export type Database = {
         Update: {
           bonfire?: boolean
           bonfire_fee?: number
+          booking_group_id?: string | null
           booking_ref?: string
           booking_source?: Database["public"]["Enums"]["booking_source"]
           booking_status?: Database["public"]["Enums"]["booking_status"]
@@ -174,6 +179,7 @@ export type Database = {
           guest_id?: string | null
           guest_name?: string
           id?: string
+          is_primary?: boolean
           karaoke?: boolean
           karaoke_fee?: number
           key_deposit?: boolean
