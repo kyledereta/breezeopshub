@@ -490,6 +490,9 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                                   <div className={cn("rounded-full overflow-hidden", getBookingColor(booking))}>
                                     <BookingCell booking={booking} />
                                   </div>
+                                  {hasGroupConnectorBelow(unit.id, dateStr) && (
+                                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-px h-[4px] bg-primary" />
+                                  )}
                                 </td>
                               </TooltipTrigger>
                               <BookingTooltip booking={booking} />
@@ -510,6 +513,9 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                                 <div className={cn("rounded-full overflow-hidden", getBookingColor(booking))}>
                                   <BookingCell booking={booking} />
                                 </div>
+                                {hasGroupConnectorBelow(unit.id, dateStr) && (
+                                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-px h-[4px] bg-primary" />
+                                )}
                               </td>
                             </TooltipTrigger>
                             <BookingTooltip booking={booking} />
