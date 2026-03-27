@@ -445,7 +445,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
                                   className="cursor-pointer relative py-[4px]"
                                   onClick={() => onBookingClick?.(booking)}
                                 >
-                                  <div className={cn("rounded-full overflow-hidden", getBookingColor(booking), getBookingRing(booking))}>
+                                  <div className={cn("rounded-full overflow-hidden", getBookingColor(booking))}>
                                     <BookingCell booking={booking} />
                                   </div>
                                 </td>
@@ -465,7 +465,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
                                 className="cursor-pointer relative py-[4px]"
                                 onClick={() => onBookingClick?.(booking)}
                               >
-                                <div className={cn("rounded-full overflow-hidden", getBookingColor(booking), getBookingRing(booking))}>
+                                <div className={cn("rounded-full overflow-hidden", getBookingColor(booking))}>
                                   <BookingCell booking={booking} />
                                 </div>
                               </td>
