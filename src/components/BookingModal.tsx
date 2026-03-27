@@ -650,6 +650,7 @@ export function BookingModal({
         other_extras_note: values.other_extras_note || null,
         has_car: hasCar,
         car_details: hasCar && carDetails.length > 0 ? carDetails : [],
+        extras_paid_status: extrasPaidStatus,
       };
 
       // Upload ID files if any
