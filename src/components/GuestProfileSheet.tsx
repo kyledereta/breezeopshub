@@ -37,6 +37,7 @@ interface GuestProfileSheetProps {
 
 export function GuestProfileSheet({ guest, open, onOpenChange }: GuestProfileSheetProps) {
   const { data: bookings = [], isLoading } = useGuestBookings(guest?.id);
+  const deleteGuest = useDeleteGuest();
   const [idUrls, setIdUrls] = useState<string[]>([]);
 
   useEffect(() => {
