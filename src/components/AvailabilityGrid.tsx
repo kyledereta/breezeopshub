@@ -701,6 +701,12 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-sm bg-muted/30" /> Weekend
         </span>
+        <span className="flex items-center gap-1.5">
+          <Ban className="h-3 w-3 text-destructive/60" /> Blocked
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="bg-ocean text-[8px] text-white font-bold rounded px-1 leading-tight">DT</span> Day Tour
+        </span>
       </div>
     </div>
   );
@@ -708,14 +714,20 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
 
 function BookingCell({ booking }: { booking: Booking }) {
   const isGrouped = !!(booking as any).booking_group_id;
+  const hasDaytour = (booking as any).daytour_fee > 0 || (booking as any).daytour || (booking as any).is_daytour_booking;
   return (
-    <div className="px-2 flex items-center gap-1 truncate h-[22px]">
+    <div className="relative px-2 flex items-center gap-1 truncate h-[22px]">
       <span className={cn("h-2 w-2 rounded-full shrink-0", getPaymentDotColor(booking.payment_status))} />
       {isGrouped && <Link2 className="h-2 w-2 text-background/70 shrink-0" />}
       <span className="text-[9px] text-background font-medium truncate leading-none">{booking.guest_name}</span>
       <span className="text-[9px] text-background/60 shrink-0 leading-none">{booking.pax}</span>
       {booking.pets && <PawPrint className="h-2 w-2 text-background/60 shrink-0" />}
       {booking.utensil_rental && <UtensilsCrossed className="h-2 w-2 text-background/60 shrink-0" />}
+      {hasDaytour && (
+        <span className="absolute -top-1.5 -right-0.5 bg-ocean text-[6px] text-white font-bold rounded px-0.5 leading-tight">
+          DT
+        </span>
+      )}
     </div>
   );
 }
