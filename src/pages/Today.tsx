@@ -282,8 +282,13 @@ export default function TodayPage() {
   const unitAvailability = useMemo(() => {
     // For each unit, check which days it's available
     return units.map((unit) => {
+      const unitStatus = unit.unit_status || "Available";
+      const isUnitUnavailable = unitStatus !== "Available";
       const dayStatus = weekDays.map((day) => {
         const dayStr = format(day, "yyyy-MM-dd");
+        if (isUnitUnavailable) {
+          return { date: day, dateStr: dayStr, available: false };
+        }
         const isOccupied = allBookings.some((b) => {
           if (b.booking_status === "Cancelled") return false;
           if (b.unit_id !== unit.id) return false;

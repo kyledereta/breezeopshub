@@ -172,13 +172,14 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
 
   // Compute daily occupancy
   const dailyOccupancy = useMemo(() => {
+    const availableUnits = units.filter((u) => (u.unit_status || "Available") === "Available");
     return days.map((day) => {
       const dateStr = format(day, "yyyy-MM-dd");
       let occupied = 0;
-      for (const unit of units) {
+      for (const unit of availableUnits) {
         if (bookingMap.has(`${unit.id}-${dateStr}`)) occupied++;
       }
-      return { date: day, occupied, available: units.length - occupied };
+      return { date: day, occupied, available: availableUnits.length - occupied };
     });
   }, [days, units, bookingMap]);
 
