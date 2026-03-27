@@ -1859,5 +1859,47 @@ export function BookingModal({
         </Form>
       </DialogContent>
     </Dialog>
+
+    {/* Overlap / Unavailable Confirmation Dialog */}
+    <Dialog open={showOverlapConfirm} onOpenChange={setShowOverlapConfirm}>
+      <DialogContent className="bg-card border-border max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="text-foreground flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-warning-orange" />
+            Booking Warning
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2 text-sm text-muted-foreground">
+          {conflictWarning && <p>{conflictWarning}</p>}
+          {(() => {
+            const allUnitIds = [watchUnitId, ...additionalUnitIds].filter(Boolean);
+            const unavailable = units.filter((u) => allUnitIds.includes(u.id) && u.unit_status !== "Available");
+            if (unavailable.length > 0) {
+              return <p>⚠️ Unavailable units: {unavailable.map((u) => `${u.name} (${u.unit_status})`).join(", ")}</p>;
+            }
+            return null;
+          })()}
+          <p className="text-foreground font-medium">Do you want to proceed anyway?</p>
+        </div>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="ghost" onClick={() => { setShowOverlapConfirm(false); setPendingSubmitValues(null); }} className="text-muted-foreground">
+            Cancel
+          </Button>
+          <Button
+            className="bg-warning-orange text-white hover:bg-warning-orange/90"
+            onClick={() => {
+              setShowOverlapConfirm(false);
+              if (pendingSubmitValues) {
+                onSubmit(pendingSubmitValues);
+                setPendingSubmitValues(null);
+              }
+            }}
+          >
+            Proceed Anyway
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
