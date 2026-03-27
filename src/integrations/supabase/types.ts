@@ -57,6 +57,8 @@ export type Database = {
           check_in: string
           check_out: string
           created_at: string
+          deleted_at: string | null
+          deletion_reason: string | null
           deposit_deducted_amount: number
           deposit_deducted_reason: string | null
           deposit_paid: number
@@ -97,6 +99,8 @@ export type Database = {
           check_in: string
           check_out: string
           created_at?: string
+          deleted_at?: string | null
+          deletion_reason?: string | null
           deposit_deducted_amount?: number
           deposit_deducted_reason?: string | null
           deposit_paid?: number
@@ -137,6 +141,8 @@ export type Database = {
           check_in?: string
           check_out?: string
           created_at?: string
+          deleted_at?: string | null
+          deletion_reason?: string | null
           deposit_deducted_amount?: number
           deposit_deducted_reason?: string | null
           deposit_paid?: number

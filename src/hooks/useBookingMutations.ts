@@ -62,3 +62,23 @@ export function useDeleteBooking() {
     },
   });
 }
+
+export function useSoftDeleteBooking() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
+      const { error } = await supabase
+        .from("bookings")
+        .update({
+          deleted_at: new Date().toISOString(),
+          deletion_reason: reason,
+          booking_status: "Cancelled" as const,
+        })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["bookings"] });
+    },
+  });
+}

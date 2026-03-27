@@ -794,21 +794,23 @@ export function BookingModal({
               {!isEditing && (
                 <div className="space-y-2">
                   {additionalUnitIds.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="space-y-1.5">
                       {additionalUnitIds.map((uid) => {
                         const u = units.find((x) => x.id === uid);
                         return (
                           <div
                             key={uid}
-                            className="flex items-center gap-1 rounded-full bg-primary/10 text-primary px-2.5 py-1 text-xs"
+                            className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2"
                           >
-                            <span>{u?.name || "Unit"}</span>
+                            <span className="text-sm text-foreground">
+                              {u?.name || "Unit"} · {u?.max_pax ?? "?"} PAX · ₱{u?.nightly_rate?.toLocaleString() ?? "0"}
+                            </span>
                             <button
                               type="button"
                               onClick={() => setAdditionalUnitIds((prev) => prev.filter((id) => id !== uid))}
-                              className="hover:text-destructive"
+                              className="text-muted-foreground hover:text-destructive"
                             >
-                              <X className="h-3 w-3" />
+                              <X className="h-3.5 w-3.5" />
                             </button>
                           </div>
                         );
@@ -1444,6 +1446,92 @@ export function BookingModal({
                 </FormItem>
               )}
             />
+
+            {/* Computation Summary */}
+            {(() => {
+              const allIds = [watchUnitId, ...additionalUnitIds].filter(Boolean);
+              const selectedUnits = units.filter((u) => allIds.includes(u.id));
+              if (selectedUnits.length === 0 || !watchCheckIn || !watchCheckOut) return null;
+              try {
+                const checkInDate = parse(watchCheckIn, "yyyy-MM-dd", new Date());
+                const checkOutDate = parse(watchCheckOut, "yyyy-MM-dd", new Date());
+                const nights = differenceInCalendarDays(checkOutDate, checkInDate);
+                if (nights <= 0) return null;
+
+                const unitBreakdowns = selectedUnits.map((u) => ({
+                  name: u.name,
+                  subtotal: u.nightly_rate * nights,
+                  rate: u.nightly_rate,
+                }));
+                const base = unitBreakdowns.reduce((s, b) => s + b.subtotal, 0);
+                const extras =
+                  (watchUtensilRental ? Number(watchUtensilFee) || 0 : 0) +
+                  (watchKaraoke ? Number(watchKaraokeFee) || 0 : 0) +
+                  (watchKitchenUse ? Number(watchKitchenFee) || 0 : 0) +
+                  (watchPets ? Number(watchPetFee) || 0 : 0) +
+                  (Number(watchExtraPaxFee) || 0);
+                const discountAmount =
+                  watchDiscountType === "percentage"
+                    ? Math.round(((base + extras) * Number(watchDiscountGiven)) / 100)
+                    : Number(watchDiscountGiven) || 0;
+                const total = Math.max(0, base + extras - discountAmount);
+
+                return (
+                  <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-1.5">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">Computation Summary</h3>
+                    {unitBreakdowns.map((ub) => (
+                      <div key={ub.name} className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">{ub.name} (₱{ub.rate.toLocaleString()} × {nights}n)</span>
+                        <span className="text-foreground">₱{ub.subtotal.toLocaleString()}</span>
+                      </div>
+                    ))}
+                    {watchUtensilRental && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Utensil Rental</span>
+                        <span className="text-foreground">₱{(Number(watchUtensilFee) || 0).toLocaleString()}</span>
+                      </div>
+                    )}
+                    {watchKaraoke && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Karaoke</span>
+                        <span className="text-foreground">₱{(Number(watchKaraokeFee) || 0).toLocaleString()}</span>
+                      </div>
+                    )}
+                    {watchKitchenUse && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Kitchen Use</span>
+                        <span className="text-foreground">₱{(Number(watchKitchenFee) || 0).toLocaleString()}</span>
+                      </div>
+                    )}
+                    {watchPets && Number(watchPetFee) > 0 && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Additional Pet</span>
+                        <span className="text-foreground">₱{(Number(watchPetFee) || 0).toLocaleString()}</span>
+                      </div>
+                    )}
+                    {Number(watchExtraPaxFee) > 0 && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Extra PAX Fee</span>
+                        <span className="text-foreground">₱{(Number(watchExtraPaxFee) || 0).toLocaleString()}</span>
+                      </div>
+                    )}
+                    {discountAmount > 0 && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Discount</span>
+                        <span className="text-destructive">-₱{discountAmount.toLocaleString()}</span>
+                      </div>
+                    )}
+                    <Separator className="bg-primary/20" />
+                    <div className="flex justify-between text-sm font-semibold">
+                      <span className="text-primary">Total</span>
+                      <span className="text-primary">₱{total.toLocaleString()}</span>
+                    </div>
+                  </div>
+                );
+              } catch {
+                return null;
+              }
+            })()}
 
             {/* Actions */}
             <div className="flex justify-end gap-2 pt-2">
