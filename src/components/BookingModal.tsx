@@ -1370,6 +1370,48 @@ export function BookingModal({
                     )}
                   />
                 )}
+                {/* Daytour Fee */}
+                <FormField
+                  control={form.control}
+                  name="daytour_fee"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Daytour Fee (₱150/head × PAX)</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                {/* Other Extras */}
+                <div className="space-y-2">
+                  <FormField
+                    control={form.control}
+                    name="other_extras_fee"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Other Extras Fee (₱)</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  {Number(watchOtherExtrasFee) > 0 && (
+                    <FormField
+                      control={form.control}
+                      name="other_extras_note"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs text-muted-foreground">Other Extras Description</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="e.g. Extra mattress, videoke extension..." className="bg-background border-border" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </div>
               </div>
 
               {/* Pets toggle - kept as separate button */}
