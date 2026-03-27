@@ -2073,7 +2073,7 @@ export function BookingModal({
                 const total = Math.max(0, base + extras - discountAmount);
 
                 return (
-                  <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-1.5">
+                  <div key={JSON.stringify(extrasPaidStatus) + String(remainingPaid)} className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-1.5">
                     <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">
                       Computation Summary
                       {watchIsDaytourBooking && <span className="ml-2 bg-ocean text-white text-[8px] px-1.5 py-0.5 rounded font-bold">DAY TOUR</span>}
@@ -2175,7 +2175,22 @@ export function BookingModal({
                     </div>
                     {(() => {
                       const depositPaid = Number(form.watch("deposit_paid")) || 0;
-                      const balance = total - depositPaid;
+
+                      // Calculate paid extras total
+                      let paidExtrasTotal = 0;
+                      if (watchUtensilRental && extrasPaidStatus.utensil_rental) paidExtrasTotal += Number(watchUtensilFee) || 0;
+                      if (watchKaraoke && extrasPaidStatus.karaoke) paidExtrasTotal += Number(watchKaraokeFee) || 0;
+                      if (watchKitchenUse && extrasPaidStatus.kitchen_use) paidExtrasTotal += Number(watchKitchenFee) || 0;
+                      if (watchWaterJug && extrasPaidStatus.water_jug) paidExtrasTotal += Number(watchWaterJugFee) || 0;
+                      if (watchTowelRent && extrasPaidStatus.towel_rent) paidExtrasTotal += Number(watchTowelRentFee) || 0;
+                      if (watchBonfire && extrasPaidStatus.bonfire) paidExtrasTotal += Number(watchBonfireFee) || 0;
+                      if (watchPets && additionalPet && extrasPaidStatus.pet_fee) paidExtrasTotal += Number(watchPetFee) || 0;
+                      if (watchDaytour && extrasPaidStatus.daytour) paidExtrasTotal += Number(watchDaytourFee) || 0;
+                      if (extrasPaidStatus.other_extras) paidExtrasTotal += Number(watchOtherExtrasFee) || 0;
+
+                      const totalPaid = depositPaid + paidExtrasTotal;
+                      const balance = total - totalPaid;
+                      const effectiveBalance = remainingPaid ? 0 : Math.max(0, balance);
 
                       // Collect unpaid extras
                       const unpaidExtras: { name: string; amount: number }[] = [];
@@ -2211,19 +2226,33 @@ export function BookingModal({
 
                       return (
                         <>
-                          {depositPaid > 0 && balance > 0 && (
-                            <>
-                              <div className="flex justify-between text-xs">
-                                <span className="text-muted-foreground">Deposit Paid</span>
-                                <span className="text-foreground">-₱{depositPaid.toLocaleString()}</span>
-                              </div>
-                              <div className="flex justify-between text-sm font-semibold">
-                                <span className="text-destructive">Balance Due</span>
-                                <span className="text-destructive">₱{balance.toLocaleString()}</span>
-                              </div>
-                            </>
+                          {depositPaid > 0 && (
+                            <div className="flex justify-between text-xs">
+                              <span className="text-muted-foreground">Downpayment</span>
+                              <span className="text-foreground">-₱{depositPaid.toLocaleString()}</span>
+                            </div>
                           )}
-                          {unpaidExtras.length > 0 && (
+                          {paidExtrasTotal > 0 && (
+                            <div className="flex justify-between text-xs">
+                              <span className="text-primary">Extras Paid</span>
+                              <span className="text-primary">-₱{paidExtrasTotal.toLocaleString()}</span>
+                            </div>
+                          )}
+                          {remainingPaid && balance > 0 && (
+                            <div className="flex justify-between text-xs">
+                              <span className="text-primary">Remaining Paid ✓</span>
+                              <span className="text-primary">-₱{balance.toLocaleString()}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between text-sm font-semibold">
+                            <span className={effectiveBalance > 0 ? "text-destructive" : "text-primary"}>
+                              {effectiveBalance > 0 ? "Balance Due" : "Fully Settled ✓"}
+                            </span>
+                            <span className={effectiveBalance > 0 ? "text-destructive" : "text-primary"}>
+                              {effectiveBalance > 0 ? `₱${effectiveBalance.toLocaleString()}` : "₱0"}
+                            </span>
+                          </div>
+                          {!remainingPaid && unpaidExtras.length > 0 && (
                             <>
                               <Separator className="bg-warning-orange/30 my-1" />
                               <div className="text-[10px] font-semibold uppercase tracking-wider text-warning-orange">
