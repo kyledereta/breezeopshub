@@ -274,9 +274,26 @@ export default function RevenuePage() {
                         <div className="bg-popover border border-border rounded-lg p-2 shadow-xl text-xs">
                           <div className="font-medium text-foreground">{d.name}</div>
                           <div className="text-muted-foreground">₱{d.revenue.toLocaleString()} · {d.count} bookings</div>
+                        </div>
+                      );
+                    }} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="space-y-1.5 mt-2">
+                  {sourceData.map((s) => (
+                    <div key={s.name} className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
+                        <span className="text-muted-foreground">{s.name}</span>
+                      </div>
+                      <span className="text-foreground font-medium">₱{s.revenue.toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            {/* TRevPAR Breakdown */}
+            {/* TRevPAR Breakdown + ADR/RevPAR Trend */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               <div className="rounded-lg border border-border bg-card p-4">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-primary mb-4">TRevPAR Breakdown</h3>
@@ -323,7 +340,6 @@ export default function RevenuePage() {
                 </div>
               </div>
 
-              {/* ADR & RevPAR Trend moved here beside TRevPAR */}
               <div className="lg:col-span-2 rounded-lg border border-border bg-card p-4">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-primary mb-4">ADR & RevPAR Trend (12 Months)</h3>
                 <ResponsiveContainer width="100%" height={280}>
@@ -338,39 +354,6 @@ export default function RevenuePage() {
                   </LineChart>
                 </ResponsiveContainer>
               </div>
-            </div>
-                      );
-                    }} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="space-y-1.5 mt-2">
-                  {sourceData.map((s) => (
-                    <div key={s.name} className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
-                        <span className="text-muted-foreground">{s.name}</span>
-                      </div>
-                      <span className="text-foreground font-medium">₱{s.revenue.toLocaleString()}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* ADR & RevPAR Trend */}
-            <div className="rounded-lg border border-border bg-card p-4">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-primary mb-4">ADR & RevPAR Trend (12 Months)</h3>
-              <ResponsiveContainer width="100%" height={240}>
-                <LineChart data={enrichedMonthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(156, 18%, 24%)" />
-                  <XAxis dataKey="label" tick={{ fill: "hsl(156, 10%, 55%)", fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: "hsl(156, 10%, 55%)", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `₱${(v / 1000).toFixed(0)}k`} />
-                  <RechartsTooltip content={<CustomTooltipContent />} />
-                  <Legend wrapperStyle={{ fontSize: 11, color: "hsl(156, 10%, 55%)" }} />
-                  <Line type="monotone" dataKey="adr" name="ADR" stroke={CHART_COLORS.primary} strokeWidth={2} dot={{ fill: CHART_COLORS.primary, r: 4 }} activeDot={{ r: 6 }} />
-                  <Line type="monotone" dataKey="revpar" name="RevPAR" stroke={CHART_COLORS.ocean} strokeWidth={2} dot={{ fill: CHART_COLORS.ocean, r: 3 }} />
-                </LineChart>
-              </ResponsiveContainer>
             </div>
 
             {/* Occupancy Trend */}
