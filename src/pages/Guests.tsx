@@ -205,7 +205,7 @@ export default function GuestsPage() {
                       <TableCell className="text-muted-foreground">{guest.location || "—"}</TableCell>
                       <TableCell className="text-center text-foreground">{guest.total_stays}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={`text-[10px] ${TIER_COLORS[guest.parang_dati_tier] || ""}`}>
+                        <Badge variant="outline" className={`text-[10px] whitespace-nowrap ${TIER_COLORS[guest.parang_dati_tier] || ""}`}>
                           {guest.parang_dati_tier}
                         </Badge>
                       </TableCell>
