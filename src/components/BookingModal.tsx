@@ -327,6 +327,11 @@ export function BookingModal({
 
       if (isEditing) {
         await updateBooking.mutateAsync({ id: booking.id, ...fullPayload });
+        // Log audit trail
+        if (originalValuesRef.current) {
+          await logBookingChanges(booking.id, originalValuesRef.current, fullPayload);
+          queryClient.invalidateQueries({ queryKey: ["booking_audit_log", booking.id] });
+        }
         toast.success("Booking updated");
       } else {
         await createBooking.mutateAsync(fullPayload);
