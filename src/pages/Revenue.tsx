@@ -53,6 +53,8 @@ export default function RevenuePage() {
 
       for (const b of allBookings) {
         if (b.booking_status === "Cancelled") continue;
+        // Skip secondary grouped bookings to avoid double-counting
+        if ((b as any).is_primary === false) continue;
         const ciMonth = b.check_in.substring(0, 7);
         // Attribute revenue to check-in month
         if (ciMonth === mStr) {
@@ -83,6 +85,7 @@ export default function RevenuePage() {
     const counts: Record<string, { count: number; revenue: number }> = {};
     for (const b of allBookings) {
       if (b.booking_status === "Cancelled") continue;
+      if ((b as any).is_primary === false) continue;
       if (!counts[b.booking_source]) counts[b.booking_source] = { count: 0, revenue: 0 };
       counts[b.booking_source].count++;
       counts[b.booking_source].revenue += b.total_amount;

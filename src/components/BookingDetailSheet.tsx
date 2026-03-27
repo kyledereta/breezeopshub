@@ -70,10 +70,20 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteReason, setDeleteReason] = useState("");
 
+  // For grouped bookings, show all unit names
+  const groupedUnitNames = useMemo(() => {
+    const gid = (booking as any)?.booking_group_id;
+    if (!gid) return null;
+    return allBookings
+      .filter((b) => (b as any).booking_group_id === gid)
+      .map((b) => units.find((u) => u.id === b.unit_id)?.name ?? "Unknown");
+  }, [allBookings, booking, units]);
+
   const unitName = useMemo(() => {
+    if (groupedUnitNames && groupedUnitNames.length > 0) return groupedUnitNames.join(" + ");
     if (!booking?.unit_id) return "Unassigned";
     return units.find((u) => u.id === booking.unit_id)?.name ?? "Unknown";
-  }, [units, booking]);
+  }, [units, booking, groupedUnitNames]);
 
   const selectedUnit = useMemo(() => {
     if (!booking?.unit_id) return null;
