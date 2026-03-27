@@ -51,6 +51,8 @@ export type Database = {
       }
       bookings: {
         Row: {
+          bonfire: boolean
+          bonfire_fee: number
           booking_ref: string
           booking_source: Database["public"]["Enums"]["booking_source"]
           booking_status: Database["public"]["Enums"]["booking_status"]
@@ -86,6 +88,9 @@ export type Database = {
           referral_code: string | null
           security_deposit: number
           total_amount: number
+          towel_rent: boolean
+          towel_rent_fee: number
+          towel_rent_qty: number
           unit_id: string | null
           updated_at: string
           utensil_rental: boolean
@@ -96,6 +101,8 @@ export type Database = {
           wristband_deposit: boolean
         }
         Insert: {
+          bonfire?: boolean
+          bonfire_fee?: number
           booking_ref: string
           booking_source?: Database["public"]["Enums"]["booking_source"]
           booking_status?: Database["public"]["Enums"]["booking_status"]
@@ -131,6 +138,9 @@ export type Database = {
           referral_code?: string | null
           security_deposit?: number
           total_amount?: number
+          towel_rent?: boolean
+          towel_rent_fee?: number
+          towel_rent_qty?: number
           unit_id?: string | null
           updated_at?: string
           utensil_rental?: boolean
@@ -141,6 +151,8 @@ export type Database = {
           wristband_deposit?: boolean
         }
         Update: {
+          bonfire?: boolean
+          bonfire_fee?: number
           booking_ref?: string
           booking_source?: Database["public"]["Enums"]["booking_source"]
           booking_status?: Database["public"]["Enums"]["booking_status"]
@@ -176,6 +188,9 @@ export type Database = {
           referral_code?: string | null
           security_deposit?: number
           total_amount?: number
+          towel_rent?: boolean
+          towel_rent_fee?: number
+          towel_rent_qty?: number
           unit_id?: string | null
           updated_at?: string
           utensil_rental?: boolean

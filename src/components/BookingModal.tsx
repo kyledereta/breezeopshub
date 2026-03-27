@@ -91,6 +91,11 @@ const bookingSchema = z.object({
   water_jug: z.boolean(),
   water_jug_qty: z.coerce.number().min(0),
   water_jug_fee: z.coerce.number().min(0),
+  towel_rent: z.boolean(),
+  towel_rent_qty: z.coerce.number().min(0),
+  towel_rent_fee: z.coerce.number().min(0),
+  bonfire: z.boolean(),
+  bonfire_fee: z.coerce.number().min(0),
 }).refine((data) => data.check_out > data.check_in, {
   message: "Check-out must be after check-in",
   path: ["check_out"],
@@ -181,6 +186,11 @@ export function BookingModal({
       water_jug: false,
       water_jug_qty: 0,
       water_jug_fee: 0,
+      towel_rent: false,
+      towel_rent_qty: 0,
+      towel_rent_fee: 0,
+      bonfire: false,
+      bonfire_fee: 0,
     },
   });
 
@@ -196,6 +206,8 @@ export function BookingModal({
   const watchPets = form.watch("pets");
   const watchKitchenUse = form.watch("kitchen_use");
   const watchWaterJug = form.watch("water_jug");
+  const watchTowelRent = form.watch("towel_rent");
+  const watchBonfire = form.watch("bonfire");
 
   // Get selected unit's max_pax
   const selectedUnit = useMemo(() => units.find((u) => u.id === watchUnitId), [units, watchUnitId]);
@@ -294,6 +306,34 @@ export function BookingModal({
     }
   }, [watchWaterJug, watchWaterJugQty, form]);
 
+  // Auto-set towel rent fee when toggled or qty changes
+  const watchTowelRentQty = form.watch("towel_rent_qty");
+  useEffect(() => {
+    if (watchTowelRent) {
+      const qty = Number(watchTowelRentQty) || 0;
+      if (qty === 0) {
+        form.setValue("towel_rent_qty", 1);
+        form.setValue("towel_rent_fee", 100);
+      } else {
+        form.setValue("towel_rent_fee", qty * 100);
+      }
+    } else {
+      form.setValue("towel_rent_qty", 0);
+      form.setValue("towel_rent_fee", 0);
+    }
+  }, [watchTowelRent, watchTowelRentQty, form]);
+
+  // Auto-set bonfire fee when toggled
+  useEffect(() => {
+    if (watchBonfire) {
+      if (form.getValues("bonfire_fee") === 0) {
+        form.setValue("bonfire_fee", 300);
+      }
+    } else {
+      form.setValue("bonfire_fee", 0);
+    }
+  }, [watchBonfire, form]);
+
   // Auto-set pet fee based on additional pet
   useEffect(() => {
     if (watchPets && additionalPet) {
@@ -311,6 +351,8 @@ export function BookingModal({
   const watchPetFee = form.watch("pet_fee");
   const watchExtraPaxFee = form.watch("extra_pax_fee");
   const watchWaterJugFee = form.watch("water_jug_fee");
+  const watchTowelRentFee = form.watch("towel_rent_fee");
+  const watchBonfireFee = form.watch("bonfire_fee");
 
   // Auto-calculate total amount based on nightly rate × nights + all extras - discount
   // Supports multi-unit: sums nightly rates across all selected units
@@ -332,7 +374,9 @@ export function BookingModal({
         (watchKitchenUse ? Number(watchKitchenFee) || 0 : 0) +
         (watchPets ? Number(watchPetFee) || 0 : 0) +
         (Number(watchExtraPaxFee) || 0) +
-        (watchWaterJug ? Number(watchWaterJugFee) || 0 : 0);
+        (watchWaterJug ? Number(watchWaterJugFee) || 0 : 0) +
+        (watchTowelRent ? Number(watchTowelRentFee) || 0 : 0) +
+        (watchBonfire ? Number(watchBonfireFee) || 0 : 0);
 
       const discountAmount =
         watchDiscountType === "percentage"
@@ -353,6 +397,8 @@ export function BookingModal({
     watchPets, watchPetFee,
     watchExtraPaxFee,
     watchWaterJug, watchWaterJugFee,
+    watchTowelRent, watchTowelRentFee,
+    watchBonfire, watchBonfireFee,
     watchDiscountType, watchDiscountGiven,
     form,
   ]);
@@ -395,6 +441,11 @@ export function BookingModal({
         water_jug: (booking as any).water_jug ?? false,
         water_jug_qty: (booking as any).water_jug_qty ?? 0,
         water_jug_fee: (booking as any).water_jug_fee ?? 0,
+        towel_rent: (booking as any).towel_rent ?? false,
+        towel_rent_qty: (booking as any).towel_rent_qty ?? 0,
+        towel_rent_fee: (booking as any).towel_rent_fee ?? 0,
+        bonfire: (booking as any).bonfire ?? false,
+        bonfire_fee: (booking as any).bonfire_fee ?? 0,
       };
       form.reset(vals);
       originalValuesRef.current = { ...vals };
@@ -434,6 +485,11 @@ export function BookingModal({
         water_jug: false,
         water_jug_qty: 0,
         water_jug_fee: 0,
+        towel_rent: false,
+        towel_rent_qty: 0,
+        towel_rent_fee: 0,
+        bonfire: false,
+        bonfire_fee: 0,
       });
       setAdditionalUnitIds([]);
       setAdditionalPet(false);
@@ -476,6 +532,11 @@ export function BookingModal({
         water_jug: values.water_jug,
         water_jug_qty: values.water_jug ? values.water_jug_qty : 0,
         water_jug_fee: values.water_jug ? values.water_jug_fee : 0,
+        towel_rent: values.towel_rent,
+        towel_rent_qty: values.towel_rent ? values.towel_rent_qty : 0,
+        towel_rent_fee: values.towel_rent ? values.towel_rent_fee : 0,
+        bonfire: values.bonfire,
+        bonfire_fee: values.bonfire ? values.bonfire_fee : 0,
       };
 
       // Upload ID files if any
@@ -1039,85 +1100,155 @@ export function BookingModal({
               <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">
                 Extras
               </h3>
-              <div className="grid grid-cols-3 gap-3">
-                <FormField
-                  control={form.control}
-                  name="utensil_rental"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center gap-3 space-y-0 rounded-lg border border-border p-3">
-                      <FormControl>
-                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
-                      <div>
-                        <FormLabel className="text-xs text-foreground">Utensil Rental</FormLabel>
-                        <p className="text-[10px] text-muted-foreground">₱500/set</p>
+              
+              {/* Multi-select extras dropdown */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between text-xs h-9 bg-background border-border">
+                    <span className="text-muted-foreground">
+                      {[
+                        watchUtensilRental && "Utensils",
+                        watchKaraoke && "Karaoke",
+                        watchKitchenUse && "Kitchen",
+                        watchWaterJug && "Water Jug",
+                        watchTowelRent && "Towel",
+                        watchBonfire && "Bonfire",
+                      ].filter(Boolean).join(", ") || "Select extras..."}
+                    </span>
+                    <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2 space-y-1" align="start">
+                  {[
+                    { key: "utensil_rental" as const, label: "Utensil Rental", desc: "₱500/set" },
+                    { key: "karaoke" as const, label: "Karaoke", desc: "₱1,500" },
+                    { key: "kitchen_use" as const, label: "Kitchen Use", desc: "₱500" },
+                    { key: "water_jug" as const, label: "Water Jug", desc: "₱100/jug" },
+                    { key: "towel_rent" as const, label: "Towel Rent", desc: "₱100/pc" },
+                    { key: "bonfire" as const, label: "Bonfire Setup", desc: "₱300" },
+                  ].map((item) => (
+                    <label
+                      key={item.key}
+                      className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted/50 cursor-pointer"
+                    >
+                      <Checkbox
+                        checked={form.watch(item.key)}
+                        onCheckedChange={(v) => form.setValue(item.key, !!v)}
+                      />
+                      <div className="flex-1">
+                        <span className="text-xs text-foreground">{item.label}</span>
+                        <span className="text-[10px] text-muted-foreground ml-1.5">{item.desc}</span>
                       </div>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="karaoke"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center gap-3 space-y-0 rounded-lg border border-border p-3">
-                      <FormControl>
-                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
-                      <div>
-                        <FormLabel className="text-xs text-foreground">Karaoke</FormLabel>
-                        <p className="text-[10px] text-muted-foreground">
-                          <Music className="h-3 w-3 inline" /> ₱1,500
-                        </p>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="kitchen_use"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center gap-3 space-y-0 rounded-lg border border-border p-3">
-                      <FormControl>
-                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
-                      <div>
-                        <FormLabel className="text-xs text-foreground">Kitchen Use</FormLabel>
-                        <p className="text-[10px] text-muted-foreground">₱500</p>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="water_jug"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center gap-3 space-y-0 rounded-lg border border-border p-3">
-                      <FormControl>
-                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
-                      <div>
-                        <FormLabel className="text-xs text-foreground">Water Jug</FormLabel>
-                        <p className="text-[10px] text-muted-foreground">₱100 per jug</p>
-                      </div>
-                    </FormItem>
-                  )}
-                />
+                    </label>
+                  ))}
+                </PopoverContent>
+              </Popover>
+
+              {/* Selected extras: quantity / fee inputs */}
+              <div className="space-y-2">
+                {watchUtensilRental && (
+                  <FormField
+                    control={form.control}
+                    name="utensil_rental_fee"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Utensil Rental Fee (₱)</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                )}
+                {watchKaraoke && (
+                  <FormField
+                    control={form.control}
+                    name="karaoke_fee"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Karaoke Fee (₱)</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                )}
+                {watchKitchenUse && (
+                  <FormField
+                    control={form.control}
+                    name="kitchen_use_fee"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Kitchen Use Fee (₱)</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                )}
+                {watchWaterJug && (
+                  <FormField
+                    control={form.control}
+                    name="water_jug_qty"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Number of Water Jugs</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" min={1} step={1} className="bg-background border-border" />
+                        </FormControl>
+                        <p className="text-[10px] text-muted-foreground">Total: ₱{((Number(field.value) || 0) * 100).toLocaleString()}</p>
+                      </FormItem>
+                    )}
+                  />
+                )}
+                {watchTowelRent && (
+                  <FormField
+                    control={form.control}
+                    name="towel_rent_qty"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Number of Towels</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" min={1} step={1} className="bg-background border-border" />
+                        </FormControl>
+                        <p className="text-[10px] text-muted-foreground">Total: ₱{((Number(field.value) || 0) * 100).toLocaleString()}</p>
+                      </FormItem>
+                    )}
+                  />
+                )}
+                {watchBonfire && (
+                  <FormField
+                    control={form.control}
+                    name="bonfire_fee"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Bonfire Setup Fee (₱)</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                )}
+                {watchPets && additionalPet && (
+                  <FormField
+                    control={form.control}
+                    name="pet_fee"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Additional Pet Fee (₱)</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                )}
               </div>
-              {watchWaterJug && (
-                <FormField
-                  control={form.control}
-                  name="water_jug_qty"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Number of Jugs</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="number" min={1} step={1} className="bg-background border-border" />
-                      </FormControl>
-                      <p className="text-[10px] text-muted-foreground">Total: ₱{((Number(field.value) || 0) * 100).toLocaleString()}</p>
-                    </FormItem>
-                  )}
-                />
-              )}
+
+              {/* Pets toggle - kept as separate button */}
               <FormField
                 control={form.control}
                 name="pets"
@@ -1146,62 +1277,6 @@ export function BookingModal({
                   </FormItem>
                 )}
               />
-              {watchUtensilRental && (
-                <FormField
-                  control={form.control}
-                  name="utensil_rental_fee"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Utensil Rental Fee (₱)</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              )}
-              {watchKaraoke && (
-                <FormField
-                  control={form.control}
-                  name="karaoke_fee"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Karaoke Fee (₱)</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              )}
-              {watchKitchenUse && (
-                <FormField
-                  control={form.control}
-                  name="kitchen_use_fee"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Kitchen Use Fee (₱)</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              )}
-              {watchPets && additionalPet && (
-                <FormField
-                  control={form.control}
-                  name="pet_fee"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Additional Pet Fee (₱)</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              )}
             </div>
 
             <Separator className="bg-border" />
@@ -1536,7 +1611,9 @@ export function BookingModal({
                   (watchKitchenUse ? Number(watchKitchenFee) || 0 : 0) +
                   (watchPets ? Number(watchPetFee) || 0 : 0) +
                   (Number(watchExtraPaxFee) || 0) +
-                  (watchWaterJug ? Number(watchWaterJugFee) || 0 : 0);
+                  (watchWaterJug ? Number(watchWaterJugFee) || 0 : 0) +
+                  (watchTowelRent ? Number(watchTowelRentFee) || 0 : 0) +
+                  (watchBonfire ? Number(watchBonfireFee) || 0 : 0);
                 const discountAmount =
                   watchDiscountType === "percentage"
                     ? Math.round(((base + extras) * Number(watchDiscountGiven)) / 100)
@@ -1586,6 +1663,18 @@ export function BookingModal({
                       <div className="flex justify-between text-xs">
                         <span className="text-muted-foreground">Water Jug (×{Number(form.watch("water_jug_qty")) || 0})</span>
                         <span className="text-foreground">₱{(Number(watchWaterJugFee) || 0).toLocaleString()}</span>
+                      </div>
+                    )}
+                    {watchTowelRent && Number(watchTowelRentFee) > 0 && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Towel Rent (×{Number(form.watch("towel_rent_qty")) || 0})</span>
+                        <span className="text-foreground">₱{(Number(watchTowelRentFee) || 0).toLocaleString()}</span>
+                      </div>
+                    )}
+                    {watchBonfire && Number(watchBonfireFee) > 0 && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Bonfire Setup</span>
+                        <span className="text-foreground">₱{(Number(watchBonfireFee) || 0).toLocaleString()}</span>
                       </div>
                     )}
                     {discountAmount > 0 && (
