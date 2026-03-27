@@ -314,6 +314,48 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
                       <span className="text-foreground">₱{booking.pet_fee.toLocaleString()}</span>
                     </div>
                   )}
+                  {(booking as any).water_jug && (booking as any).water_jug_fee > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Water Jug (×{(booking as any).water_jug_qty})</span>
+                      <span className="text-foreground">₱{(booking as any).water_jug_fee.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {(booking as any).towel_rent && (booking as any).towel_rent_fee > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Towel Rent (×{(booking as any).towel_rent_qty})</span>
+                      <span className="text-foreground">₱{(booking as any).towel_rent_fee.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {(booking as any).bonfire && (booking as any).bonfire_fee > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Bonfire Setup</span>
+                      <span className="text-foreground">₱{(booking as any).bonfire_fee.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {(booking as any).daytour_fee > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Daytour Fee</span>
+                      <span className="text-foreground">₱{(booking as any).daytour_fee.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {(booking as any).other_extras_fee > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Other Extras{(booking as any).other_extras_note ? ` (${(booking as any).other_extras_note})` : ""}</span>
+                      <span className="text-foreground">₱{(booking as any).other_extras_fee.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {(booking as any).extension_fee > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Extension Fee</span>
+                      <span className="text-foreground">₱{(booking as any).extension_fee.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {(booking as any).security_deposit > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Security Deposit</span>
+                      <span className="text-foreground">₱{(booking as any).security_deposit.toLocaleString()}</span>
+                    </div>
+                  )}
                   {booking.discount_given > 0 && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Discount ({booking.discount_type})</span>
@@ -322,6 +364,16 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
                         {booking.discount_reason && <span className="text-[10px] text-muted-foreground ml-1">({booking.discount_reason})</span>}
                       </span>
                     </div>
+                  )}
+                  {/* Balance Due */}
+                  {booking.deposit_paid > 0 && booking.total_amount - booking.deposit_paid > 0 && (
+                    <>
+                      <Separator className="bg-border/50 my-1" />
+                      <div className="flex justify-between font-medium">
+                        <span className="text-destructive">Balance Due</span>
+                        <span className="text-destructive">₱{(booking.total_amount - booking.deposit_paid).toLocaleString()}</span>
+                      </div>
+                    </>
                   )}
                 </div>
                 {/* Extras */}
