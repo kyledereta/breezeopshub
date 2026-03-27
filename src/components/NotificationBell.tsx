@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { format, parseISO, addDays, isBefore } from "date-fns";
 import { useBookings } from "@/hooks/useBookings";
 import { useUnits } from "@/hooks/useUnits";
-import { Bell, LogIn, AlertTriangle, TrendingDown } from "lucide-react";
+import { Bell, LogIn, LogOut, AlertTriangle, TrendingDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -58,6 +58,22 @@ export function NotificationBell() {
         title: `${tomorrowCheckIns.length} check-in${tomorrowCheckIns.length > 1 ? "s" : ""} tomorrow`,
         description: tomorrowCheckIns.map((b) => b.guest_name).join(", "),
         color: "text-ocean",
+      });
+    }
+
+    // Due check-outs today
+    const dueCheckouts = allBookings.filter(
+      (b) => b.check_out === todayStr && b.booking_status === "Checked In"
+    );
+
+    if (dueCheckouts.length > 0) {
+      items.push({
+        id: "due-checkouts",
+        icon: LogOut,
+        title: `${dueCheckouts.length} check-out${dueCheckouts.length > 1 ? "s" : ""} due today`,
+        description: dueCheckouts.map((b) => b.guest_name).join(", "),
+        color: "text-coral",
+        action: () => { navigate("/today"); setOpen(false); },
       });
     }
 
