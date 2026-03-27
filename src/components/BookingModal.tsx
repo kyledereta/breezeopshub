@@ -287,6 +287,7 @@ export function BookingModal({
         pets: values.pets,
         deposit_status: values.deposit_status as DepositStatus,
         deposit_deducted_amount: values.deposit_status === "Deducted" ? values.deposit_deducted_amount : 0,
+        security_deposit: values.security_deposit,
         extra_pax_fee: values.extra_pax_fee,
         discount_given: values.discount_given,
         discount_type: values.discount_type,
