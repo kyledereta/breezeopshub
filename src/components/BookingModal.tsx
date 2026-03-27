@@ -154,7 +154,7 @@ export function BookingModal({
 
   // Load existing ID files when editing
   useEffect(() => {
-    if (!open) { setIdFiles([]); setExistingIds([]); setAdditionalUnitIds([]); setAdditionalPet(false); setBirthMonthFilter(0); return; }
+    if (!open) { setIdFiles([]); setExistingIds([]); setAdditionalUnitIds([]); setAdditionalPet(false); setBirthMonthFilter(0); setHasCar(false); setCarDetails([]); return; }
     if (booking) {
       supabase.storage.from("guest-ids").list(booking.id).then(({ data }) => {
         if (data) setExistingIds(data.map((f) => `${booking.id}/${f.name}`));
