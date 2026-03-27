@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -37,6 +37,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Upload, X, FileImage, PawPrint, AlertTriangle } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { logBookingChanges } from "@/hooks/useBookingAuditLog";
 
 type PaymentStatus = Database["public"]["Enums"]["payment_status"];
 type BookingStatus = Database["public"]["Enums"]["booking_status"];
@@ -99,6 +100,7 @@ export function BookingModal({
   const [conflictWarning, setConflictWarning] = useState<string | null>(null);
   const [guestSuggestions, setGuestSuggestions] = useState<{ id: string; guest_name: string; phone: string | null; email: string | null; pets: boolean }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const originalValuesRef = useRef<Record<string, any> | null>(null);
 
   // Load existing ID files when editing
   useEffect(() => {
@@ -196,7 +198,7 @@ export function BookingModal({
     if (!open) return;
 
     if (booking) {
-      form.reset({
+      const vals = {
         guest_name: booking.guest_name,
         unit_id: booking.unit_id ?? "",
         check_in: booking.check_in,
@@ -219,8 +221,11 @@ export function BookingModal({
         utensil_rental: (booking as any).utensil_rental ?? false,
         pets: (booking as any).pets ?? false,
         deposit_status: (booking as any).deposit_status ?? "Pending",
-      });
+      };
+      form.reset(vals);
+      originalValuesRef.current = { ...vals };
     } else {
+      originalValuesRef.current = null;
       form.reset({
         guest_name: "",
         unit_id: defaultUnitId ?? "",
@@ -322,6 +327,11 @@ export function BookingModal({
 
       if (isEditing) {
         await updateBooking.mutateAsync({ id: booking.id, ...fullPayload });
+        // Log audit trail
+        if (originalValuesRef.current) {
+          await logBookingChanges(booking.id, originalValuesRef.current, fullPayload);
+          queryClient.invalidateQueries({ queryKey: ["booking_audit_log", booking.id] });
+        }
         toast.success("Booking updated");
       } else {
         await createBooking.mutateAsync(fullPayload);
