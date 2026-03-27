@@ -2116,21 +2116,69 @@ export function BookingModal({
                     {(() => {
                       const depositPaid = Number(form.watch("deposit_paid")) || 0;
                       const balance = total - depositPaid;
-                      if (depositPaid > 0 && balance > 0) {
-                        return (
-                          <>
-                            <div className="flex justify-between text-xs">
-                              <span className="text-muted-foreground">Deposit Paid</span>
-                              <span className="text-foreground">-₱{depositPaid.toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between text-sm font-semibold">
-                              <span className="text-destructive">Balance Due</span>
-                              <span className="text-destructive">₱{balance.toLocaleString()}</span>
-                            </div>
-                          </>
-                        );
+
+                      // Collect unpaid extras
+                      const unpaidExtras: { name: string; amount: number }[] = [];
+                      if (watchUtensilRental && !extrasPaidStatus.utensil_rental && Number(watchUtensilFee) > 0) {
+                        unpaidExtras.push({ name: "Utensil Rental", amount: Number(watchUtensilFee) });
                       }
-                      return null;
+                      if (watchKaraoke && !extrasPaidStatus.karaoke && Number(watchKaraokeFee) > 0) {
+                        unpaidExtras.push({ name: "Karaoke", amount: Number(watchKaraokeFee) });
+                      }
+                      if (watchKitchenUse && !extrasPaidStatus.kitchen_use && Number(watchKitchenFee) > 0) {
+                        unpaidExtras.push({ name: "Kitchen Use", amount: Number(watchKitchenFee) });
+                      }
+                      if (watchWaterJug && !extrasPaidStatus.water_jug && Number(watchWaterJugFee) > 0) {
+                        unpaidExtras.push({ name: "Water Jug", amount: Number(watchWaterJugFee) });
+                      }
+                      if (watchTowelRent && !extrasPaidStatus.towel_rent && Number(watchTowelRentFee) > 0) {
+                        unpaidExtras.push({ name: "Towel Rent", amount: Number(watchTowelRentFee) });
+                      }
+                      if (watchBonfire && !extrasPaidStatus.bonfire && Number(watchBonfireFee) > 0) {
+                        unpaidExtras.push({ name: "Bonfire", amount: Number(watchBonfireFee) });
+                      }
+                      if (watchPets && additionalPet && !extrasPaidStatus.pet_fee && Number(watchPetFee) > 0) {
+                        unpaidExtras.push({ name: "Pet Fee", amount: Number(watchPetFee) });
+                      }
+                      if (watchDaytour && !extrasPaidStatus.daytour && Number(watchDaytourFee) > 0) {
+                        unpaidExtras.push({ name: "Daytour", amount: Number(watchDaytourFee) });
+                      }
+                      if (!extrasPaidStatus.other_extras && Number(watchOtherExtrasFee) > 0) {
+                        unpaidExtras.push({ name: form.watch("other_extras_note") || "Other Extras", amount: Number(watchOtherExtrasFee) });
+                      }
+
+                      const unpaidExtrasTotal = unpaidExtras.reduce((s, e) => s + e.amount, 0);
+
+                      return (
+                        <>
+                          {depositPaid > 0 && balance > 0 && (
+                            <>
+                              <div className="flex justify-between text-xs">
+                                <span className="text-muted-foreground">Deposit Paid</span>
+                                <span className="text-foreground">-₱{depositPaid.toLocaleString()}</span>
+                              </div>
+                              <div className="flex justify-between text-sm font-semibold">
+                                <span className="text-destructive">Balance Due</span>
+                                <span className="text-destructive">₱{balance.toLocaleString()}</span>
+                              </div>
+                            </>
+                          )}
+                          {unpaidExtras.length > 0 && (
+                            <>
+                              <Separator className="bg-warning-orange/30 my-1" />
+                              <div className="text-[10px] font-semibold uppercase tracking-wider text-warning-orange">
+                                Pending Extras (₱{unpaidExtrasTotal.toLocaleString()})
+                              </div>
+                              {unpaidExtras.map((e) => (
+                                <div key={e.name} className="flex justify-between text-xs">
+                                  <span className="text-warning-orange/80">• {e.name}</span>
+                                  <span className="text-warning-orange font-medium">₱{e.amount.toLocaleString()}</span>
+                                </div>
+                              ))}
+                            </>
+                          )}
+                        </>
+                      );
                     })()}
                   </div>
                 );
