@@ -491,7 +491,16 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
       {/* Legend */}
       <div className="flex flex-wrap items-center gap-3 sm:gap-4 px-4 sm:px-6 py-2 sm:py-3 border-t border-border text-[10px] font-sans text-muted-foreground shrink-0">
         <span className="flex items-center gap-1.5">
-          <span className="w-6 h-3 rounded-full bg-foreground" /> Booked
+          <span className="w-5 h-3 rounded-full bg-foreground ring-2 ring-primary" /> Fully Paid
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-5 h-3 rounded-full bg-foreground ring-2 ring-airbnb-pink" /> Airbnb
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-5 h-3 rounded-full bg-foreground ring-2 ring-warning-orange" /> Partial DP
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-5 h-3 rounded-full bg-foreground ring-2 ring-destructive" /> Unpaid
         </span>
         <span className="flex items-center gap-1.5 border-l border-border pl-3">
           <TrendingUp className="h-3 w-3 text-primary/70" /> Peak / Markup
