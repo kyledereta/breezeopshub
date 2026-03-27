@@ -89,6 +89,7 @@ export type Database = {
           booking_ref: string
           booking_source: Database["public"]["Enums"]["booking_source"]
           booking_status: Database["public"]["Enums"]["booking_status"]
+          car_details: Json | null
           check_in: string
           check_out: string
           created_at: string
@@ -108,6 +109,7 @@ export type Database = {
           extra_pax_fee: number
           guest_id: string | null
           guest_name: string
+          has_car: boolean
           id: string
           is_daytour_booking: boolean
           is_primary: boolean
@@ -147,6 +149,7 @@ export type Database = {
           booking_ref: string
           booking_source?: Database["public"]["Enums"]["booking_source"]
           booking_status?: Database["public"]["Enums"]["booking_status"]
+          car_details?: Json | null
           check_in: string
           check_out: string
           created_at?: string
@@ -166,6 +169,7 @@ export type Database = {
           extra_pax_fee?: number
           guest_id?: string | null
           guest_name: string
+          has_car?: boolean
           id?: string
           is_daytour_booking?: boolean
           is_primary?: boolean
@@ -205,6 +209,7 @@ export type Database = {
           booking_ref?: string
           booking_source?: Database["public"]["Enums"]["booking_source"]
           booking_status?: Database["public"]["Enums"]["booking_status"]
+          car_details?: Json | null
           check_in?: string
           check_out?: string
           created_at?: string
@@ -224,6 +229,7 @@ export type Database = {
           extra_pax_fee?: number
           guest_id?: string | null
           guest_name?: string
+          has_car?: boolean
           id?: string
           is_daytour_booking?: boolean
           is_primary?: boolean
