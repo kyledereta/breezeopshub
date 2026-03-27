@@ -174,6 +174,7 @@ export function BookingModal({
       payment_status: "Unpaid",
       booking_status: "Inquiry",
       booking_source: "Other",
+      mode_of_payment: "",
       email: "",
       phone: "",
       notes: "",
@@ -212,9 +213,34 @@ export function BookingModal({
   const watchTowelRent = form.watch("towel_rent");
   const watchBonfire = form.watch("bonfire");
 
-  // Get selected unit's max_pax
+  // Get combined max_pax across all selected units
+  const combinedMaxPax = useMemo(() => {
+    const allIds = [watchUnitId, ...additionalUnitIds].filter(Boolean);
+    const selectedUnits = units.filter((u) => allIds.includes(u.id));
+    return selectedUnits.reduce((sum, u) => sum + u.max_pax, 0);
+  }, [units, watchUnitId, additionalUnitIds]);
+
   const selectedUnit = useMemo(() => units.find((u) => u.id === watchUnitId), [units, watchUnitId]);
-  const extraPax = selectedUnit ? Math.max(0, watchPax - selectedUnit.max_pax) : 0;
+  const extraPax = combinedMaxPax > 0 ? Math.max(0, watchPax - combinedMaxPax) : 0;
+
+  // Auto-set pax to unit's max_pax when unit is selected (new bookings only)
+  useEffect(() => {
+    if (isEditing) return;
+    if (combinedMaxPax > 0) {
+      form.setValue("pax", combinedMaxPax);
+    }
+  }, [combinedMaxPax, isEditing, form]);
+
+  // Auto-set deposit_paid based on payment status
+  const watchPaymentStatus = form.watch("payment_status");
+  useEffect(() => {
+    if (watchPaymentStatus === "Unpaid") {
+      form.setValue("deposit_paid", 0);
+    } else if (watchPaymentStatus === "Fully Paid") {
+      const total = form.getValues("total_amount");
+      form.setValue("deposit_paid", total);
+    }
+  }, [watchPaymentStatus, form]);
 
   // Check for booking conflicts (all selected units)
   useEffect(() => {
