@@ -288,15 +288,19 @@ export function BookingModal({
   const watchExtraPaxFee = form.watch("extra_pax_fee");
 
   // Auto-calculate total amount based on nightly rate × nights + all extras - discount
+  // Supports multi-unit: sums nightly rates across all selected units
   useEffect(() => {
-    if (!selectedUnit || !watchCheckIn || !watchCheckOut) return;
+    if (!watchCheckIn || !watchCheckOut) return;
+    const allIds = [watchUnitId, ...additionalUnitIds].filter(Boolean);
+    const selectedUnits = units.filter((u) => allIds.includes(u.id));
+    if (selectedUnits.length === 0) return;
     try {
       const checkInDate = parse(watchCheckIn, "yyyy-MM-dd", new Date());
       const checkOutDate = parse(watchCheckOut, "yyyy-MM-dd", new Date());
       const nights = differenceInCalendarDays(checkOutDate, checkInDate);
       if (nights <= 0) return;
 
-      const base = selectedUnit.nightly_rate * nights;
+      const base = selectedUnits.reduce((sum, u) => sum + u.nightly_rate * nights, 0);
       const extras =
         (watchUtensilRental ? Number(watchUtensilFee) || 0 : 0) +
         (watchKaraoke ? Number(watchKaraokeFee) || 0 : 0) +
@@ -315,7 +319,8 @@ export function BookingModal({
       // Invalid dates, skip
     }
   }, [
-    selectedUnit, watchCheckIn, watchCheckOut,
+    units, watchUnitId, additionalUnitIds,
+    watchCheckIn, watchCheckOut,
     watchUtensilRental, watchUtensilFee,
     watchKaraoke, watchKaraokeFee,
     watchKitchenUse, watchKitchenFee,
@@ -991,10 +996,10 @@ export function BookingModal({
 
             <Separator className="bg-border" />
 
-            {/* Extras & Deposits */}
+            {/* Extras */}
             <div className="space-y-3">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">
-                Extras & Deposits
+                Extras
               </h3>
               <div className="grid grid-cols-3 gap-3">
                 <FormField
@@ -1003,10 +1008,7 @@ export function BookingModal({
                   render={({ field }) => (
                     <FormItem className="flex items-center gap-3 space-y-0 rounded-lg border border-border p-3">
                       <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
+                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                       </FormControl>
                       <div>
                         <FormLabel className="text-xs text-foreground">Utensil Rental</FormLabel>
@@ -1021,10 +1023,7 @@ export function BookingModal({
                   render={({ field }) => (
                     <FormItem className="flex items-center gap-3 space-y-0 rounded-lg border border-border p-3">
                       <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
+                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                       </FormControl>
                       <div>
                         <FormLabel className="text-xs text-foreground">Karaoke</FormLabel>
@@ -1041,10 +1040,7 @@ export function BookingModal({
                   render={({ field }) => (
                     <FormItem className="flex items-center gap-3 space-y-0 rounded-lg border border-border p-3">
                       <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
+                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                       </FormControl>
                       <div>
                         <FormLabel className="text-xs text-foreground">Kitchen Use</FormLabel>
@@ -1054,107 +1050,34 @@ export function BookingModal({
                   )}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="pets"
-                  render={({ field }) => (
-                    <FormItem className="space-y-0 rounded-lg border border-border p-3">
-                      <div className="flex items-center gap-3">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div>
-                          <FormLabel className="text-xs text-foreground">With Pets</FormLabel>
-                          <p className="text-[10px] text-muted-foreground">
-                            <PawPrint className="h-3 w-3 inline" /> Pet included
-                          </p>
-                        </div>
+              <FormField
+                control={form.control}
+                name="pets"
+                render={({ field }) => (
+                  <FormItem className="space-y-0 rounded-lg border border-border p-3">
+                    <div className="flex items-center gap-3">
+                      <FormControl>
+                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                      <div>
+                        <FormLabel className="text-xs text-foreground">With Pets</FormLabel>
+                        <p className="text-[10px] text-muted-foreground">
+                          <PawPrint className="h-3 w-3 inline" /> Pet included
+                        </p>
                       </div>
-                      {watchPets && (
-                        <div className="mt-2 pt-2 border-t border-border flex items-center gap-2">
-                          <Checkbox
-                            checked={additionalPet}
-                            onCheckedChange={(v) => setAdditionalPet(!!v)}
-                          />
-                          <span className="text-xs text-muted-foreground">Additional pet (+₱300)</span>
-                        </div>
-                      )}
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="deposit_status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Security Deposit</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="bg-background border-border">
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-popover border-border">
-                          <SelectItem value="Pending">Pending</SelectItem>
-                          <SelectItem value="Collected">Collected</SelectItem>
-                          <SelectItem value="Returned">Returned</SelectItem>
-                          <SelectItem value="Deducted">Deducted</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="security_deposit"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Security Deposit Amount (₱)</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                {watchDepositStatus === "Deducted" && (
-                  <FormField
-                    control={form.control}
-                    name="deposit_deducted_amount"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs text-muted-foreground">Amount Deducted (₱)</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+                    </div>
+                    {watchPets && (
+                      <div className="mt-2 pt-2 border-t border-border flex items-center gap-2">
+                        <Checkbox
+                          checked={additionalPet}
+                          onCheckedChange={(v) => setAdditionalPet(!!v)}
+                        />
+                        <span className="text-xs text-muted-foreground">Additional pet (+₱300)</span>
+                      </div>
                     )}
-                  />
+                  </FormItem>
                 )}
-              </div>
-              {watchDepositStatus === "Deducted" && (
-                <FormField
-                  control={form.control}
-                  name="deposit_deducted_reason"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Deduction Reason</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="e.g. Damaged linens, broken fixture..." className="bg-background border-border" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
+              />
               {watchUtensilRental && (
                 <FormField
                   control={form.control}
@@ -1165,7 +1088,6 @@ export function BookingModal({
                       <FormControl>
                         <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
                       </FormControl>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -1180,7 +1102,6 @@ export function BookingModal({
                       <FormControl>
                         <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
                       </FormControl>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -1195,7 +1116,6 @@ export function BookingModal({
                       <FormControl>
                         <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
                       </FormControl>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -1210,7 +1130,6 @@ export function BookingModal({
                       <FormControl>
                         <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
                       </FormControl>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -1233,9 +1152,7 @@ export function BookingModal({
                       <FormLabel className="text-xs text-muted-foreground">Status</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="bg-background border-border">
-                            <SelectValue />
-                          </SelectTrigger>
+                          <SelectTrigger className="bg-background border-border"><SelectValue /></SelectTrigger>
                         </FormControl>
                         <SelectContent className="bg-popover border-border">
                           {Constants.public.Enums.booking_status.map((s) => (
@@ -1243,7 +1160,6 @@ export function BookingModal({
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -1255,9 +1171,7 @@ export function BookingModal({
                       <FormLabel className="text-xs text-muted-foreground">Payment</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="bg-background border-border">
-                            <SelectValue />
-                          </SelectTrigger>
+                          <SelectTrigger className="bg-background border-border"><SelectValue /></SelectTrigger>
                         </FormControl>
                         <SelectContent className="bg-popover border-border">
                           {Constants.public.Enums.payment_status.map((s) => (
@@ -1265,7 +1179,6 @@ export function BookingModal({
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -1277,9 +1190,7 @@ export function BookingModal({
                       <FormLabel className="text-xs text-muted-foreground">Source</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="bg-background border-border">
-                            <SelectValue />
-                          </SelectTrigger>
+                          <SelectTrigger className="bg-background border-border"><SelectValue /></SelectTrigger>
                         </FormControl>
                         <SelectContent className="bg-popover border-border">
                           {Constants.public.Enums.booking_source.map((s) => (
@@ -1287,7 +1198,6 @@ export function BookingModal({
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -1302,7 +1212,6 @@ export function BookingModal({
                       <FormControl>
                         <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
                       </FormControl>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -1315,7 +1224,6 @@ export function BookingModal({
                       <FormControl>
                         <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
                       </FormControl>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -1331,16 +1239,13 @@ export function BookingModal({
                         <FormLabel className="text-xs text-muted-foreground">Discount Type</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger className="bg-background border-border">
-                              <SelectValue />
-                            </SelectTrigger>
+                            <SelectTrigger className="bg-background border-border"><SelectValue /></SelectTrigger>
                           </FormControl>
                           <SelectContent className="bg-popover border-border">
                             <SelectItem value="fixed">Fixed (₱)</SelectItem>
                             <SelectItem value="percentage">Percentage (%)</SelectItem>
                           </SelectContent>
                         </Select>
-                        <FormMessage />
                       </FormItem>
                     )}
                   />
@@ -1362,7 +1267,6 @@ export function BookingModal({
                             className="bg-background border-border"
                           />
                         </FormControl>
-                        <FormMessage />
                       </FormItem>
                     )}
                   />
@@ -1375,7 +1279,6 @@ export function BookingModal({
                         <FormControl>
                           <Input {...field} placeholder="Optional" className="bg-background border-border" />
                         </FormControl>
-                        <FormMessage />
                       </FormItem>
                     )}
                   />
@@ -1386,6 +1289,70 @@ export function BookingModal({
                   </p>
                 )}
               </div>
+              {/* Security Deposit */}
+              <Separator className="bg-border/50" />
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="deposit_status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Security Deposit</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="bg-background border-border"><SelectValue /></SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-popover border-border">
+                          <SelectItem value="Pending">Pending</SelectItem>
+                          <SelectItem value="Collected">Collected</SelectItem>
+                          <SelectItem value="Returned">Returned</SelectItem>
+                          <SelectItem value="Deducted">Deducted</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="security_deposit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Deposit Amount (₱)</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+              {watchDepositStatus === "Deducted" && (
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="deposit_deducted_amount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Amount Deducted (₱)</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="deposit_deducted_reason"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Deduction Reason</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="e.g. Damaged linens..." className="bg-background border-border" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
             </div>
 
             <Separator className="bg-border" />
