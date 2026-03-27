@@ -794,21 +794,23 @@ export function BookingModal({
               {!isEditing && (
                 <div className="space-y-2">
                   {additionalUnitIds.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="space-y-1.5">
                       {additionalUnitIds.map((uid) => {
                         const u = units.find((x) => x.id === uid);
                         return (
                           <div
                             key={uid}
-                            className="flex items-center gap-1 rounded-full bg-primary/10 text-primary px-2.5 py-1 text-xs"
+                            className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2"
                           >
-                            <span>{u?.name || "Unit"}</span>
+                            <span className="text-sm text-foreground">
+                              {u?.name || "Unit"} · {u?.max_pax ?? "?"} PAX · ₱{u?.nightly_rate?.toLocaleString() ?? "0"}
+                            </span>
                             <button
                               type="button"
                               onClick={() => setAdditionalUnitIds((prev) => prev.filter((id) => id !== uid))}
-                              className="hover:text-destructive"
+                              className="text-muted-foreground hover:text-destructive"
                             >
-                              <X className="h-3 w-3" />
+                              <X className="h-3.5 w-3.5" />
                             </button>
                           </div>
                         );
