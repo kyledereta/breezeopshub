@@ -1591,12 +1591,30 @@ export function BookingModal({
                       <div>
                         <FormLabel className="text-xs text-foreground">Day Tour</FormLabel>
                         <p className="text-[10px] text-muted-foreground">
-                          ₱150/head daytour fee
+                          No nightly rate, fees only
                         </p>
                       </div>
                     </div>
                     {watchDaytour && (
                       <div className="mt-2 pt-2 border-t border-border space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="daytour_fee"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs text-muted-foreground">Daytour Fee (₱/head × {watchPax} PAX)</FormLabel>
+                              <div className="flex items-center gap-2">
+                                <FormControl>
+                                  <Input {...field} type="number" min={0} step="any" className="bg-background border-border flex-1" />
+                                </FormControl>
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  <span className="text-[9px] text-muted-foreground">{extrasPaidStatus.daytour ? "Paid" : "Unpaid"}</span>
+                                  <Switch checked={!!extrasPaidStatus.daytour} onCheckedChange={() => toggleExtraPaid("daytour")} className="scale-75" />
+                                </div>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
                         <div className="flex items-center gap-2">
                           <Checkbox
                             checked={watchIsDaytourBooking}
@@ -1604,9 +1622,6 @@ export function BookingModal({
                           />
                           <span className="text-xs text-muted-foreground">Day Tour Only (no nightly rate, fees only)</span>
                         </div>
-                        <p className="text-[10px] text-muted-foreground">
-                          Fee: ₱{(Number(watchDaytourFee) || 0).toLocaleString()}
-                        </p>
                       </div>
                     )}
                   </FormItem>
