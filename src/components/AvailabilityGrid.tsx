@@ -442,7 +442,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
                               <TooltipTrigger asChild>
                                 <td
                                   colSpan={Math.min(span, days.length - days.indexOf(day))}
-                                  className="cursor-pointer relative py-[4px]"
+                                  className="cursor-pointer relative py-[4px] border-b border-r border-border"
                                   onClick={() => onBookingClick?.(booking)}
                                 >
                                   <div className={cn("rounded-full overflow-hidden", getBookingColor(booking))}>
@@ -462,7 +462,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
                             <TooltipTrigger asChild>
                               <td
                                 colSpan={Math.min(span, days.length - days.indexOf(day))}
-                                className="cursor-pointer relative py-[4px]"
+                                className="cursor-pointer relative py-[4px] border-b border-r border-border"
                                 onClick={() => onBookingClick?.(booking)}
                               >
                                 <div className={cn("rounded-full overflow-hidden", getBookingColor(booking))}>
