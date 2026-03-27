@@ -529,28 +529,81 @@ export function BookingModal({
                 <FormField
                   control={form.control}
                   name="check_in"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Check-in</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="date" className="bg-background border-border" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    const dateValue = field.value ? parse(field.value, "yyyy-MM-dd", new Date()) : undefined;
+                    return (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Check-in</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full pl-3 text-left font-normal bg-background border-border",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? format(dateValue!, "MMM d, yyyy") : <span>Pick date</span>}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={dateValue}
+                              onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                              initialFocus
+                              className="p-3 pointer-events-auto"
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
                 <FormField
                   control={form.control}
                   name="check_out"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Check-out</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="date" className="bg-background border-border" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    const dateValue = field.value ? parse(field.value, "yyyy-MM-dd", new Date()) : undefined;
+                    const checkInValue = form.getValues("check_in");
+                    const minDate = checkInValue ? parse(checkInValue, "yyyy-MM-dd", new Date()) : undefined;
+                    return (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Check-out</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full pl-3 text-left font-normal bg-background border-border",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? format(dateValue!, "MMM d, yyyy") : <span>Pick date</span>}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={dateValue}
+                              onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                              disabled={(date) => minDate ? date <= minDate : false}
+                              initialFocus
+                              className="p-3 pointer-events-auto"
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
                 <FormField
                   control={form.control}
