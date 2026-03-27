@@ -104,6 +104,7 @@ export type Database = {
           discount_given: number
           discount_reason: string | null
           discount_type: string
+          dp_mode_of_payment: string | null
           email: string | null
           extension_fee: number
           extra_pax_fee: number
@@ -129,6 +130,8 @@ export type Database = {
           pets: boolean
           phone: string | null
           referral_code: string | null
+          remaining_mode_of_payment: string | null
+          remaining_paid: boolean
           security_deposit: number
           total_amount: number
           towel_rent: boolean
@@ -165,6 +168,7 @@ export type Database = {
           discount_given?: number
           discount_reason?: string | null
           discount_type?: string
+          dp_mode_of_payment?: string | null
           email?: string | null
           extension_fee?: number
           extra_pax_fee?: number
@@ -190,6 +194,8 @@ export type Database = {
           pets?: boolean
           phone?: string | null
           referral_code?: string | null
+          remaining_mode_of_payment?: string | null
+          remaining_paid?: boolean
           security_deposit?: number
           total_amount?: number
           towel_rent?: boolean
@@ -226,6 +232,7 @@ export type Database = {
           discount_given?: number
           discount_reason?: string | null
           discount_type?: string
+          dp_mode_of_payment?: string | null
           email?: string | null
           extension_fee?: number
           extra_pax_fee?: number
@@ -251,6 +258,8 @@ export type Database = {
           pets?: boolean
           phone?: string | null
           referral_code?: string | null
+          remaining_mode_of_payment?: string | null
+          remaining_paid?: boolean
           security_deposit?: number
           total_amount?: number
           towel_rent?: boolean

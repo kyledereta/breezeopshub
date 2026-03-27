@@ -44,6 +44,7 @@ export async function logBookingChanges(
     "bonfire", "bonfire_fee", "extension_fee", "security_deposit",
     "daytour", "is_daytour_booking", "daytour_fee",
     "other_extras_fee", "other_extras_note", "mode_of_payment",
+    "dp_mode_of_payment", "remaining_mode_of_payment", "remaining_paid",
   ];
 
   const changes: { booking_id: string; field_name: string; old_value: string | null; new_value: string | null }[] = [];

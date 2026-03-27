@@ -154,6 +154,10 @@ export function BookingModal({
   const [carDetails, setCarDetails] = useState<{ type: string; color: string; plate: string }[]>([]);
   // Extras paid status tracking
   const [extrasPaidStatus, setExtrasPaidStatus] = useState<Record<string, boolean>>({});
+  // Payment restructure: DP mode, remaining mode, remaining paid toggle
+  const [dpModeOfPayment, setDpModeOfPayment] = useState("");
+  const [remainingModeOfPayment, setRemainingModeOfPayment] = useState("");
+  const [remainingPaid, setRemainingPaid] = useState(false);
 
   const toggleExtraPaid = (key: string) => {
     setExtrasPaidStatus((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -536,6 +540,9 @@ export function BookingModal({
         setCarDetails([]);
       }
       setExtrasPaidStatus((booking as any).extras_paid_status && typeof (booking as any).extras_paid_status === 'object' ? (booking as any).extras_paid_status : {});
+      setDpModeOfPayment((booking as any).dp_mode_of_payment ?? (booking as any).mode_of_payment ?? "");
+      setRemainingModeOfPayment((booking as any).remaining_mode_of_payment ?? "");
+      setRemainingPaid((booking as any).remaining_paid ?? false);
     } else {
       originalValuesRef.current = null;
       form.reset({
@@ -586,6 +593,9 @@ export function BookingModal({
       setAdditionalUnitIds([]);
       setAdditionalPet(false);
       setBirthMonthFilter(0);
+      setDpModeOfPayment("");
+      setRemainingModeOfPayment("");
+      setRemainingPaid(false);
     }
   }, [open, booking, defaultUnitId, defaultDate, form]);
 
@@ -615,7 +625,10 @@ export function BookingModal({
         payment_status: values.payment_status as PaymentStatus,
         booking_status: values.booking_status as BookingStatus,
         booking_source: values.booking_source as BookingSource,
-        mode_of_payment: values.mode_of_payment || null,
+        mode_of_payment: dpModeOfPayment || null,
+        dp_mode_of_payment: dpModeOfPayment || null,
+        remaining_mode_of_payment: remainingModeOfPayment || null,
+        remaining_paid: remainingPaid,
         email: values.email || null,
         phone: values.phone || null,
         notes: values.notes || null,
@@ -1651,39 +1664,22 @@ export function BookingModal({
                   )}
                 />
               </div>
-              {/* Mode of Payment */}
+              {/* Total Amount */}
               <FormField
                 control={form.control}
-                name="mode_of_payment"
+                name="total_amount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs text-muted-foreground">Mode of Payment</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ""}>
-                      <FormControl>
-                        <SelectTrigger className="bg-background border-border"><SelectValue placeholder="Select..." /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-popover border-border">
-                        <SelectItem value="Cash">Cash</SelectItem>
-                        <SelectItem value="Gcash">Gcash</SelectItem>
-                        <SelectItem value="EastWest Bank">EastWest Bank</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormLabel className="text-xs text-muted-foreground">Total Amount (₱)</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
+                    </FormControl>
                   </FormItem>
                 )}
               />
+
+              {/* Downpayment Row */}
               <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="total_amount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Total Amount (₱)</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
                 <FormField
                   control={form.control}
                   name="deposit_paid"
@@ -1696,7 +1692,53 @@ export function BookingModal({
                     </FormItem>
                   )}
                 />
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">DP Mode of Payment</label>
+                  <Select onValueChange={setDpModeOfPayment} value={dpModeOfPayment}>
+                    <SelectTrigger className="bg-background border-border"><SelectValue placeholder="Select..." /></SelectTrigger>
+                    <SelectContent className="bg-popover border-border">
+                      <SelectItem value="Cash">Cash</SelectItem>
+                      <SelectItem value="Gcash">Gcash</SelectItem>
+                      <SelectItem value="EastWest Bank">EastWest Bank</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
+
+              {/* Remaining Balance Row */}
+              {(() => {
+                const totalAmt = Number(form.watch("total_amount")) || 0;
+                const dpAmt = Number(form.watch("deposit_paid")) || 0;
+                const remaining = totalAmt - dpAmt;
+                if (remaining <= 0) return null;
+                return (
+                  <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground">Remaining Balance</span>
+                      <span className="text-sm font-semibold text-destructive">₱{remaining.toLocaleString()}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 items-end">
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Mode of Payment</label>
+                        <Select onValueChange={setRemainingModeOfPayment} value={remainingModeOfPayment}>
+                          <SelectTrigger className="bg-background border-border"><SelectValue placeholder="Select..." /></SelectTrigger>
+                          <SelectContent className="bg-popover border-border">
+                            <SelectItem value="Cash">Cash</SelectItem>
+                            <SelectItem value="Gcash">Gcash</SelectItem>
+                            <SelectItem value="EastWest Bank">EastWest Bank</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Switch checked={remainingPaid} onCheckedChange={setRemainingPaid} />
+                        <span className={`text-xs font-medium ${remainingPaid ? "text-primary" : "text-destructive"}`}>
+                          {remainingPaid ? "Paid" : "Unpaid"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
               {/* Discount */}
               <div className="space-y-2">
                 <div className="grid grid-cols-3 gap-3">
