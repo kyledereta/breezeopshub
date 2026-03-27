@@ -515,8 +515,11 @@ function BookingTooltip({ booking }: { booking: Booking }) {
       <div className="space-y-1.5">
         <div className="flex items-center gap-2">
           {(() => {
+            if (booking.booking_source === "Airbnb") {
+              return <AirbnbIcon className={cn("h-3.5 w-3.5 shrink-0", getSourceColor(booking.booking_source))} />;
+            }
             const SourceIcon = getSourceIcon(booking.booking_source);
-            return <SourceIcon className={cn("h-3.5 w-3.5 shrink-0", getSourceColor(booking.booking_source))} />;
+            return SourceIcon ? <SourceIcon className={cn("h-3.5 w-3.5 shrink-0", getSourceColor(booking.booking_source))} /> : null;
           })()}
           <span className="font-medium text-sm text-foreground">{booking.guest_name}</span>
         </div>
