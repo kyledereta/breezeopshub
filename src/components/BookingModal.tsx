@@ -377,6 +377,16 @@ export function BookingModal({
     }
   }, [watchBonfire, form]);
 
+  // Auto-set daytour fee when toggled (150 × pax)
+  useEffect(() => {
+    if (watchDaytour) {
+      form.setValue("daytour_fee", 150 * (watchPax || 1));
+    } else {
+      form.setValue("daytour_fee", 0);
+      form.setValue("is_daytour_booking", false);
+    }
+  }, [watchDaytour, watchPax, form]);
+
   // Auto-set pet fee based on additional pet
   useEffect(() => {
     if (watchPets && additionalPet) {
