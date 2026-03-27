@@ -549,9 +549,11 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
 }
 
 function BookingCell({ booking }: { booking: Booking }) {
+  const isGrouped = !!(booking as any).booking_group_id;
   return (
     <div className="px-2 flex items-center gap-1 truncate h-[22px]">
       <span className={cn("h-2 w-2 rounded-full shrink-0", getPaymentDotColor(booking.payment_status))} />
+      {isGrouped && <Link2 className="h-2 w-2 text-background/70 shrink-0" />}
       <span className="text-[9px] text-background font-medium truncate leading-none">{booking.guest_name}</span>
       <span className="text-[9px] text-background/60 shrink-0 leading-none">{booking.pax}</span>
       {booking.pets && <PawPrint className="h-2 w-2 text-background/60 shrink-0" />}
