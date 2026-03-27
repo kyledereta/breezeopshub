@@ -173,13 +173,13 @@ export default function RevenuePage() {
         ) : (
           <div className="flex-1 overflow-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
             {/* Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
               <StatCard icon={Banknote} label="This Month" value={`₱${(currentMonthData?.revenue ?? 0).toLocaleString()}`} sub={`${currentMonthData?.bookings ?? 0} bookings`} />
               <StatCard icon={TrendingUp} label="All-Time Revenue" value={`₱${totalRevenue.toLocaleString()}`} sub={`${activeBookings.length} total bookings`} />
               <StatCard icon={CalendarCheck} label="Occupancy Rate" value={`${currentOccupancy}%`} sub={`${currentMonthData?.occupiedNights ?? 0} of ${currentMonthData?.totalNights ?? 0} unit-nights`} />
               <StatCard icon={Banknote} label="ADR" value={`₱${currentADR.toLocaleString()}`} sub="Avg revenue per occupied room" />
               <StatCard icon={TrendingUp} label="RevPAR" value={`₱${currentRevPAR.toLocaleString()}`} sub="Revenue per available room" />
-              <StatCard icon={ShieldMinus} label="Security Deposit Deducted" value={`₱${totalDepositDeducted.toLocaleString()}`} sub="Deducted from security deposits" />
+              <StatCard icon={ShieldMinus} label="Deposit Deducted" value={`₱${totalDepositDeducted.toLocaleString()}`} sub="From security deposits" />
               <StatCard icon={UtensilsCrossed} label="Utensil Rental" value={`₱${totalUtensilRevenue.toLocaleString()}`} sub="Total utensil rental fees" />
               <StatCard icon={Users} label="Top Source" value={sourceData[0]?.name ?? "—"} sub={sourceData[0] ? `₱${sourceData[0].revenue.toLocaleString()}` : ""} />
             </div>
@@ -286,11 +286,11 @@ function StatCard({ icon: Icon, label, value, sub }: { icon: any; label: string;
   return (
     <div className="rounded-lg border border-border bg-card p-4">
       <div className="flex items-center gap-2 mb-2">
-        <Icon className="h-4 w-4 text-primary" />
-        <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium">{label}</span>
+        <Icon className="h-4 w-4 text-primary shrink-0" />
+        <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium truncate">{label}</span>
       </div>
-      <div className="text-2xl font-display text-foreground">{value}</div>
-      <div className="text-xs text-muted-foreground mt-0.5">{sub}</div>
+      <div className="text-lg sm:text-xl font-display text-foreground truncate">{value}</div>
+      <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 truncate">{sub}</div>
     </div>
   );
 }
