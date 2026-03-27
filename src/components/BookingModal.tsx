@@ -540,6 +540,9 @@ export function BookingModal({
         setCarDetails([]);
       }
       setExtrasPaidStatus((booking as any).extras_paid_status && typeof (booking as any).extras_paid_status === 'object' ? (booking as any).extras_paid_status : {});
+      setDpModeOfPayment((booking as any).dp_mode_of_payment ?? (booking as any).mode_of_payment ?? "");
+      setRemainingModeOfPayment((booking as any).remaining_mode_of_payment ?? "");
+      setRemainingPaid((booking as any).remaining_paid ?? false);
     } else {
       originalValuesRef.current = null;
       form.reset({
@@ -590,6 +593,9 @@ export function BookingModal({
       setAdditionalUnitIds([]);
       setAdditionalPet(false);
       setBirthMonthFilter(0);
+      setDpModeOfPayment("");
+      setRemainingModeOfPayment("");
+      setRemainingPaid(false);
     }
   }, [open, booking, defaultUnitId, defaultDate, form]);
 
