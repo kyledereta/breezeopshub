@@ -528,6 +528,19 @@ export function BookingModal({
     }
   }, [open, booking, defaultUnitId, defaultDate, form]);
 
+  function handleFormSubmit(values: BookingFormValues) {
+    // Check for overlap/unavailable units - show confirmation if needed
+    const allUnitIds = [values.unit_id, ...additionalUnitIds].filter(Boolean);
+    const unavailableUnits = units.filter((u) => allUnitIds.includes(u.id) && u.unit_status !== "Available");
+    
+    if (conflictWarning || unavailableUnits.length > 0) {
+      setPendingSubmitValues(values);
+      setShowOverlapConfirm(true);
+      return;
+    }
+    onSubmit(values);
+  }
+
   async function onSubmit(values: BookingFormValues) {
     try {
       const payload = {
