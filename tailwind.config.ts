@@ -62,8 +62,8 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
         // Brand colors via tokens
-        forest: "hsl(var(--forest))",
-        "forest-deep": "hsl(var(--forest-deep))",
+        teal: "hsl(var(--teal))",
+        "teal-light": "hsl(var(--teal-light))",
         gold: "hsl(var(--gold))",
         "gold-light": "hsl(var(--gold-light))",
         coral: "hsl(var(--coral))",
