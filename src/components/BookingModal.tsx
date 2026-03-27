@@ -1442,6 +1442,26 @@ export function BookingModal({
                   )}
                 />
               </div>
+              {/* Mode of Payment */}
+              <FormField
+                control={form.control}
+                name="mode_of_payment"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs text-muted-foreground">Mode of Payment</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <FormControl>
+                        <SelectTrigger className="bg-background border-border"><SelectValue placeholder="Select..." /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-popover border-border">
+                        <SelectItem value="Cash">Cash</SelectItem>
+                        <SelectItem value="Gcash">Gcash</SelectItem>
+                        <SelectItem value="EastWest Bank">EastWest Bank</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
               <div className="grid grid-cols-2 gap-3">
                 <FormField
                   control={form.control}
