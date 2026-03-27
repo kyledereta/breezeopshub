@@ -1420,7 +1420,7 @@ export function BookingModal({
                           <SelectTrigger className="bg-background border-border"><SelectValue /></SelectTrigger>
                         </FormControl>
                         <SelectContent className="bg-popover border-border">
-                          {Constants.public.Enums.booking_status.map((s) => (
+                          {Constants.public.Enums.booking_status.filter((s) => s !== "Inquiry").map((s) => (
                             <SelectItem key={s} value={s}>{s}</SelectItem>
                           ))}
                         </SelectContent>
