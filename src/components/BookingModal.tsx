@@ -76,6 +76,7 @@ const bookingSchema = z.object({
   payment_status: z.string(),
   booking_status: z.string(),
   booking_source: z.string(),
+  mode_of_payment: z.string().optional().or(z.literal("")),
   email: z.string().email().max(255).optional().or(z.literal("")),
   phone: z.string().max(20).optional().or(z.literal("")),
   notes: z.string().max(500).optional().or(z.literal("")),
@@ -127,6 +128,8 @@ export function BookingModal({
   const [idFiles, setIdFiles] = useState<File[]>([]);
   const [existingIds, setExistingIds] = useState<string[]>([]);
   const [conflictWarning, setConflictWarning] = useState<string | null>(null);
+  const [showOverlapConfirm, setShowOverlapConfirm] = useState(false);
+  const [pendingSubmitValues, setPendingSubmitValues] = useState<BookingFormValues | null>(null);
   const [unitSearch, setUnitSearch] = useState("");
   const [unitPopoverOpen, setUnitPopoverOpen] = useState(false);
   const [guestSuggestions, setGuestSuggestions] = useState<{ id: string; guest_name: string; phone: string | null; email: string | null; pets: boolean; birthday_month: number | null }[]>([]);
@@ -171,6 +174,7 @@ export function BookingModal({
       payment_status: "Unpaid",
       booking_status: "Inquiry",
       booking_source: "Other",
+      mode_of_payment: "",
       email: "",
       phone: "",
       notes: "",
@@ -209,9 +213,34 @@ export function BookingModal({
   const watchTowelRent = form.watch("towel_rent");
   const watchBonfire = form.watch("bonfire");
 
-  // Get selected unit's max_pax
+  // Get combined max_pax across all selected units
+  const combinedMaxPax = useMemo(() => {
+    const allIds = [watchUnitId, ...additionalUnitIds].filter(Boolean);
+    const selectedUnits = units.filter((u) => allIds.includes(u.id));
+    return selectedUnits.reduce((sum, u) => sum + u.max_pax, 0);
+  }, [units, watchUnitId, additionalUnitIds]);
+
   const selectedUnit = useMemo(() => units.find((u) => u.id === watchUnitId), [units, watchUnitId]);
-  const extraPax = selectedUnit ? Math.max(0, watchPax - selectedUnit.max_pax) : 0;
+  const extraPax = combinedMaxPax > 0 ? Math.max(0, watchPax - combinedMaxPax) : 0;
+
+  // Auto-set pax to unit's max_pax when unit is selected (new bookings only)
+  useEffect(() => {
+    if (isEditing) return;
+    if (combinedMaxPax > 0) {
+      form.setValue("pax", combinedMaxPax);
+    }
+  }, [combinedMaxPax, isEditing, form]);
+
+  // Auto-set deposit_paid based on payment status
+  const watchPaymentStatus = form.watch("payment_status");
+  useEffect(() => {
+    if (watchPaymentStatus === "Unpaid") {
+      form.setValue("deposit_paid", 0);
+    } else if (watchPaymentStatus === "Fully Paid") {
+      const total = form.getValues("total_amount");
+      form.setValue("deposit_paid", total);
+    }
+  }, [watchPaymentStatus, form]);
 
   // Check for booking conflicts (all selected units)
   useEffect(() => {
@@ -385,6 +414,10 @@ export function BookingModal({
 
       const total = Math.max(0, base + extras - discountAmount);
       form.setValue("total_amount", total);
+      // Auto-sync deposit when Fully Paid
+      if (form.getValues("payment_status") === "Fully Paid") {
+        form.setValue("deposit_paid", total);
+      }
     } catch {
       // Invalid dates, skip
     }
@@ -426,6 +459,7 @@ export function BookingModal({
         payment_status: booking.payment_status,
         booking_status: booking.booking_status,
         booking_source: booking.booking_source,
+        mode_of_payment: (booking as any).mode_of_payment ?? "",
         email: booking.email ?? "",
         phone: booking.phone ?? "",
         notes: booking.notes ?? "",
@@ -470,6 +504,7 @@ export function BookingModal({
         payment_status: "Unpaid",
         booking_status: "Inquiry",
         booking_source: "Other",
+        mode_of_payment: "",
         email: "",
         phone: "",
         notes: "",
@@ -497,6 +532,19 @@ export function BookingModal({
     }
   }, [open, booking, defaultUnitId, defaultDate, form]);
 
+  function handleFormSubmit(values: BookingFormValues) {
+    // Check for overlap/unavailable units - show confirmation if needed
+    const allUnitIds = [values.unit_id, ...additionalUnitIds].filter(Boolean);
+    const unavailableUnits = units.filter((u) => allUnitIds.includes(u.id) && u.unit_status !== "Available");
+    
+    if (conflictWarning || unavailableUnits.length > 0) {
+      setPendingSubmitValues(values);
+      setShowOverlapConfirm(true);
+      return;
+    }
+    onSubmit(values);
+  }
+
   async function onSubmit(values: BookingFormValues) {
     try {
       const payload = {
@@ -510,6 +558,7 @@ export function BookingModal({
         payment_status: values.payment_status as PaymentStatus,
         booking_status: values.booking_status as BookingStatus,
         booking_source: values.booking_source as BookingSource,
+        mode_of_payment: values.mode_of_payment || null,
         email: values.email || null,
         phone: values.phone || null,
         notes: values.notes || null,
@@ -723,6 +772,7 @@ export function BookingModal({
   }, [availableUnitsForAdd, addUnitSearch]);
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-card border-border max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -732,7 +782,7 @@ export function BookingModal({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
             {/* Guest Info */}
             <div className="space-y-3">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">
@@ -1126,7 +1176,7 @@ export function BookingModal({
               {extraPax > 0 && (
                 <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
                   <p className="text-xs text-primary font-medium">
-                    +{extraPax} extra guest{extraPax > 1 ? "s" : ""} beyond {selectedUnit?.max_pax} max PAX
+                    +{extraPax} extra guest{extraPax > 1 ? "s" : ""} beyond {combinedMaxPax} combined max PAX
                   </p>
                   <FormField
                     control={form.control}
@@ -1397,6 +1447,26 @@ export function BookingModal({
                   )}
                 />
               </div>
+              {/* Mode of Payment */}
+              <FormField
+                control={form.control}
+                name="mode_of_payment"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs text-muted-foreground">Mode of Payment</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <FormControl>
+                        <SelectTrigger className="bg-background border-border"><SelectValue placeholder="Select..." /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-popover border-border">
+                        <SelectItem value="Cash">Cash</SelectItem>
+                        <SelectItem value="Gcash">Gcash</SelectItem>
+                        <SelectItem value="EastWest Bank">EastWest Bank</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
               <div className="grid grid-cols-2 gap-3">
                 <FormField
                   control={form.control}
@@ -1794,5 +1864,47 @@ export function BookingModal({
         </Form>
       </DialogContent>
     </Dialog>
+
+    {/* Overlap / Unavailable Confirmation Dialog */}
+    <Dialog open={showOverlapConfirm} onOpenChange={setShowOverlapConfirm}>
+      <DialogContent className="bg-card border-border max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="text-foreground flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-warning-orange" />
+            Booking Warning
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2 text-sm text-muted-foreground">
+          {conflictWarning && <p>{conflictWarning}</p>}
+          {(() => {
+            const allUnitIds = [watchUnitId, ...additionalUnitIds].filter(Boolean);
+            const unavailable = units.filter((u) => allUnitIds.includes(u.id) && u.unit_status !== "Available");
+            if (unavailable.length > 0) {
+              return <p>⚠️ Unavailable units: {unavailable.map((u) => `${u.name} (${u.unit_status})`).join(", ")}</p>;
+            }
+            return null;
+          })()}
+          <p className="text-foreground font-medium">Do you want to proceed anyway?</p>
+        </div>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="ghost" onClick={() => { setShowOverlapConfirm(false); setPendingSubmitValues(null); }} className="text-muted-foreground">
+            Cancel
+          </Button>
+          <Button
+            className="bg-warning-orange text-white hover:bg-warning-orange/90"
+            onClick={() => {
+              setShowOverlapConfirm(false);
+              if (pendingSubmitValues) {
+                onSubmit(pendingSubmitValues);
+                setPendingSubmitValues(null);
+              }
+            }}
+          >
+            Proceed Anyway
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

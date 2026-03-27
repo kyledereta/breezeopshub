@@ -1,0 +1,1 @@
+ALTER TABLE public.bookings ADD COLUMN mode_of_payment text DEFAULT NULL;

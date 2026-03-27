@@ -13,7 +13,7 @@ import {
   isWeekend,
   getDay,
 } from "date-fns";
-import { Home, Tent, TreePalm, Crown, Fan, PawPrint, Users, Facebook, Instagram, Globe, MapPin, Share2, UtensilsCrossed, TrendingUp } from "lucide-react";
+import { Home, Tent, TreePalm, Crown, Fan, PawPrint, Users, Facebook, Instagram, Globe, MapPin, Share2, UtensilsCrossed, TrendingUp, Link2 } from "lucide-react";
 import { getPHHolidaysForMonth } from "@/lib/phHolidays";
 import { Button } from "@/components/ui/button";
 import { useUnits, groupUnitsByArea } from "@/hooks/useUnits";
@@ -169,6 +169,28 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
     }
     return map;
   }, [bookings, days]);
+
+  // Build group lookup for connector lines
+  const flatUnitOrder = useMemo(() => {
+    const result: string[] = [];
+    for (const { units: areaUnits } of groupedUnits) {
+      for (const u of areaUnits) result.push(u.id);
+    }
+    return result;
+  }, [groupedUnits]);
+
+  const hasGroupConnectorBelow = useCallback((unitId: string, dateStr: string) => {
+    const booking = bookingMap.get(`${unitId}-${dateStr}`);
+    if (!booking) return false;
+    const gid = (booking as any).booking_group_id;
+    if (!gid) return false;
+    const unitIndex = flatUnitOrder.indexOf(unitId);
+    if (unitIndex < 0 || unitIndex >= flatUnitOrder.length - 1) return false;
+    const nextUnitId = flatUnitOrder[unitIndex + 1];
+    const nextBooking = bookingMap.get(`${nextUnitId}-${dateStr}`);
+    if (!nextBooking) return false;
+    return (nextBooking as any).booking_group_id === gid;
+  }, [bookingMap, flatUnitOrder]);
 
   // Compute daily occupancy
   const dailyOccupancy = useMemo(() => {
@@ -468,6 +490,9 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                                   <div className={cn("rounded-full overflow-hidden", getBookingColor(booking))}>
                                     <BookingCell booking={booking} />
                                   </div>
+                                  {hasGroupConnectorBelow(unit.id, dateStr) && (
+                                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-px h-[4px] bg-primary" />
+                                  )}
                                 </td>
                               </TooltipTrigger>
                               <BookingTooltip booking={booking} />
@@ -488,6 +513,9 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                                 <div className={cn("rounded-full overflow-hidden", getBookingColor(booking))}>
                                   <BookingCell booking={booking} />
                                 </div>
+                                {hasGroupConnectorBelow(unit.id, dateStr) && (
+                                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-px h-[4px] bg-primary" />
+                                )}
                               </td>
                             </TooltipTrigger>
                             <BookingTooltip booking={booking} />
@@ -549,9 +577,11 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
 }
 
 function BookingCell({ booking }: { booking: Booking }) {
+  const isGrouped = !!(booking as any).booking_group_id;
   return (
     <div className="px-2 flex items-center gap-1 truncate h-[22px]">
       <span className={cn("h-2 w-2 rounded-full shrink-0", getPaymentDotColor(booking.payment_status))} />
+      {isGrouped && <Link2 className="h-2 w-2 text-background/70 shrink-0" />}
       <span className="text-[9px] text-background font-medium truncate leading-none">{booking.guest_name}</span>
       <span className="text-[9px] text-background/60 shrink-0 leading-none">{booking.pax}</span>
       {booking.pets && <PawPrint className="h-2 w-2 text-background/60 shrink-0" />}

@@ -81,6 +81,7 @@ export type Database = {
           key_deposit: boolean
           kitchen_use: boolean
           kitchen_use_fee: number
+          mode_of_payment: string | null
           notes: string | null
           pax: number
           payment_status: Database["public"]["Enums"]["payment_status"]
@@ -133,6 +134,7 @@ export type Database = {
           key_deposit?: boolean
           kitchen_use?: boolean
           kitchen_use_fee?: number
+          mode_of_payment?: string | null
           notes?: string | null
           pax?: number
           payment_status?: Database["public"]["Enums"]["payment_status"]
@@ -185,6 +187,7 @@ export type Database = {
           key_deposit?: boolean
           kitchen_use?: boolean
           kitchen_use_fee?: number
+          mode_of_payment?: string | null
           notes?: string | null
           pax?: number
           payment_status?: Database["public"]["Enums"]["payment_status"]
