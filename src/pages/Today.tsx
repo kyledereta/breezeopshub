@@ -219,13 +219,6 @@ export default function TodayPage() {
       }
     }
 
-    // Include guests due to depart (still checked in, checkout is today)
-    for (const booking of dueDepartures) {
-      if (!clearedDepartureIds.includes(booking.id)) {
-        byId.set(booking.id, booking);
-      }
-    }
-
     for (const bookingId of manualDepartureIds) {
       const booking = allBookings.find((item) => item.id === bookingId);
       if (booking && !clearedDepartureIds.includes(booking.id)) {
