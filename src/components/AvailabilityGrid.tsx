@@ -405,7 +405,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
                                 <td
                                   colSpan={Math.min(span, days.length - days.indexOf(day))}
                                   className={cn(
-                                    "cursor-pointer relative overflow-hidden",
+                                    "cursor-pointer relative overflow-hidden rounded-full",
                                     getBookingColor(booking)
                                   )}
                                   onClick={() => onBookingClick?.(booking)}
@@ -426,7 +426,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
                               <td
                                 colSpan={Math.min(span, days.length - days.indexOf(day))}
                                 className={cn(
-                                  "cursor-pointer relative overflow-hidden rounded-sm",
+                                  "cursor-pointer relative overflow-hidden rounded-full",
                                   getBookingColor(booking)
                                 )}
                                 onClick={() => onBookingClick?.(booking)}
