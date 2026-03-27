@@ -301,6 +301,41 @@ export type Database = {
         }
         Relationships: []
       }
+      unit_status_log: {
+        Row: {
+          changed_at: string
+          id: string
+          new_status: string
+          notes: string | null
+          old_status: string | null
+          unit_id: string
+        }
+        Insert: {
+          changed_at?: string
+          id?: string
+          new_status: string
+          notes?: string | null
+          old_status?: string | null
+          unit_id: string
+        }
+        Update: {
+          changed_at?: string
+          id?: string
+          new_status?: string
+          notes?: string | null
+          old_status?: string | null
+          unit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unit_status_log_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       units: {
         Row: {
           area: string
