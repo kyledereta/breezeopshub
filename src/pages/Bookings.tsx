@@ -216,61 +216,106 @@ export default function BookingsPage() {
             </div>
           ) : (
             <>
-              <Table>
-                <TableHeader className="sticky top-0 z-10">
-                  <TableRow className="bg-card border-b border-border hover:bg-card">
-                    <TableHead className="text-xs text-muted-foreground font-medium">Ref</TableHead>
-                    <TableHead className="text-xs text-muted-foreground font-medium">Guest</TableHead>
-                    <TableHead className="text-xs text-muted-foreground font-medium">Unit</TableHead>
-                    <TableHead className="text-xs text-muted-foreground font-medium">Check-in</TableHead>
-                    <TableHead className="text-xs text-muted-foreground font-medium">Check-out</TableHead>
-                    <TableHead className="text-xs text-muted-foreground font-medium text-center">PAX</TableHead>
-                    <TableHead className="text-xs text-muted-foreground font-medium">Status</TableHead>
-                    <TableHead className="text-xs text-muted-foreground font-medium">Payment</TableHead>
-                    <TableHead className="text-xs text-muted-foreground font-medium text-right">Total</TableHead>
-                    <TableHead className="text-xs text-muted-foreground font-medium">Source</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredBookings.map((booking) => (
-                    <TableRow
-                      key={booking.id}
-                      className="cursor-pointer hover:bg-muted/20 border-b border-border"
-                      onClick={() => openView(booking)}
-                    >
-                      <TableCell className="text-xs text-muted-foreground font-mono">{booking.booking_ref}</TableCell>
-                      <TableCell className="text-sm font-medium text-foreground">{booking.guest_name}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
+              {/* Desktop Table */}
+              <div className="hidden sm:block">
+                <Table>
+                  <TableHeader className="sticky top-0 z-10">
+                    <TableRow className="bg-card border-b border-border hover:bg-card">
+                      <TableHead className="text-xs text-muted-foreground font-medium">Ref</TableHead>
+                      <TableHead className="text-xs text-muted-foreground font-medium">Guest</TableHead>
+                      <TableHead className="text-xs text-muted-foreground font-medium">Unit</TableHead>
+                      <TableHead className="text-xs text-muted-foreground font-medium">Check-in</TableHead>
+                      <TableHead className="text-xs text-muted-foreground font-medium">Check-out</TableHead>
+                      <TableHead className="text-xs text-muted-foreground font-medium text-center">PAX</TableHead>
+                      <TableHead className="text-xs text-muted-foreground font-medium">Status</TableHead>
+                      <TableHead className="text-xs text-muted-foreground font-medium">Payment</TableHead>
+                      <TableHead className="text-xs text-muted-foreground font-medium text-right">Total</TableHead>
+                      <TableHead className="text-xs text-muted-foreground font-medium">Source</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredBookings.map((booking) => (
+                      <TableRow
+                        key={booking.id}
+                        className="cursor-pointer hover:bg-muted/20 border-b border-border"
+                        onClick={() => openView(booking)}
+                      >
+                        <TableCell className="text-xs text-muted-foreground font-mono">{booking.booking_ref}</TableCell>
+                        <TableCell className="text-sm font-medium text-foreground">{booking.guest_name}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {(booking as any).booking_group_id
+                            ? (groupUnitNames.get((booking as any).booking_group_id) ?? []).join(" + ")
+                            : unitMap.get(booking.unit_id ?? "") ?? "—"}
+                        </TableCell>
+                        <TableCell className="text-xs text-foreground">{format(parseISO(booking.check_in), "MMM d, yyyy")}</TableCell>
+                        <TableCell className="text-xs text-foreground">{format(parseISO(booking.check_out), "MMM d, yyyy")}</TableCell>
+                        <TableCell className="text-xs text-foreground text-center">{booking.pax}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", getStatusBadgeClass(booking.booking_status))}>
+                            {booking.booking_status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", getPaymentBadgeClass(booking.payment_status))}>
+                            {booking.payment_status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs text-foreground text-right font-medium">₱{booking.total_amount.toLocaleString()}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{booking.booking_source}</TableCell>
+                      </TableRow>
+                    ))}
+                    {filteredBookings.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={10} className="text-center py-12 text-sm text-muted-foreground">
+                          No bookings found
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile Card List */}
+              <div className="sm:hidden divide-y divide-border">
+                {filteredBookings.map((booking) => (
+                  <div
+                    key={booking.id}
+                    className="px-4 py-3 active:bg-muted/20 cursor-pointer"
+                    onClick={() => openView(booking)}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-sm font-medium text-foreground truncate mr-2">{booking.guest_name}</span>
+                      <span className="text-xs text-foreground font-medium shrink-0">₱{booking.total_amount.toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[11px] text-muted-foreground">
                         {(booking as any).booking_group_id
                           ? (groupUnitNames.get((booking as any).booking_group_id) ?? []).join(" + ")
                           : unitMap.get(booking.unit_id ?? "") ?? "—"}
-                      </TableCell>
-                      <TableCell className="text-xs text-foreground">{format(parseISO(booking.check_in), "MMM d, yyyy")}</TableCell>
-                      <TableCell className="text-xs text-foreground">{format(parseISO(booking.check_out), "MMM d, yyyy")}</TableCell>
-                      <TableCell className="text-xs text-foreground text-center">{booking.pax}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", getStatusBadgeClass(booking.booking_status))}>
+                      </span>
+                      <span className="text-[11px] text-muted-foreground font-mono">{booking.booking_ref}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-muted-foreground">
+                        {format(parseISO(booking.check_in), "MMM d")} → {format(parseISO(booking.check_out), "MMM d")}
+                        <span className="ml-1.5">· {booking.pax} pax</span>
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <Badge variant="outline" className={cn("text-[9px] px-1 py-0", getStatusBadgeClass(booking.booking_status))}>
                           {booking.booking_status}
                         </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", getPaymentBadgeClass(booking.payment_status))}>
+                        <Badge variant="outline" className={cn("text-[9px] px-1 py-0", getPaymentBadgeClass(booking.payment_status))}>
                           {booking.payment_status}
                         </Badge>
-                      </TableCell>
-                      <TableCell className="text-xs text-foreground text-right font-medium">₱{booking.total_amount.toLocaleString()}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{booking.booking_source}</TableCell>
-                    </TableRow>
-                  ))}
-                  {filteredBookings.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={10} className="text-center py-12 text-sm text-muted-foreground">
-                        No bookings found
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {filteredBookings.length === 0 && (
+                  <div className="text-center py-12 text-sm text-muted-foreground">
+                    No bookings found
+                  </div>
+                )}
 
               {/* Deleted / Cancelled Section */}
               {deletedBookings.length > 0 && (
