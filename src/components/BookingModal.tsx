@@ -259,16 +259,8 @@ export function BookingModal({
     }
   }, [combinedMaxPax, isEditing, form]);
 
-  // Auto-set deposit_paid based on payment status
+  // Watch payment status (used by auto-sync effect below)
   const watchPaymentStatus = form.watch("payment_status");
-  useEffect(() => {
-    if (watchPaymentStatus === "Unpaid") {
-      form.setValue("deposit_paid", 0);
-    } else if (watchPaymentStatus === "Fully Paid") {
-      const total = form.getValues("total_amount");
-      form.setValue("deposit_paid", total);
-    }
-  }, [watchPaymentStatus, form]);
 
   // Check for booking conflicts (all selected units)
   useEffect(() => {
@@ -481,7 +473,6 @@ export function BookingModal({
   // Auto-sync payment_status based on deposit, extras paid, and remaining paid
   const watchTotalAmount = form.watch("total_amount");
   const watchDepositPaid = form.watch("deposit_paid");
-  const watchPaymentStatus = form.watch("payment_status");
 
   useEffect(() => {
     const total = Number(watchTotalAmount) || 0;
