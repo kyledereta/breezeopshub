@@ -7,7 +7,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
   ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend,
 } from "recharts";
-import { Banknote, TrendingUp, CalendarCheck, Users, UtensilsCrossed, ShieldMinus, Download } from "lucide-react";
+import { Banknote, TrendingUp, CalendarCheck, Users, UtensilsCrossed, ShieldMinus, Download, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { downloadCsv } from "@/lib/csvExport";
 
