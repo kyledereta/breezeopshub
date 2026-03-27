@@ -339,7 +339,7 @@ export default function TodayPage() {
                 alert={pendingBalances.length > 0}
                 onClick={() => navigate("/balances")}
               />
-              <StatCard icon={Users} label="Guests" value={String(guests.length)} onClick={() => navigate("/guests")} />
+              <StatCard icon={Users} label="Guests" value={String(checkIns.length + inHouse.length + visibleDepartures.length)} sub="Today's bookings" onClick={() => navigate("/guests")} />
             </div>
 
             {/* Overbooking Warnings */}
