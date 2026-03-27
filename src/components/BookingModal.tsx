@@ -1526,6 +1526,25 @@ export function BookingModal({
                       <span className="text-primary">Total</span>
                       <span className="text-primary">₱{total.toLocaleString()}</span>
                     </div>
+                    {(() => {
+                      const depositPaid = Number(form.watch("deposit_paid")) || 0;
+                      const balance = total - depositPaid;
+                      if (depositPaid > 0 && balance > 0) {
+                        return (
+                          <>
+                            <div className="flex justify-between text-xs">
+                              <span className="text-muted-foreground">Deposit Paid</span>
+                              <span className="text-foreground">-₱{depositPaid.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between text-sm font-semibold">
+                              <span className="text-destructive">Balance Due</span>
+                              <span className="text-destructive">₱{balance.toLocaleString()}</span>
+                            </div>
+                          </>
+                        );
+                      }
+                      return null;
+                    })()}
                   </div>
                 );
               } catch {
