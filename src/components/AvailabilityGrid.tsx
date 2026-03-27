@@ -432,7 +432,8 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
                                   colSpan={Math.min(span, days.length - days.indexOf(day))}
                                   className={cn(
                                     "cursor-pointer relative overflow-hidden rounded-full",
-                                    getBookingColor(booking)
+                                    getBookingColor(booking),
+                                    getBookingRing(booking)
                                   )}
                                   onClick={() => onBookingClick?.(booking)}
                                 >
@@ -453,7 +454,8 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
                                 colSpan={Math.min(span, days.length - days.indexOf(day))}
                                 className={cn(
                                   "cursor-pointer relative overflow-hidden rounded-full",
-                                  getBookingColor(booking)
+                                  getBookingColor(booking),
+                                  getBookingRing(booking)
                                 )}
                                 onClick={() => onBookingClick?.(booking)}
                               >
