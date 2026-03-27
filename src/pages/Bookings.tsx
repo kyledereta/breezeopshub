@@ -251,12 +251,12 @@ export default function BookingsPage() {
                         <TableCell className="text-xs text-foreground">{format(parseISO(booking.check_out), "MMM d, yyyy")}</TableCell>
                         <TableCell className="text-xs text-foreground text-center">{booking.pax}</TableCell>
                         <TableCell>
-                          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", getStatusBadgeClass(booking.booking_status))}>
+                          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 whitespace-nowrap", getStatusBadgeClass(booking.booking_status))}>
                             {booking.booking_status}
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", getPaymentBadgeClass(booking.payment_status))}>
+                          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 whitespace-nowrap", getPaymentBadgeClass(booking.payment_status))}>
                             {booking.payment_status}
                           </Badge>
                         </TableCell>
