@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { useUnits, groupUnitsByArea } from "@/hooks/useUnits";
 import { useCreateBooking, useUpdateBooking } from "@/hooks/useBookingMutations";
 import type { Booking } from "@/hooks/useBookings";
