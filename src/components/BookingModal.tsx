@@ -97,6 +97,9 @@ const bookingSchema = z.object({
   towel_rent_fee: z.coerce.number().min(0),
   bonfire: z.boolean(),
   bonfire_fee: z.coerce.number().min(0),
+  daytour_fee: z.coerce.number().min(0),
+  other_extras_fee: z.coerce.number().min(0),
+  other_extras_note: z.string().max(300).optional().or(z.literal("")),
 }).refine((data) => data.check_out > data.check_in, {
   message: "Check-out must be after check-in",
   path: ["check_out"],
