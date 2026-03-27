@@ -112,7 +112,7 @@ export function GuestModal({ open, onOpenChange, guest }: GuestModalProps) {
         await updateGuest.mutateAsync({ id: guest.id, ...payload });
         toast.success("Guest updated");
       } else {
-        await createGuest.mutateAsync(payload);
+        await createGuest.mutateAsync({ ...payload, guest_ref: generateGuestRef() });
         toast.success("Guest added");
       }
       onOpenChange(false);

@@ -35,6 +35,7 @@ import type { Booking } from "@/hooks/useBookings";
 import { Constants, type Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { generateGuestRef } from "@/lib/guestRef";
 import { Upload, X, FileImage, PawPrint, AlertTriangle } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { logBookingChanges } from "@/hooks/useBookingAuditLog";
@@ -311,6 +312,7 @@ export function BookingModal({
             .from("guests")
             .insert({
               guest_name: values.guest_name.trim(),
+              guest_ref: generateGuestRef(),
               phone: values.phone || null,
               email: values.email || null,
               pets: values.pets,
