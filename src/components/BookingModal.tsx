@@ -1235,6 +1235,8 @@ export function BookingModal({
                         watchWaterJug && "Water Jug",
                         watchTowelRent && "Towel",
                         watchBonfire && "Bonfire",
+                        Number(watchDaytourFee) > 0 && "Daytour",
+                        Number(watchOtherExtrasFee) > 0 && "Others",
                       ].filter(Boolean).join(", ") || "Select extras..."}
                     </span>
                     <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground" />
