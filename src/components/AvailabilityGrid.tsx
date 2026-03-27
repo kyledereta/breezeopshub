@@ -26,6 +26,18 @@ function getBookingColor(_booking: Booking): string {
   return "bg-foreground";
 }
 
+function getSourceDotColor(source: string): string {
+  switch (source) {
+    case "Facebook Direct": return "bg-ocean";
+    case "Instagram": return "bg-airbnb-pink";
+    case "Airbnb": return "bg-airbnb-pink";
+    case "Walk-in": return "bg-coral";
+    case "Referral": return "bg-primary";
+    case "TikTok": return "bg-foreground";
+    default: return "bg-muted-foreground";
+  }
+}
+
 function getBookingRing(booking: Booking): string {
   switch (booking.payment_status) {
     case "Fully Paid":
@@ -513,16 +525,11 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
 }
 
 function BookingCell({ booking }: { booking: Booking }) {
-  const SourceIcon = getSourceIcon(booking.booking_source);
   return (
-    <div className="px-1.5 flex items-center gap-1 truncate h-[18px]">
-      {booking.booking_source === "Airbnb" ? (
-        <AirbnbIcon className="h-2 w-2 shrink-0 text-background/80" />
-      ) : SourceIcon ? (
-        <SourceIcon className="h-2 w-2 shrink-0 text-background/80" />
-      ) : null}
-      <span className="text-[8px] text-background font-medium truncate leading-none">{booking.guest_name}</span>
-      <span className="text-[8px] text-background/60 shrink-0 leading-none">{booking.pax}</span>
+    <div className="px-2 flex items-center gap-1 truncate h-[22px]">
+      <span className={cn("h-2 w-2 rounded-full shrink-0", getSourceDotColor(booking.booking_source))} />
+      <span className="text-[9px] text-background font-medium truncate leading-none">{booking.guest_name}</span>
+      <span className="text-[9px] text-background/60 shrink-0 leading-none">{booking.pax}</span>
       {booking.pets && <PawPrint className="h-2 w-2 text-background/60 shrink-0" />}
       {booking.utensil_rental && <UtensilsCrossed className="h-2 w-2 text-background/60 shrink-0" />}
     </div>
