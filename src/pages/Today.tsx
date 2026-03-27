@@ -1,4 +1,5 @@
 import { useMemo, useState, useCallback } from "react";
+import { getUnpaidExtras, getUnpaidExtrasTotal, hasUnpaidExtras } from "@/lib/unpaidExtras";
 import { format, parseISO, addDays, eachDayOfInterval, isWithinInterval, isSameDay, startOfMonth, endOfMonth } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
@@ -158,7 +159,7 @@ export default function TodayPage() {
       if (b.booking_status === "Checked In" && ci <= todayStr && co >= todayStr) {
         inHouse.push(b);
       }
-      if (b.payment_status === "Unpaid" || b.payment_status === "Partial DP") {
+      if (b.payment_status === "Unpaid" || b.payment_status === "Partial DP" || hasUnpaidExtras(b)) {
         pendingBalances.push(b);
       }
       // Today's revenue: bookings checked in today (revenue attributed to check-in month)
@@ -285,7 +286,13 @@ export default function TodayPage() {
 
   const totalPaxInHouse = inHouse.reduce((sum, b) => sum + b.pax, 0);
   const occupancyRate = units.length > 0 ? Math.round((inHouse.length / units.length) * 100) : 0;
-  const pendingTotal = pendingBalances.reduce((s, b) => s + (b.total_amount - b.deposit_paid), 0);
+  const pendingTotal = pendingBalances.reduce((s, b) => {
+    const balance = b.total_amount - b.deposit_paid;
+    const unpaidExtrasAmt = getUnpaidExtrasTotal(b);
+    // If fully paid but has unpaid extras, show only the extras amount
+    if (balance <= 0 && unpaidExtrasAmt > 0) return s + unpaidExtrasAmt;
+    return s + Math.max(balance, 0);
+  }, 0);
   const isLoading = bookingsLoading || unitsLoading;
 
   const groupedUnits = useMemo(() => groupUnitsByArea(units), [units]);
@@ -462,18 +469,31 @@ export default function TodayPage() {
                   <AlertCircle className="h-3.5 w-3.5" /> Pending Balances ({pendingBalances.length})
                 </h3>
                 <div className="space-y-2">
-                  {pendingBalances.slice(0, 5).map((b) => (
-                    <div key={b.id} className="flex items-center justify-between text-sm">
-                      <div className="min-w-0">
-                        <span className="text-foreground font-medium">{b.guest_name}</span>
-                        <span className="text-muted-foreground ml-2 text-xs">{b.booking_ref}</span>
+                  {pendingBalances.slice(0, 5).map((b) => {
+                    const balance = b.total_amount - b.deposit_paid;
+                    const unpaidExtrasList = getUnpaidExtras(b);
+                    const unpaidExtrasAmt = unpaidExtrasList.reduce((s, e) => s + e.amount, 0);
+                    const displayAmount = balance > 0 ? balance : unpaidExtrasAmt;
+                    return (
+                      <div key={b.id} className="space-y-0.5">
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="min-w-0">
+                            <span className="text-foreground font-medium">{b.guest_name}</span>
+                            <span className="text-muted-foreground ml-2 text-xs">{b.booking_ref}</span>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span className="text-destructive font-medium">₱{displayAmount.toLocaleString()}</span>
+                            <Badge variant="outline" className="ml-2 text-[10px]">{b.payment_status}</Badge>
+                          </div>
+                        </div>
+                        {unpaidExtrasList.length > 0 && (
+                          <div className="text-[10px] text-warning-orange pl-2">
+                            Unpaid: {unpaidExtrasList.map(e => e.name).join(", ")}
+                          </div>
+                        )}
                       </div>
-                      <div className="text-right shrink-0">
-                        <span className="text-destructive font-medium">₱{(b.total_amount - b.deposit_paid).toLocaleString()}</span>
-                        <Badge variant="outline" className="ml-2 text-[10px]">{b.payment_status}</Badge>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   {pendingBalances.length > 5 && (
                     <button className="text-xs text-primary hover:underline" onClick={() => navigate("/balances")}>
                       View all {pendingBalances.length} →

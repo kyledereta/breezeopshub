@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { getUnpaidExtras, hasUnpaidExtras } from "@/lib/unpaidExtras";
 import { format, parseISO } from "date-fns";
 import { AppLayout } from "@/components/AppLayout";
 import { useBookings, type Booking } from "@/hooks/useBookings";
@@ -35,7 +36,8 @@ export default function BalancesPage() {
     return allBookings
       .filter((b) => {
         if ((b as any).is_primary === false) return false;
-        return b.booking_status !== "Cancelled" && (b.payment_status === "Unpaid" || b.payment_status === "Partial DP");
+        if (b.booking_status === "Cancelled") return false;
+        return b.payment_status === "Unpaid" || b.payment_status === "Partial DP" || hasUnpaidExtras(b);
       })
       .sort((a, b) => a.check_in.localeCompare(b.check_in));
   }, [allBookings]);
@@ -123,6 +125,7 @@ export default function BalancesPage() {
                 <TableBody>
                   {pendingBookings.map((booking) => {
                     const balance = booking.total_amount - booking.deposit_paid;
+                    const unpaidExtrasList = getUnpaidExtras(booking);
                     return (
                       <TableRow
                         key={booking.id}
@@ -141,6 +144,11 @@ export default function BalancesPage() {
                           <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", getPaymentBadgeClass(booking.payment_status))}>
                             {booking.payment_status}
                           </Badge>
+                          {unpaidExtrasList.length > 0 && (
+                            <div className="text-[10px] text-warning-orange mt-0.5">
+                              Unpaid: {unpaidExtrasList.map(e => e.name).join(", ")}
+                            </div>
+                          )}
                         </TableCell>
                         <TableCell className="text-xs text-foreground text-right">₱{booking.total_amount.toLocaleString()}</TableCell>
                         <TableCell className="text-xs text-muted-foreground text-right">₱{booking.deposit_paid.toLocaleString()}</TableCell>
