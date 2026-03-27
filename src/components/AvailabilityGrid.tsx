@@ -379,11 +379,19 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                 {/* Area header */}
                 <tr key={area}>
                   <td
-                    colSpan={days.length + 1}
-                    className="bg-secondary/50 px-3 py-1.5 text-[10px] uppercase tracking-[0.15em] text-primary font-semibold border-b border-border"
+                    className="sticky left-0 z-10 bg-secondary border-b border-r border-border px-3 py-1.5 text-[10px] uppercase tracking-[0.15em] text-primary font-semibold shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)]"
                   >
                     {area}
                   </td>
+                  {days.map((day) => (
+                    <td
+                      key={day.toISOString()}
+                      className={cn(
+                        "bg-secondary/50 border-b border-r border-border",
+                        isWeekend(day) && "bg-secondary/70"
+                      )}
+                    />
+                  ))}
                 </tr>
 
                 {/* Unit rows */}
@@ -393,7 +401,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                   return (
                   <tr key={unit.id} className={cn("hover:bg-muted/20 transition-colors h-[30px]", isUnavailable && "opacity-50")}>
                     <td
-                      className="sticky left-0 z-10 bg-card/80 backdrop-blur border-b border-r border-border px-3 py-1 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)] cursor-pointer hover:bg-muted/30 transition-colors"
+                      className="sticky left-0 z-10 bg-card border-b border-r border-border px-3 py-1 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)] cursor-pointer hover:bg-muted/30 transition-colors"
                       onClick={() => onUnitClick?.(unit)}
                     >
                       <div className="flex items-center gap-1.5">
