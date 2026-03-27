@@ -351,6 +351,8 @@ export function BookingModal({
   const watchPetFee = form.watch("pet_fee");
   const watchExtraPaxFee = form.watch("extra_pax_fee");
   const watchWaterJugFee = form.watch("water_jug_fee");
+  const watchTowelRentFee = form.watch("towel_rent_fee");
+  const watchBonfireFee = form.watch("bonfire_fee");
 
   // Auto-calculate total amount based on nightly rate × nights + all extras - discount
   // Supports multi-unit: sums nightly rates across all selected units
@@ -372,7 +374,9 @@ export function BookingModal({
         (watchKitchenUse ? Number(watchKitchenFee) || 0 : 0) +
         (watchPets ? Number(watchPetFee) || 0 : 0) +
         (Number(watchExtraPaxFee) || 0) +
-        (watchWaterJug ? Number(watchWaterJugFee) || 0 : 0);
+        (watchWaterJug ? Number(watchWaterJugFee) || 0 : 0) +
+        (watchTowelRent ? Number(watchTowelRentFee) || 0 : 0) +
+        (watchBonfire ? Number(watchBonfireFee) || 0 : 0);
 
       const discountAmount =
         watchDiscountType === "percentage"
@@ -393,6 +397,8 @@ export function BookingModal({
     watchPets, watchPetFee,
     watchExtraPaxFee,
     watchWaterJug, watchWaterJugFee,
+    watchTowelRent, watchTowelRentFee,
+    watchBonfire, watchBonfireFee,
     watchDiscountType, watchDiscountGiven,
     form,
   ]);
