@@ -1611,7 +1611,9 @@ export function BookingModal({
                   (watchKitchenUse ? Number(watchKitchenFee) || 0 : 0) +
                   (watchPets ? Number(watchPetFee) || 0 : 0) +
                   (Number(watchExtraPaxFee) || 0) +
-                  (watchWaterJug ? Number(watchWaterJugFee) || 0 : 0);
+                  (watchWaterJug ? Number(watchWaterJugFee) || 0 : 0) +
+                  (watchTowelRent ? Number(watchTowelRentFee) || 0 : 0) +
+                  (watchBonfire ? Number(watchBonfireFee) || 0 : 0);
                 const discountAmount =
                   watchDiscountType === "percentage"
                     ? Math.round(((base + extras) * Number(watchDiscountGiven)) / 100)
@@ -1661,6 +1663,18 @@ export function BookingModal({
                       <div className="flex justify-between text-xs">
                         <span className="text-muted-foreground">Water Jug (×{Number(form.watch("water_jug_qty")) || 0})</span>
                         <span className="text-foreground">₱{(Number(watchWaterJugFee) || 0).toLocaleString()}</span>
+                      </div>
+                    )}
+                    {watchTowelRent && Number(watchTowelRentFee) > 0 && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Towel Rent (×{Number(form.watch("towel_rent_qty")) || 0})</span>
+                        <span className="text-foreground">₱{(Number(watchTowelRentFee) || 0).toLocaleString()}</span>
+                      </div>
+                    )}
+                    {watchBonfire && Number(watchBonfireFee) > 0 && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Bonfire Setup</span>
+                        <span className="text-foreground">₱{(Number(watchBonfireFee) || 0).toLocaleString()}</span>
                       </div>
                     )}
                     {discountAmount > 0 && (
