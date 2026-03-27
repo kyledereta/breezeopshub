@@ -92,6 +92,48 @@ export default function RevenuePage() {
       .sort((a, b) => b.revenue - a.revenue);
   }, [allBookings]);
 
+  // TRevPAR breakdown — ancillary revenue categories
+  const trevparData = useMemo(() => {
+    let utensilTotal = 0;
+    let karaokeTotal = 0; // owner earns ₱500 per ₱1,500 charge
+    let petTotal = 0;
+    let kitchenTotal = 0;
+    let extraPaxTotal = 0;
+    let extensionTotal = 0;
+    let roomTotal = 0;
+
+    for (const b of allBookings) {
+      if (b.booking_status === "Cancelled") continue;
+      const utensil = b.utensil_rental_fee ?? 0;
+      const karaoke = b.karaoke_fee ? 500 : 0; // owner keeps ₱500 from ₱1,500
+      const pet = b.pet_fee ?? 0;
+      const kitchen = b.kitchen_use_fee ?? 0;
+      const extraPax = b.extra_pax_fee ?? 0;
+      const extension = b.extension_fee ?? 0;
+      const ancillaries = utensil + (b.karaoke_fee ?? 0) + pet + kitchen + extraPax + extension;
+      const room = Math.max(0, b.total_amount - ancillaries);
+
+      utensilTotal += utensil;
+      karaokeTotal += karaoke;
+      petTotal += pet;
+      kitchenTotal += kitchen;
+      extraPaxTotal += extraPax;
+      extensionTotal += extension;
+      roomTotal += room;
+    }
+
+    const items = [
+      { name: "Room Revenue", value: roomTotal, color: CHART_COLORS.primary },
+      { name: "Utensil Rental", value: utensilTotal, color: CHART_COLORS.ocean },
+      { name: "Karaoke (Owner Share)", value: karaokeTotal, color: CHART_COLORS.coral },
+      { name: "Pet Fee", value: petTotal, color: CHART_COLORS.pink },
+      { name: "Kitchen Use", value: kitchenTotal, color: CHART_COLORS.green },
+      { name: "Extra Pax", value: extraPaxTotal, color: "#8B8C89" },
+      { name: "Extension Fee", value: extensionTotal, color: "#B08D57" },
+    ];
+    return items.filter((i) => i.value > 0);
+  }, [allBookings]);
+
   // Summary stats
   const currentMonth = format(new Date(), "yyyy-MM");
   const currentMonthData = monthlyData.find((m) => m.month === currentMonth);
