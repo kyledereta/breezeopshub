@@ -735,6 +735,8 @@ export function BookingModal({
               towel_rent_fee: 0,
               bonfire_fee: 0,
               extension_fee: 0,
+              daytour_fee: 0,
+              other_extras_fee: 0,
             } as any);
           }
         } else {

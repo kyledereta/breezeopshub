@@ -147,7 +147,9 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
       water_jug: "Water Jug", water_jug_qty: "Water Jug Qty", water_jug_fee: "Water Jug Fee",
       towel_rent: "Towel Rent", towel_rent_qty: "Towel Rent Qty", towel_rent_fee: "Towel Rent Fee",
       bonfire: "Bonfire", bonfire_fee: "Bonfire Fee", extension_fee: "Extension Fee",
-      security_deposit: "Security Deposit Amount",
+      security_deposit: "Security Deposit Amount", daytour_fee: "Daytour Fee",
+      other_extras_fee: "Other Extras Fee", other_extras_note: "Other Extras Note",
+      mode_of_payment: "Mode of Payment",
     };
     return map[f] || f;
   };
