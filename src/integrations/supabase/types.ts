@@ -172,6 +172,7 @@ export type Database = {
           created_at: string
           email: string | null
           guest_name: string
+          guest_ref: string
           guest_segment: Database["public"]["Enums"]["guest_segment"] | null
           id: string
           location: string | null
@@ -189,6 +190,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           guest_name: string
+          guest_ref: string
           guest_segment?: Database["public"]["Enums"]["guest_segment"] | null
           id?: string
           location?: string | null
@@ -206,6 +208,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           guest_name?: string
+          guest_ref?: string
           guest_segment?: Database["public"]["Enums"]["guest_segment"] | null
           id?: string
           location?: string | null
@@ -283,6 +286,7 @@ export type Database = {
           nightly_rate: number
           notes: string | null
           peak_rate: number
+          unit_status: Database["public"]["Enums"]["unit_status"]
         }
         Insert: {
           area: string
@@ -295,6 +299,7 @@ export type Database = {
           nightly_rate: number
           notes?: string | null
           peak_rate: number
+          unit_status?: Database["public"]["Enums"]["unit_status"]
         }
         Update: {
           area?: string
@@ -307,6 +312,7 @@ export type Database = {
           nightly_rate?: number
           notes?: string | null
           peak_rate?: number
+          unit_status?: Database["public"]["Enums"]["unit_status"]
         }
         Relationships: []
       }
@@ -348,6 +354,7 @@ export type Database = {
         | "Fully Paid"
         | "Airbnb Paid"
         | "Refunded"
+      unit_status: "Available" | "Under Construction" | "Maintenance" | "Closed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -509,6 +516,7 @@ export const Constants = {
         "Airbnb Paid",
         "Refunded",
       ],
+      unit_status: ["Available", "Under Construction", "Maintenance", "Closed"],
     },
   },
 } as const
