@@ -76,6 +76,7 @@ const bookingSchema = z.object({
   payment_status: z.string(),
   booking_status: z.string(),
   booking_source: z.string(),
+  mode_of_payment: z.string().optional().or(z.literal("")),
   email: z.string().email().max(255).optional().or(z.literal("")),
   phone: z.string().max(20).optional().or(z.literal("")),
   notes: z.string().max(500).optional().or(z.literal("")),
@@ -127,6 +128,8 @@ export function BookingModal({
   const [idFiles, setIdFiles] = useState<File[]>([]);
   const [existingIds, setExistingIds] = useState<string[]>([]);
   const [conflictWarning, setConflictWarning] = useState<string | null>(null);
+  const [showOverlapConfirm, setShowOverlapConfirm] = useState(false);
+  const [pendingSubmitValues, setPendingSubmitValues] = useState<BookingFormValues | null>(null);
   const [unitSearch, setUnitSearch] = useState("");
   const [unitPopoverOpen, setUnitPopoverOpen] = useState(false);
   const [guestSuggestions, setGuestSuggestions] = useState<{ id: string; guest_name: string; phone: string | null; email: string | null; pets: boolean; birthday_month: number | null }[]>([]);
