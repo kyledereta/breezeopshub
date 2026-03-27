@@ -69,10 +69,13 @@ export type Database = {
           guest_id: string | null
           guest_name: string
           id: string
+          karaoke: boolean
+          karaoke_fee: number
           key_deposit: boolean
           notes: string | null
           pax: number
           payment_status: Database["public"]["Enums"]["payment_status"]
+          pet_fee: number
           pets: boolean
           phone: string | null
           referral_code: string | null
@@ -103,10 +106,13 @@ export type Database = {
           guest_id?: string | null
           guest_name: string
           id?: string
+          karaoke?: boolean
+          karaoke_fee?: number
           key_deposit?: boolean
           notes?: string | null
           pax?: number
           payment_status?: Database["public"]["Enums"]["payment_status"]
+          pet_fee?: number
           pets?: boolean
           phone?: string | null
           referral_code?: string | null
@@ -137,10 +143,13 @@ export type Database = {
           guest_id?: string | null
           guest_name?: string
           id?: string
+          karaoke?: boolean
+          karaoke_fee?: number
           key_deposit?: boolean
           notes?: string | null
           pax?: number
           payment_status?: Database["public"]["Enums"]["payment_status"]
+          pet_fee?: number
           pets?: boolean
           phone?: string | null
           referral_code?: string | null
