@@ -47,6 +47,7 @@ const STATUS_CONFIG: Record<string, { color: string; icon: any; label: string }>
 export function UnitDetailSheet({ open, onOpenChange, unit }: UnitDetailSheetProps) {
   const qc = useQueryClient();
   const [saving, setSaving] = useState(false);
+  const { data: statusLog = [] } = useUnitStatusLog(unit?.id);
 
   const updateUnit = useMutation({
     mutationFn: async ({ id, ...updates }: { id: string; [key: string]: any }) => {
@@ -64,9 +65,12 @@ export function UnitDetailSheet({ open, onOpenChange, unit }: UnitDetailSheetPro
   const IconComp = getUnitIcon(unit.name);
 
   const handleStatusChange = async (newStatus: string) => {
+    if (newStatus === status) return;
     setSaving(true);
     try {
       await updateUnit.mutateAsync({ id: unit.id, unit_status: newStatus, status_updated_at: new Date().toISOString() });
+      await logUnitStatusChange(unit.id, status, newStatus);
+      qc.invalidateQueries({ queryKey: ["unit_status_log", unit.id] });
       toast.success(`${unit.name} marked as ${newStatus}`);
     } catch (err: any) {
       toast.error(err.message ?? "Failed to update");
