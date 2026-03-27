@@ -31,6 +31,7 @@ const SOURCE_COLORS: Record<string, string> = {
 };
 
 export default function RevenuePage() {
+  const todayStr = format(new Date(), "yyyy-MM-dd");
   const { data: allBookings = [], isLoading: bookingsLoading } = useBookings();
   const { data: units = [], isLoading: unitsLoading } = useUnits();
 
