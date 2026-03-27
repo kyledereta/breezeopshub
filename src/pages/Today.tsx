@@ -407,6 +407,7 @@ export default function TodayPage() {
 
               <Section
                 icon={Home} title="In-House" count={inHouse.length} color="text-ocean"
+                extraBadge={dueDepartures.length > 0 ? { label: `${dueDepartures.length} due out`, color: "bg-coral/20 text-coral" } : undefined}
                 isDropTarget={dragOver === "inhouse"}
                 onDrop={(e) => handleDrop("inhouse", e)}
                 onDragOver={(e) => handleDragOver("inhouse", e)}
@@ -614,9 +615,10 @@ interface SectionProps {
   isDropTarget?: boolean; onDrop?: (e: React.DragEvent) => void;
   onDragOver?: (e: React.DragEvent) => void; onDragLeave?: () => void;
   onClear?: () => void;
+  extraBadge?: { label: string; color: string };
 }
 
-function Section({ icon: Icon, title, count, color, children, isDropTarget, onDrop, onDragOver, onDragLeave, onClear }: SectionProps) {
+function Section({ icon: Icon, title, count, color, children, isDropTarget, onDrop, onDragOver, onDragLeave, onClear, extraBadge }: SectionProps) {
   return (
     <div
       className={cn(
@@ -632,6 +634,9 @@ function Section({ icon: Icon, title, count, color, children, isDropTarget, onDr
           <Icon className={cn("h-4 w-4", color)} />
           <span className="text-sm font-medium text-foreground">{title}</span>
           <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full font-medium">{count}</span>
+          {extraBadge && (
+            <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full font-medium", extraBadge.color)}>{extraBadge.label}</span>
+          )}
         </div>
         {onClear && (
           <Button
