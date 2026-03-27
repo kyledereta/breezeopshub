@@ -316,6 +316,7 @@ export default function BookingsPage() {
                     No bookings found
                   </div>
                 )}
+              </div>
 
               {/* Deleted / Cancelled Section */}
               {deletedBookings.length > 0 && (
