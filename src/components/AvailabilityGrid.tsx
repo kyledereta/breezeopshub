@@ -627,6 +627,11 @@ function BookingTooltip({ booking }: { booking: Booking }) {
         <div className="text-xs text-foreground font-medium">
           ₱{booking.total_amount.toLocaleString()}
         </div>
+        {(booking as any).booking_group_id && (
+          <div className="flex items-center gap-1 text-[9px] text-primary font-medium">
+            <Link2 className="h-2.5 w-2.5" /> Combined Booking
+          </div>
+        )}
         {booking.deposit_paid > 0 && (
           <div className="text-[10px] text-muted-foreground">
             Deposit: ₱{booking.deposit_paid.toLocaleString()}

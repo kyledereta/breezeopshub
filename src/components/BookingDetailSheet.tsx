@@ -15,7 +15,7 @@ import { useBookings, type Booking } from "@/hooks/useBookings";
 import { useBookingAuditLog } from "@/hooks/useBookingAuditLog";
 import { useSoftDeleteBooking } from "@/hooks/useBookingMutations";
 import { cn } from "@/lib/utils";
-import { PawPrint, UtensilsCrossed, AlertTriangle, Edit, Users, CalendarDays, StickyNote, Banknote, Trash2 } from "lucide-react";
+import { PawPrint, UtensilsCrossed, AlertTriangle, Edit, Users, CalendarDays, StickyNote, Banknote, Trash2, Link2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -147,7 +147,9 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
       water_jug: "Water Jug", water_jug_qty: "Water Jug Qty", water_jug_fee: "Water Jug Fee",
       towel_rent: "Towel Rent", towel_rent_qty: "Towel Rent Qty", towel_rent_fee: "Towel Rent Fee",
       bonfire: "Bonfire", bonfire_fee: "Bonfire Fee", extension_fee: "Extension Fee",
-      security_deposit: "Security Deposit Amount",
+      security_deposit: "Security Deposit Amount", daytour_fee: "Daytour Fee",
+      other_extras_fee: "Other Extras Fee", other_extras_note: "Other Extras Note",
+      mode_of_payment: "Mode of Payment",
     };
     return map[f] || f;
   };
@@ -200,6 +202,12 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
                 <p className="text-sm text-muted-foreground">
                   in <span className="font-medium text-foreground">{unitName}</span>
                 </p>
+                {(booking as any).booking_group_id && (
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <Link2 className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-[10px] text-primary font-medium">Combined Booking (Multi-Unit)</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-2 mt-2">
                   <Badge variant="outline" className={cn("text-xs", getStatusBadgeStyle(booking.booking_status))}>
                     {booking.booking_status}
@@ -229,7 +237,10 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
                     <p className="text-[10px] text-muted-foreground">11:00 AM</p>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground">{nights} night{nights !== 1 ? "s" : ""} · via {booking.booking_source}</p>
+                <p className="text-xs text-muted-foreground">
+                  {nights} night{nights !== 1 ? "s" : ""} · via {booking.booking_source}
+                  {(booking as any).mode_of_payment && ` · ${(booking as any).mode_of_payment}`}
+                </p>
               </div>
 
               {/* Overlap Notice */}
@@ -305,6 +316,48 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
                       <span className="text-foreground">₱{booking.pet_fee.toLocaleString()}</span>
                     </div>
                   )}
+                  {(booking as any).water_jug && (booking as any).water_jug_fee > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Water Jug (×{(booking as any).water_jug_qty})</span>
+                      <span className="text-foreground">₱{(booking as any).water_jug_fee.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {(booking as any).towel_rent && (booking as any).towel_rent_fee > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Towel Rent (×{(booking as any).towel_rent_qty})</span>
+                      <span className="text-foreground">₱{(booking as any).towel_rent_fee.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {(booking as any).bonfire && (booking as any).bonfire_fee > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Bonfire Setup</span>
+                      <span className="text-foreground">₱{(booking as any).bonfire_fee.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {(booking as any).daytour_fee > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Daytour Fee</span>
+                      <span className="text-foreground">₱{(booking as any).daytour_fee.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {(booking as any).other_extras_fee > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Other Extras{(booking as any).other_extras_note ? ` (${(booking as any).other_extras_note})` : ""}</span>
+                      <span className="text-foreground">₱{(booking as any).other_extras_fee.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {(booking as any).extension_fee > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Extension Fee</span>
+                      <span className="text-foreground">₱{(booking as any).extension_fee.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {(booking as any).security_deposit > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Security Deposit</span>
+                      <span className="text-foreground">₱{(booking as any).security_deposit.toLocaleString()}</span>
+                    </div>
+                  )}
                   {booking.discount_given > 0 && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Discount ({booking.discount_type})</span>
@@ -313,6 +366,16 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
                         {booking.discount_reason && <span className="text-[10px] text-muted-foreground ml-1">({booking.discount_reason})</span>}
                       </span>
                     </div>
+                  )}
+                  {/* Balance Due */}
+                  {booking.deposit_paid > 0 && booking.total_amount - booking.deposit_paid > 0 && (
+                    <>
+                      <Separator className="bg-border/50 my-1" />
+                      <div className="flex justify-between font-medium">
+                        <span className="text-destructive">Balance Due</span>
+                        <span className="text-destructive">₱{(booking.total_amount - booking.deposit_paid).toLocaleString()}</span>
+                      </div>
+                    </>
                   )}
                 </div>
                 {/* Extras */}

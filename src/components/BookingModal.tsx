@@ -97,6 +97,9 @@ const bookingSchema = z.object({
   towel_rent_fee: z.coerce.number().min(0),
   bonfire: z.boolean(),
   bonfire_fee: z.coerce.number().min(0),
+  daytour_fee: z.coerce.number().min(0),
+  other_extras_fee: z.coerce.number().min(0),
+  other_extras_note: z.string().max(300).optional().or(z.literal("")),
 }).refine((data) => data.check_out > data.check_in, {
   message: "Check-out must be after check-in",
   path: ["check_out"],
@@ -195,6 +198,9 @@ export function BookingModal({
       towel_rent_fee: 0,
       bonfire: false,
       bonfire_fee: 0,
+      daytour_fee: 0,
+      other_extras_fee: 0,
+      other_extras_note: "",
     },
   });
 
@@ -212,6 +218,8 @@ export function BookingModal({
   const watchWaterJug = form.watch("water_jug");
   const watchTowelRent = form.watch("towel_rent");
   const watchBonfire = form.watch("bonfire");
+  const watchDaytourFee = form.watch("daytour_fee");
+  const watchOtherExtrasFee = form.watch("other_extras_fee");
 
   // Get combined max_pax across all selected units
   const combinedMaxPax = useMemo(() => {
@@ -405,7 +413,9 @@ export function BookingModal({
         (Number(watchExtraPaxFee) || 0) +
         (watchWaterJug ? Number(watchWaterJugFee) || 0 : 0) +
         (watchTowelRent ? Number(watchTowelRentFee) || 0 : 0) +
-        (watchBonfire ? Number(watchBonfireFee) || 0 : 0);
+        (watchBonfire ? Number(watchBonfireFee) || 0 : 0) +
+        (Number(watchDaytourFee) || 0) +
+        (Number(watchOtherExtrasFee) || 0);
 
       const discountAmount =
         watchDiscountType === "percentage"
@@ -432,6 +442,7 @@ export function BookingModal({
     watchWaterJug, watchWaterJugFee,
     watchTowelRent, watchTowelRentFee,
     watchBonfire, watchBonfireFee,
+    watchDaytourFee, watchOtherExtrasFee,
     watchDiscountType, watchDiscountGiven,
     form,
   ]);
@@ -480,6 +491,9 @@ export function BookingModal({
         towel_rent_fee: (booking as any).towel_rent_fee ?? 0,
         bonfire: (booking as any).bonfire ?? false,
         bonfire_fee: (booking as any).bonfire_fee ?? 0,
+        daytour_fee: (booking as any).daytour_fee ?? 0,
+        other_extras_fee: (booking as any).other_extras_fee ?? 0,
+        other_extras_note: (booking as any).other_extras_note ?? "",
       };
       form.reset(vals);
       originalValuesRef.current = { ...vals };
@@ -502,8 +516,8 @@ export function BookingModal({
         discount_type: "fixed",
         discount_reason: "",
         payment_status: "Unpaid",
-        booking_status: "Inquiry",
-        booking_source: "Other",
+        booking_status: "Confirmed",
+        booking_source: "Facebook Direct",
         mode_of_payment: "",
         email: "",
         phone: "",
@@ -525,6 +539,9 @@ export function BookingModal({
         towel_rent_fee: 0,
         bonfire: false,
         bonfire_fee: 0,
+        daytour_fee: 0,
+        other_extras_fee: 0,
+        other_extras_note: "",
       });
       setAdditionalUnitIds([]);
       setAdditionalPet(false);
@@ -586,6 +603,9 @@ export function BookingModal({
         towel_rent_fee: values.towel_rent ? values.towel_rent_fee : 0,
         bonfire: values.bonfire,
         bonfire_fee: values.bonfire ? values.bonfire_fee : 0,
+        daytour_fee: values.daytour_fee || 0,
+        other_extras_fee: values.other_extras_fee || 0,
+        other_extras_note: values.other_extras_note || null,
       };
 
       // Upload ID files if any
@@ -715,6 +735,8 @@ export function BookingModal({
               towel_rent_fee: 0,
               bonfire_fee: 0,
               extension_fee: 0,
+              daytour_fee: 0,
+              other_extras_fee: 0,
             } as any);
           }
         } else {
@@ -1215,6 +1237,8 @@ export function BookingModal({
                         watchWaterJug && "Water Jug",
                         watchTowelRent && "Towel",
                         watchBonfire && "Bonfire",
+                        Number(watchDaytourFee) > 0 && "Daytour",
+                        Number(watchOtherExtrasFee) > 0 && "Others",
                       ].filter(Boolean).join(", ") || "Select extras..."}
                     </span>
                     <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground" />
@@ -1348,6 +1372,48 @@ export function BookingModal({
                     )}
                   />
                 )}
+                {/* Daytour Fee */}
+                <FormField
+                  control={form.control}
+                  name="daytour_fee"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Daytour Fee (₱150/head × PAX)</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                {/* Other Extras */}
+                <div className="space-y-2">
+                  <FormField
+                    control={form.control}
+                    name="other_extras_fee"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Other Extras Fee (₱)</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  {Number(watchOtherExtrasFee) > 0 && (
+                    <FormField
+                      control={form.control}
+                      name="other_extras_note"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs text-muted-foreground">Other Extras Description</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="e.g. Extra mattress, videoke extension..." className="bg-background border-border" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </div>
               </div>
 
               {/* Pets toggle - kept as separate button */}
@@ -1400,7 +1466,7 @@ export function BookingModal({
                           <SelectTrigger className="bg-background border-border"><SelectValue /></SelectTrigger>
                         </FormControl>
                         <SelectContent className="bg-popover border-border">
-                          {Constants.public.Enums.booking_status.map((s) => (
+                          {Constants.public.Enums.booking_status.filter((s) => s !== "Inquiry").map((s) => (
                             <SelectItem key={s} value={s}>{s}</SelectItem>
                           ))}
                         </SelectContent>
@@ -1735,7 +1801,9 @@ export function BookingModal({
                   (Number(watchExtraPaxFee) || 0) +
                   (watchWaterJug ? Number(watchWaterJugFee) || 0 : 0) +
                   (watchTowelRent ? Number(watchTowelRentFee) || 0 : 0) +
-                  (watchBonfire ? Number(watchBonfireFee) || 0 : 0);
+                  (watchBonfire ? Number(watchBonfireFee) || 0 : 0) +
+                  (Number(watchDaytourFee) || 0) +
+                  (Number(watchOtherExtrasFee) || 0);
                 const discountAmount =
                   watchDiscountType === "percentage"
                     ? Math.round(((base + extras) * Number(watchDiscountGiven)) / 100)
@@ -1797,6 +1865,18 @@ export function BookingModal({
                       <div className="flex justify-between text-xs">
                         <span className="text-muted-foreground">Bonfire Setup</span>
                         <span className="text-foreground">₱{(Number(watchBonfireFee) || 0).toLocaleString()}</span>
+                      </div>
+                    )}
+                    {Number(watchDaytourFee) > 0 && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Daytour Fee</span>
+                        <span className="text-foreground">₱{(Number(watchDaytourFee) || 0).toLocaleString()}</span>
+                      </div>
+                    )}
+                    {Number(watchOtherExtrasFee) > 0 && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Other Extras{form.watch("other_extras_note") ? ` (${form.watch("other_extras_note")})` : ""}</span>
+                        <span className="text-foreground">₱{(Number(watchOtherExtrasFee) || 0).toLocaleString()}</span>
                       </div>
                     )}
                     {discountAmount > 0 && (
