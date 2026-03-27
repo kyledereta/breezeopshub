@@ -43,9 +43,10 @@ interface GuestCardProps {
   unitName: string;
   draggable?: boolean;
   onEdit?: () => void;
+  noLateCheckout?: boolean;
 }
 
-function GuestCard({ booking, unitName, draggable, onEdit }: GuestCardProps) {
+function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout }: GuestCardProps) {
   const [wasDragged, setWasDragged] = useState(false);
   return (
     <div
@@ -61,6 +62,7 @@ function GuestCard({ booking, unitName, draggable, onEdit }: GuestCardProps) {
       }}
       className={cn(
         "flex items-center gap-2 rounded-lg bg-background border border-border hover:border-primary/30 transition-colors p-3 group",
+        noLateCheckout && "border-warning-orange/40",
         draggable ? "cursor-grab active:cursor-grabbing" : onEdit ? "cursor-pointer" : ""
       )}
     >
@@ -88,6 +90,12 @@ function GuestCard({ booking, unitName, draggable, onEdit }: GuestCardProps) {
             {format(parseISO(booking.check_in), "MMM d")} → {format(parseISO(booking.check_out), "MMM d")}
           </span>
         </div>
+        {noLateCheckout && (
+          <div className="flex items-center gap-1 mt-1 text-[10px] text-warning-orange font-medium">
+            <Clock className="h-3 w-3" />
+            No late check-out — next guest arriving tomorrow
+          </div>
+        )}
       </div>
       {onEdit && (
         <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
