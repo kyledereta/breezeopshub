@@ -26,6 +26,23 @@ function getBookingColor(_booking: Booking): string {
   return "bg-foreground";
 }
 
+function getBookingRing(booking: Booking): string {
+  switch (booking.payment_status) {
+    case "Fully Paid":
+      return "ring-2 ring-primary";
+    case "Airbnb Paid":
+      return "ring-2 ring-airbnb-pink";
+    case "Partial DP":
+      return "ring-2 ring-warning-orange";
+    case "Unpaid":
+      return "ring-2 ring-destructive";
+    case "Refunded":
+      return "ring-2 ring-muted-foreground";
+    default:
+      return "";
+  }
+}
+
 function getStatusBadge(status: string) {
   switch (status) {
     case "Fully Paid":
