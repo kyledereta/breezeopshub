@@ -1083,7 +1083,7 @@ export function BookingModal({
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">Extra PAX Fee (₱)</FormLabel>
                         <FormControl>
-                          <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                          <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -1154,7 +1154,7 @@ export function BookingModal({
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">Utensil Rental Fee (₱)</FormLabel>
                         <FormControl>
-                          <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                          <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
                         </FormControl>
                       </FormItem>
                     )}
@@ -1168,7 +1168,7 @@ export function BookingModal({
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">Karaoke Fee (₱)</FormLabel>
                         <FormControl>
-                          <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                          <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
                         </FormControl>
                       </FormItem>
                     )}
@@ -1182,7 +1182,7 @@ export function BookingModal({
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">Kitchen Use Fee (₱)</FormLabel>
                         <FormControl>
-                          <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                          <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
                         </FormControl>
                       </FormItem>
                     )}
@@ -1226,7 +1226,7 @@ export function BookingModal({
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">Bonfire Setup Fee (₱)</FormLabel>
                         <FormControl>
-                          <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                          <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
                         </FormControl>
                       </FormItem>
                     )}
@@ -1240,7 +1240,7 @@ export function BookingModal({
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">Additional Pet Fee (₱)</FormLabel>
                         <FormControl>
-                          <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                          <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
                         </FormControl>
                       </FormItem>
                     )}
@@ -1353,7 +1353,7 @@ export function BookingModal({
                     <FormItem>
                       <FormLabel className="text-xs text-muted-foreground">Total Amount (₱)</FormLabel>
                       <FormControl>
-                        <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                        <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
                       </FormControl>
                     </FormItem>
                   )}
@@ -1365,7 +1365,7 @@ export function BookingModal({
                     <FormItem>
                       <FormLabel className="text-xs text-muted-foreground">Downpayment (₱)</FormLabel>
                       <FormControl>
-                        <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                        <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
                       </FormControl>
                     </FormItem>
                   )}
@@ -1462,7 +1462,7 @@ export function BookingModal({
                     <FormItem>
                       <FormLabel className="text-xs text-muted-foreground">Deposit Amount (₱)</FormLabel>
                       <FormControl>
-                        <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                        <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
                       </FormControl>
                     </FormItem>
                   )}
@@ -1477,7 +1477,7 @@ export function BookingModal({
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">Amount Deducted (₱)</FormLabel>
                         <FormControl>
-                          <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                          <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
                         </FormControl>
                       </FormItem>
                     )}
