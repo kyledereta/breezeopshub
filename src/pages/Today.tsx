@@ -469,18 +469,31 @@ export default function TodayPage() {
                   <AlertCircle className="h-3.5 w-3.5" /> Pending Balances ({pendingBalances.length})
                 </h3>
                 <div className="space-y-2">
-                  {pendingBalances.slice(0, 5).map((b) => (
-                    <div key={b.id} className="flex items-center justify-between text-sm">
-                      <div className="min-w-0">
-                        <span className="text-foreground font-medium">{b.guest_name}</span>
-                        <span className="text-muted-foreground ml-2 text-xs">{b.booking_ref}</span>
+                  {pendingBalances.slice(0, 5).map((b) => {
+                    const balance = b.total_amount - b.deposit_paid;
+                    const unpaidExtrasList = getUnpaidExtras(b);
+                    const unpaidExtrasAmt = unpaidExtrasList.reduce((s, e) => s + e.amount, 0);
+                    const displayAmount = balance > 0 ? balance : unpaidExtrasAmt;
+                    return (
+                      <div key={b.id} className="space-y-0.5">
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="min-w-0">
+                            <span className="text-foreground font-medium">{b.guest_name}</span>
+                            <span className="text-muted-foreground ml-2 text-xs">{b.booking_ref}</span>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span className="text-destructive font-medium">₱{displayAmount.toLocaleString()}</span>
+                            <Badge variant="outline" className="ml-2 text-[10px]">{b.payment_status}</Badge>
+                          </div>
+                        </div>
+                        {unpaidExtrasList.length > 0 && (
+                          <div className="text-[10px] text-warning-orange pl-2">
+                            Unpaid: {unpaidExtrasList.map(e => e.name).join(", ")}
+                          </div>
+                        )}
                       </div>
-                      <div className="text-right shrink-0">
-                        <span className="text-destructive font-medium">₱{(b.total_amount - b.deposit_paid).toLocaleString()}</span>
-                        <Badge variant="outline" className="ml-2 text-[10px]">{b.payment_status}</Badge>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   {pendingBalances.length > 5 && (
                     <button className="text-xs text-primary hover:underline" onClick={() => navigate("/balances")}>
                       View all {pendingBalances.length} →
