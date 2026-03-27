@@ -95,21 +95,23 @@ export default function RevenuePage() {
   // TRevPAR breakdown — ancillary revenue categories
   const trevparData = useMemo(() => {
     let utensilTotal = 0;
-    let karaokeTotal = 0; // owner earns ₱500 per ₱1,500 charge
+    let karaokeTotal = 0;
     let petTotal = 0;
     let kitchenTotal = 0;
     let extraPaxTotal = 0;
     let extensionTotal = 0;
+    let depositDeductedTotal = 0;
     let roomTotal = 0;
 
     for (const b of allBookings) {
       if (b.booking_status === "Cancelled") continue;
       const utensil = b.utensil_rental_fee ?? 0;
-      const karaoke = b.karaoke_fee ? 500 : 0; // owner keeps ₱500 from ₱1,500
+      const karaoke = b.karaoke_fee ? 500 : 0;
       const pet = b.pet_fee ?? 0;
       const kitchen = b.kitchen_use_fee ?? 0;
       const extraPax = b.extra_pax_fee ?? 0;
       const extension = b.extension_fee ?? 0;
+      const depositDeducted = b.deposit_deducted_amount ?? 0;
       const ancillaries = utensil + (b.karaoke_fee ?? 0) + pet + kitchen + extraPax + extension;
       const room = Math.max(0, b.total_amount - ancillaries);
 
@@ -119,17 +121,19 @@ export default function RevenuePage() {
       kitchenTotal += kitchen;
       extraPaxTotal += extraPax;
       extensionTotal += extension;
+      depositDeductedTotal += depositDeducted;
       roomTotal += room;
     }
 
     const items = [
       { name: "Room Revenue", value: roomTotal, color: CHART_COLORS.primary },
       { name: "Utensil Rental", value: utensilTotal, color: CHART_COLORS.ocean },
-      { name: "Karaoke (Owner Share)", value: karaokeTotal, color: CHART_COLORS.coral },
+      { name: "Karaoke (Owner ₱500)", value: karaokeTotal, color: CHART_COLORS.coral },
       { name: "Pet Fee", value: petTotal, color: CHART_COLORS.pink },
       { name: "Kitchen Use", value: kitchenTotal, color: CHART_COLORS.green },
       { name: "Extra Pax", value: extraPaxTotal, color: "#8B8C89" },
       { name: "Extension Fee", value: extensionTotal, color: "#B08D57" },
+      { name: "Deposit Deductions", value: depositDeductedTotal, color: "#C45B5B" },
     ];
     return items.filter((i) => i.value > 0);
   }, [allBookings]);
@@ -143,8 +147,7 @@ export default function RevenuePage() {
   // Today's revenue
   const todayArrivals = activeBookings.filter((b) => b.check_in === todayStr);
   const todayRevenue = todayArrivals.reduce((s, b) => s + b.total_amount, 0);
-  const totalDepositDeducted = activeBookings.reduce((s, b) => s + ((b as any).deposit_deducted_amount ?? 0), 0);
-  const totalUtensilRevenue = activeBookings.reduce((s, b) => s + ((b as any).utensil_rental_fee ?? 0), 0);
+  const totalAncillaryRevenue = trevparData.reduce((s, i) => i.name !== "Room Revenue" ? s + i.value : s, 0);
   const currentOccupancy = currentMonthData && currentMonthData.totalNights > 0
     ? Math.round((currentMonthData.occupiedNights / currentMonthData.totalNights) * 100)
     : 0;
@@ -227,8 +230,7 @@ export default function RevenuePage() {
               <StatCard icon={CalendarCheck} label="Occupancy Rate" value={`${currentOccupancy}%`} sub={`${currentMonthData?.occupiedNights ?? 0} of ${currentMonthData?.totalNights ?? 0} unit-nights`} />
               <StatCard icon={Banknote} label="ADR" value={`₱${currentADR.toLocaleString()}`} sub="Avg revenue per occupied room" />
               <StatCard icon={TrendingUp} label="RevPAR" value={`₱${currentRevPAR.toLocaleString()}`} sub="Revenue per available room" />
-              <StatCard icon={ShieldMinus} label="Deposit Deducted" value={`₱${totalDepositDeducted.toLocaleString()}`} sub="From security deposits" />
-              <StatCard icon={UtensilsCrossed} label="Utensil Rental" value={`₱${totalUtensilRevenue.toLocaleString()}`} sub="Total utensil rental fees" />
+              <StatCard icon={UtensilsCrossed} label="TRevPAR Ancillary" value={`₱${totalAncillaryRevenue.toLocaleString()}`} sub="Extras, fees & deductions" />
               <StatCard icon={Users} label="Top Source" value={sourceData[0]?.name ?? "—"} sub={sourceData[0] ? `₱${sourceData[0].revenue.toLocaleString()}` : ""} />
             </div>
 
