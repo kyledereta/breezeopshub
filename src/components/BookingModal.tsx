@@ -152,10 +152,16 @@ export function BookingModal({
   // Car details
   const [hasCar, setHasCar] = useState(false);
   const [carDetails, setCarDetails] = useState<{ type: string; color: string; plate: string }[]>([]);
+  // Extras paid status tracking
+  const [extrasPaidStatus, setExtrasPaidStatus] = useState<Record<string, boolean>>({});
+
+  const toggleExtraPaid = (key: string) => {
+    setExtrasPaidStatus((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
 
   // Load existing ID files when editing
   useEffect(() => {
-    if (!open) { setIdFiles([]); setExistingIds([]); setAdditionalUnitIds([]); setAdditionalPet(false); setBirthMonthFilter(0); setHasCar(false); setCarDetails([]); return; }
+    if (!open) { setIdFiles([]); setExistingIds([]); setAdditionalUnitIds([]); setAdditionalPet(false); setBirthMonthFilter(0); setHasCar(false); setCarDetails([]); setExtrasPaidStatus({}); return; }
     if (booking) {
       supabase.storage.from("guest-ids").list(booking.id).then(({ data }) => {
         if (data) setExistingIds(data.map((f) => `${booking.id}/${f.name}`));
