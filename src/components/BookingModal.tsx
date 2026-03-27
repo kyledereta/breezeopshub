@@ -154,6 +154,10 @@ export function BookingModal({
   const [carDetails, setCarDetails] = useState<{ type: string; color: string; plate: string }[]>([]);
   // Extras paid status tracking
   const [extrasPaidStatus, setExtrasPaidStatus] = useState<Record<string, boolean>>({});
+  // Payment restructure: DP mode, remaining mode, remaining paid toggle
+  const [dpModeOfPayment, setDpModeOfPayment] = useState("");
+  const [remainingModeOfPayment, setRemainingModeOfPayment] = useState("");
+  const [remainingPaid, setRemainingPaid] = useState(false);
 
   const toggleExtraPaid = (key: string) => {
     setExtrasPaidStatus((prev) => ({ ...prev, [key]: !prev[key] }));
