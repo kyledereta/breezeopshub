@@ -44,7 +44,7 @@ import { Constants, type Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { generateGuestRef } from "@/lib/guestRef";
-import { Upload, X, FileImage, PawPrint, AlertTriangle } from "lucide-react";
+import { Upload, X, FileImage, PawPrint, AlertTriangle, Music, Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { logBookingChanges } from "@/hooks/useBookingAuditLog";
 
@@ -52,6 +52,11 @@ type PaymentStatus = Database["public"]["Enums"]["payment_status"];
 type BookingStatus = Database["public"]["Enums"]["booking_status"];
 type BookingSource = Database["public"]["Enums"]["booking_source"];
 type DepositStatus = Database["public"]["Enums"]["deposit_status"];
+
+const BIRTH_MONTHS = [
+  "", "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
 
 const bookingSchema = z.object({
   guest_name: z.string().trim().min(1, "Guest name is required").max(100),
@@ -77,6 +82,9 @@ const bookingSchema = z.object({
   utensil_rental: z.boolean(),
   pets: z.boolean(),
   deposit_status: z.string(),
+  karaoke: z.boolean(),
+  karaoke_fee: z.coerce.number().min(0),
+  pet_fee: z.coerce.number().min(0),
 }).refine((data) => data.check_out > data.check_in, {
   message: "Check-out must be after check-in",
   path: ["check_out"],
@@ -110,13 +118,21 @@ export function BookingModal({
   const [conflictWarning, setConflictWarning] = useState<string | null>(null);
   const [unitSearch, setUnitSearch] = useState("");
   const [unitPopoverOpen, setUnitPopoverOpen] = useState(false);
-  const [guestSuggestions, setGuestSuggestions] = useState<{ id: string; guest_name: string; phone: string | null; email: string | null; pets: boolean }[]>([]);
+  const [guestSuggestions, setGuestSuggestions] = useState<{ id: string; guest_name: string; phone: string | null; email: string | null; pets: boolean; birthday_month: number | null }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const originalValuesRef = useRef<Record<string, any> | null>(null);
+  // Multi-unit support
+  const [additionalUnitIds, setAdditionalUnitIds] = useState<string[]>([]);
+  const [addUnitPopoverOpen, setAddUnitPopoverOpen] = useState(false);
+  const [addUnitSearch, setAddUnitSearch] = useState("");
+  // Pet additional fee
+  const [additionalPet, setAdditionalPet] = useState(false);
+  // Birthday month for guest verification
+  const [birthMonthFilter, setBirthMonthFilter] = useState(0);
 
   // Load existing ID files when editing
   useEffect(() => {
-    if (!open) { setIdFiles([]); setExistingIds([]); return; }
+    if (!open) { setIdFiles([]); setExistingIds([]); setAdditionalUnitIds([]); setAdditionalPet(false); setBirthMonthFilter(0); return; }
     if (booking) {
       supabase.storage.from("guest-ids").list(booking.id).then(({ data }) => {
         if (data) setExistingIds(data.map((f) => `${booking.id}/${f.name}`));
@@ -150,6 +166,9 @@ export function BookingModal({
       utensil_rental: false,
       pets: false,
       deposit_status: "Pending",
+      karaoke: false,
+      karaoke_fee: 0,
+      pet_fee: 0,
     },
   });
 
@@ -161,22 +180,25 @@ export function BookingModal({
   const watchPax = form.watch("pax");
   const watchDiscountType = form.watch("discount_type");
   const watchDiscountGiven = form.watch("discount_given");
+  const watchKaraoke = form.watch("karaoke");
+  const watchPets = form.watch("pets");
 
   // Get selected unit's max_pax
   const selectedUnit = useMemo(() => units.find((u) => u.id === watchUnitId), [units, watchUnitId]);
   const extraPax = selectedUnit ? Math.max(0, watchPax - selectedUnit.max_pax) : 0;
 
-  // Check for booking conflicts
+  // Check for booking conflicts (all selected units)
   useEffect(() => {
-    if (!watchUnitId || !watchCheckIn || !watchCheckOut) {
+    const allUnitIds = [watchUnitId, ...additionalUnitIds].filter(Boolean);
+    if (allUnitIds.length === 0 || !watchCheckIn || !watchCheckOut) {
       setConflictWarning(null);
       return;
     }
     const checkConflict = async () => {
       let query = supabase
         .from("bookings")
-        .select("id, guest_name, check_in, check_out")
-        .eq("unit_id", watchUnitId)
+        .select("id, guest_name, check_in, check_out, unit_id")
+        .in("unit_id", allUnitIds)
         .not("booking_status", "eq", "Cancelled")
         .lt("check_in", watchCheckOut)
         .gt("check_out", watchCheckIn);
@@ -187,14 +209,17 @@ export function BookingModal({
 
       const { data } = await query;
       if (data && data.length > 0) {
-        const names = data.map((b) => b.guest_name).join(", ");
-        setConflictWarning(`⚠️ Overlaps with: ${names} (${data[0].check_in} → ${data[0].check_out})`);
+        const conflicts = data.map((b) => {
+          const unitName = units.find((u) => u.id === b.unit_id)?.name || "Unit";
+          return `${unitName}: ${b.guest_name} (${b.check_in} → ${b.check_out})`;
+        }).join("; ");
+        setConflictWarning(`⚠️ Overlaps: ${conflicts}`);
       } else {
         setConflictWarning(null);
       }
     };
     checkConflict();
-  }, [watchUnitId, watchCheckIn, watchCheckOut, booking]);
+  }, [watchUnitId, additionalUnitIds, watchCheckIn, watchCheckOut, booking, units]);
 
   // Auto-set utensil rental fee to ₱500 when toggled on
   useEffect(() => {
@@ -206,16 +231,36 @@ export function BookingModal({
     }
   }, [watchUtensilRental, form]);
 
-  // Auto-set security deposit default based on unit type
+  // Auto-set security deposit default based on unit type (includes additional units)
   useEffect(() => {
-    if (!selectedUnit || isEditing) return;
-    const name = selectedUnit.name.toLowerCase();
-    if (name.includes("villa")) {
-      form.setValue("security_deposit", 1000);
+    if (isEditing) return;
+    const allIds = [watchUnitId, ...additionalUnitIds].filter(Boolean);
+    const selectedUnits = units.filter((u) => allIds.includes(u.id));
+    if (selectedUnits.length === 0) return;
+    const hasVilla = selectedUnits.some((u) => u.name.toLowerCase().includes("villa"));
+    form.setValue("security_deposit", hasVilla ? 1000 : 500);
+  }, [watchUnitId, additionalUnitIds, isEditing, form, units]);
+
+  // Auto-set karaoke fee when toggled
+  useEffect(() => {
+    if (watchKaraoke) {
+      if (form.getValues("karaoke_fee") === 0) {
+        form.setValue("karaoke_fee", 1500);
+      }
     } else {
-      form.setValue("security_deposit", 500);
+      form.setValue("karaoke_fee", 0);
     }
-  }, [selectedUnit, isEditing, form]);
+  }, [watchKaraoke, form]);
+
+  // Auto-set pet fee based on additional pet
+  useEffect(() => {
+    if (watchPets && additionalPet) {
+      form.setValue("pet_fee", 300);
+    } else {
+      form.setValue("pet_fee", 0);
+      if (!watchPets) setAdditionalPet(false);
+    }
+  }, [watchPets, additionalPet, form]);
 
   // Reset form when modal opens with new data
   useEffect(() => {
@@ -246,9 +291,13 @@ export function BookingModal({
         utensil_rental: (booking as any).utensil_rental ?? false,
         pets: (booking as any).pets ?? false,
         deposit_status: (booking as any).deposit_status ?? "Pending",
+        karaoke: (booking as any).karaoke ?? false,
+        karaoke_fee: (booking as any).karaoke_fee ?? 0,
+        pet_fee: (booking as any).pet_fee ?? 0,
       };
       form.reset(vals);
       originalValuesRef.current = { ...vals };
+      setAdditionalPet((booking as any).pet_fee > 0);
     } else {
       originalValuesRef.current = null;
       form.reset({
@@ -275,7 +324,13 @@ export function BookingModal({
         utensil_rental: false,
         pets: false,
         deposit_status: "Pending",
+        karaoke: false,
+        karaoke_fee: 0,
+        pet_fee: 0,
       });
+      setAdditionalUnitIds([]);
+      setAdditionalPet(false);
+      setBirthMonthFilter(0);
     }
   }, [open, booking, defaultUnitId, defaultDate, form]);
 
@@ -305,6 +360,9 @@ export function BookingModal({
         discount_given: values.discount_given,
         discount_type: values.discount_type,
         discount_reason: values.discount_reason || null,
+        karaoke: values.karaoke,
+        karaoke_fee: values.karaoke ? values.karaoke_fee : 0,
+        pet_fee: values.pets ? values.pet_fee : 0,
       };
 
       // Upload ID files if any
@@ -323,29 +381,49 @@ export function BookingModal({
       // Auto-link guest: find existing or create new guest record
       let guestId: string | null = null;
       try {
-        // Try to find by name (case-insensitive)
-        const { data: existingGuests } = await supabase
+        // Try to find by name (case-insensitive) + optional birthday month verification
+        let guestQuery = supabase
           .from("guests")
           .select("id")
-          .ilike("guest_name", values.guest_name.trim())
-          .limit(1);
+          .ilike("guest_name", values.guest_name.trim());
+        
+        if (birthMonthFilter > 0) {
+          guestQuery = guestQuery.eq("birthday_month", birthMonthFilter);
+        }
+
+        const { data: existingGuests } = await guestQuery.limit(1);
 
         if (existingGuests && existingGuests.length > 0) {
           guestId = existingGuests[0].id;
         } else {
-          // Create new guest
-          const { data: newGuest } = await supabase
-            .from("guests")
-            .insert({
-              guest_name: values.guest_name.trim(),
-              guest_ref: generateGuestRef(),
-              phone: values.phone || null,
-              email: values.email || null,
-              pets: values.pets,
-            })
-            .select("id")
-            .single();
-          if (newGuest) guestId = newGuest.id;
+          // Fallback: try name-only match if birthday filter was used
+          if (birthMonthFilter > 0) {
+            const { data: nameOnly } = await supabase
+              .from("guests")
+              .select("id")
+              .ilike("guest_name", values.guest_name.trim())
+              .limit(1);
+            if (nameOnly && nameOnly.length > 0) {
+              guestId = nameOnly[0].id;
+            }
+          }
+          
+          if (!guestId) {
+            // Create new guest
+            const { data: newGuest } = await supabase
+              .from("guests")
+              .insert({
+                guest_name: values.guest_name.trim(),
+                guest_ref: generateGuestRef(),
+                phone: values.phone || null,
+                email: values.email || null,
+                pets: values.pets,
+                birthday_month: birthMonthFilter > 0 ? birthMonthFilter : null,
+              })
+              .select("id")
+              .single();
+            if (newGuest) guestId = newGuest.id;
+          }
         }
       } catch {
         // Non-critical: continue without linking
@@ -362,8 +440,12 @@ export function BookingModal({
         }
         toast.success("Booking updated");
       } else {
-        await createBooking.mutateAsync(fullPayload);
-        toast.success("Booking created");
+        // Create one booking per selected unit (multi-unit support)
+        const allUnitIds = [values.unit_id, ...additionalUnitIds];
+        for (const unitId of allUnitIds) {
+          await createBooking.mutateAsync({ ...fullPayload, unit_id: unitId });
+        }
+        toast.success(allUnitIds.length > 1 ? `${allUnitIds.length} bookings created` : "Booking created");
       }
 
       // Update guest total_stays and tier after checkout
@@ -395,6 +477,24 @@ export function BookingModal({
   }
 
   const isPending = createBooking.isPending || updateBooking.isPending;
+
+  // Available units for additional selection (exclude already selected)
+  const availableUnitsForAdd = useMemo(() => {
+    const selectedIds = new Set([watchUnitId, ...additionalUnitIds]);
+    return units.filter((u) => !selectedIds.has(u.id));
+  }, [units, watchUnitId, additionalUnitIds]);
+
+  const filteredAddUnits = useMemo(() => {
+    const groups = groupUnitsByArea(availableUnitsForAdd);
+    return groups
+      .map(({ area, units: areaUnits }) => ({
+        area,
+        units: areaUnits.filter((u) =>
+          u.name.toLowerCase().includes(addUnitSearch.toLowerCase())
+        ),
+      }))
+      .filter((g) => g.units.length > 0);
+  }, [availableUnitsForAdd, addUnitSearch]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -430,7 +530,7 @@ export function BookingModal({
                           if (q.length >= 2) {
                             const { data } = await supabase
                               .from("guests")
-                              .select("id, guest_name, phone, email, pets")
+                              .select("id, guest_name, phone, email, pets, birthday_month")
                               .ilike("guest_name", `%${q}%`)
                               .limit(5);
                             setGuestSuggestions(data || []);
@@ -456,10 +556,16 @@ export function BookingModal({
                               if (g.phone) form.setValue("phone", g.phone);
                               if (g.email) form.setValue("email", g.email);
                               form.setValue("pets", g.pets);
+                              if (g.birthday_month) setBirthMonthFilter(g.birthday_month);
                               setShowSuggestions(false);
                             }}
                           >
-                            <span className="text-foreground">{g.guest_name}</span>
+                            <div className="flex flex-col">
+                              <span className="text-foreground">{g.guest_name}</span>
+                              {g.birthday_month ? (
+                                <span className="text-[10px] text-primary">🎂 {BIRTH_MONTHS[g.birthday_month]}</span>
+                              ) : null}
+                            </div>
                             <span className="text-xs text-muted-foreground">{g.phone || g.email || ""}</span>
                           </button>
                         ))}
@@ -496,6 +602,24 @@ export function BookingModal({
                     </FormItem>
                   )}
                 />
+              </div>
+              {/* Birthday Month - for guest verification */}
+              <div>
+                <label className="text-xs text-muted-foreground mb-1.5 block">Birthday Month (for guest verification)</label>
+                <Select
+                  value={String(birthMonthFilter)}
+                  onValueChange={(v) => setBirthMonthFilter(Number(v))}
+                >
+                  <SelectTrigger className="bg-background border-border">
+                    <SelectValue placeholder="Select..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover border-border">
+                    <SelectItem value="0">— Not set</SelectItem>
+                    {BIRTH_MONTHS.slice(1).map((m, i) => (
+                      <SelectItem key={i + 1} value={String(i + 1)}>{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -588,6 +712,88 @@ export function BookingModal({
                   );
                 }}
               />
+
+              {/* Additional Units (multi-unit) */}
+              {!isEditing && (
+                <div className="space-y-2">
+                  {additionalUnitIds.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {additionalUnitIds.map((uid) => {
+                        const u = units.find((x) => x.id === uid);
+                        return (
+                          <div
+                            key={uid}
+                            className="flex items-center gap-1 rounded-full bg-primary/10 text-primary px-2.5 py-1 text-xs"
+                          >
+                            <span>{u?.name || "Unit"}</span>
+                            <button
+                              type="button"
+                              onClick={() => setAdditionalUnitIds((prev) => prev.filter((id) => id !== uid))}
+                              className="hover:text-destructive"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {availableUnitsForAdd.length > 0 && (
+                    <Popover open={addUnitPopoverOpen} onOpenChange={setAddUnitPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="text-xs border-dashed border-border text-muted-foreground hover:text-primary"
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Add another unit
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-72 p-0" align="start">
+                        <div className="p-2 border-b border-border">
+                          <Input
+                            placeholder="Search units..."
+                            value={addUnitSearch}
+                            onChange={(e) => setAddUnitSearch(e.target.value)}
+                            className="h-8 bg-background border-border text-sm"
+                            autoFocus
+                          />
+                        </div>
+                        <div className="max-h-48 overflow-auto p-1">
+                          {filteredAddUnits.length === 0 && (
+                            <p className="text-xs text-muted-foreground p-3 text-center">No more units</p>
+                          )}
+                          {filteredAddUnits.map(({ area, units: areaUnits }) => (
+                            <div key={area}>
+                              <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-primary font-semibold">
+                                {area}
+                              </div>
+                              {areaUnits.map((unit) => (
+                                <button
+                                  key={unit.id}
+                                  type="button"
+                                  className="w-full text-left px-3 py-1.5 text-sm rounded-sm hover:bg-muted/50 flex justify-between"
+                                  onClick={() => {
+                                    setAdditionalUnitIds((prev) => [...prev, unit.id]);
+                                    setAddUnitPopoverOpen(false);
+                                    setAddUnitSearch("");
+                                  }}
+                                >
+                                  <span>{unit.name}</span>
+                                  <span className="text-xs text-muted-foreground">₱{unit.nightly_rate.toLocaleString()}</span>
+                                </button>
+                              ))}
+                            </div>
+                          ))}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  )}
+                </div>
+              )}
+
               {conflictWarning && (
                 <div className="flex items-center gap-2 rounded-lg border border-warning-orange/50 bg-warning-orange/10 px-3 py-2">
                   <AlertTriangle className="h-4 w-4 text-warning-orange shrink-0" />
@@ -889,7 +1095,7 @@ export function BookingModal({
               <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">
                 Extras & Deposits
               </h3>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <FormField
                   control={form.control}
                   name="utensil_rental"
@@ -910,7 +1116,7 @@ export function BookingModal({
                 />
                 <FormField
                   control={form.control}
-                  name="pets"
+                  name="karaoke"
                   render={({ field }) => (
                     <FormItem className="flex items-center gap-3 space-y-0 rounded-lg border border-border p-3">
                       <FormControl>
@@ -920,11 +1126,44 @@ export function BookingModal({
                         />
                       </FormControl>
                       <div>
-                        <FormLabel className="text-xs text-foreground">With Pets</FormLabel>
+                        <FormLabel className="text-xs text-foreground">Karaoke</FormLabel>
                         <p className="text-[10px] text-muted-foreground">
-                          <PawPrint className="h-3 w-3 inline" /> Pet included
+                          <Music className="h-3 w-3 inline" /> ₱1,500
                         </p>
                       </div>
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="pets"
+                  render={({ field }) => (
+                    <FormItem className="space-y-0 rounded-lg border border-border p-3">
+                      <div className="flex items-center gap-3">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div>
+                          <FormLabel className="text-xs text-foreground">With Pets</FormLabel>
+                          <p className="text-[10px] text-muted-foreground">
+                            <PawPrint className="h-3 w-3 inline" /> Pet included
+                          </p>
+                        </div>
+                      </div>
+                      {watchPets && (
+                        <div className="mt-2 pt-2 border-t border-border flex items-center gap-2">
+                          <Checkbox
+                            checked={additionalPet}
+                            onCheckedChange={(v) => setAdditionalPet(!!v)}
+                          />
+                          <span className="text-xs text-muted-foreground">Additional pet (+₱300)</span>
+                        </div>
+                      )}
                     </FormItem>
                   )}
                 />
@@ -989,6 +1228,36 @@ export function BookingModal({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs text-muted-foreground">Utensil Rental Fee (₱)</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              {watchKaraoke && (
+                <FormField
+                  control={form.control}
+                  name="karaoke_fee"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Karaoke Fee (₱)</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              {watchPets && additionalPet && (
+                <FormField
+                  control={form.control}
+                  name="pet_fee"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Additional Pet Fee (₱)</FormLabel>
                       <FormControl>
                         <Input {...field} type="number" min={0} step={100} className="bg-background border-border" />
                       </FormControl>
@@ -1104,7 +1373,13 @@ export function BookingModal({
                 disabled={isPending}
                 className="bg-primary text-primary-foreground hover:bg-primary/90"
               >
-                {isPending ? "Saving..." : isEditing ? "Update Booking" : "Create Booking"}
+                {isPending
+                  ? "Saving..."
+                  : isEditing
+                  ? "Update Booking"
+                  : additionalUnitIds.length > 0
+                  ? `Create ${1 + additionalUnitIds.length} Bookings`
+                  : "Create Booking"}
               </Button>
             </div>
           </form>
