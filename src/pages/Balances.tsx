@@ -33,7 +33,10 @@ export default function BalancesPage() {
 
   const pendingBookings = useMemo(() => {
     return allBookings
-      .filter((b) => b.booking_status !== "Cancelled" && (b.payment_status === "Unpaid" || b.payment_status === "Partial DP"))
+      .filter((b) => {
+        if ((b as any).is_primary === false) return false;
+        return b.booking_status !== "Cancelled" && (b.payment_status === "Unpaid" || b.payment_status === "Partial DP");
+      })
       .sort((a, b) => a.check_in.localeCompare(b.check_in));
   }, [allBookings]);
 
