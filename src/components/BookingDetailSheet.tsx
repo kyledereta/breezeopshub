@@ -200,6 +200,12 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
                 <p className="text-sm text-muted-foreground">
                   in <span className="font-medium text-foreground">{unitName}</span>
                 </p>
+                {(booking as any).booking_group_id && (
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <Link2 className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-[10px] text-primary font-medium">Combined Booking (Multi-Unit)</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-2 mt-2">
                   <Badge variant="outline" className={cn("text-xs", getStatusBadgeStyle(booking.booking_status))}>
                     {booking.booking_status}
@@ -229,7 +235,10 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
                     <p className="text-[10px] text-muted-foreground">11:00 AM</p>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground">{nights} night{nights !== 1 ? "s" : ""} · via {booking.booking_source}</p>
+                <p className="text-xs text-muted-foreground">
+                  {nights} night{nights !== 1 ? "s" : ""} · via {booking.booking_source}
+                  {(booking as any).mode_of_payment && ` · ${(booking as any).mode_of_payment}`}
+                </p>
               </div>
 
               {/* Overlap Notice */}
