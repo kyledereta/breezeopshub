@@ -204,6 +204,17 @@ export function BookingModal({
     }
   }, [watchUtensilRental, form]);
 
+  // Auto-set security deposit default based on unit type
+  useEffect(() => {
+    if (!selectedUnit || isEditing) return;
+    const name = selectedUnit.name.toLowerCase();
+    if (name.includes("villa")) {
+      form.setValue("security_deposit", 1000);
+    } else {
+      form.setValue("security_deposit", 500);
+    }
+  }, [selectedUnit, isEditing, form]);
+
   // Reset form when modal opens with new data
   useEffect(() => {
     if (!open) return;
