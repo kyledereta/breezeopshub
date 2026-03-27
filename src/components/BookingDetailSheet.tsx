@@ -100,6 +100,12 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
     ? Math.max(0, booking.pax - selectedUnit.max_pax)
     : 0;
 
+  const unitMap = useMemo(() => {
+    const m: Record<string, string> = {};
+    units.forEach((u) => { m[u.id] = u.name; });
+    return m;
+  }, [units]);
+
   if (!booking) return null;
 
   const handleDelete = async () => {
@@ -117,12 +123,6 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
       toast.error("Failed to delete booking");
     }
   };
-
-  const unitMap = useMemo(() => {
-    const m: Record<string, string> = {};
-    units.forEach((u) => { m[u.id] = u.name; });
-    return m;
-  }, [units]);
 
   const fieldLabel = (f: string) => {
     const map: Record<string, string> = {
