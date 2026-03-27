@@ -520,6 +520,14 @@ export function BookingModal({
       form.reset(vals);
       originalValuesRef.current = { ...vals };
       setAdditionalPet((booking as any).pet_fee > 0);
+      const bookingCars = (booking as any).car_details;
+      if (bookingCars && Array.isArray(bookingCars) && bookingCars.length > 0) {
+        setHasCar(true);
+        setCarDetails(bookingCars);
+      } else {
+        setHasCar((booking as any).has_car ?? false);
+        setCarDetails([]);
+      }
     } else {
       originalValuesRef.current = null;
       form.reset({
