@@ -777,7 +777,7 @@ export function BookingModal({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
             {/* Guest Info */}
             <div className="space-y-3">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">
@@ -1171,7 +1171,7 @@ export function BookingModal({
               {extraPax > 0 && (
                 <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
                   <p className="text-xs text-primary font-medium">
-                    +{extraPax} extra guest{extraPax > 1 ? "s" : ""} beyond {selectedUnit?.max_pax} max PAX
+                    +{extraPax} extra guest{extraPax > 1 ? "s" : ""} beyond {combinedMaxPax} combined max PAX
                   </p>
                   <FormField
                     control={form.control}
