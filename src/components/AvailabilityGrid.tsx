@@ -26,14 +26,13 @@ function getBookingColor(_booking: Booking): string {
   return "bg-foreground";
 }
 
-function getSourceDotColor(source: string): string {
-  switch (source) {
-    case "Facebook Direct": return "bg-ocean";
-    case "Instagram": return "bg-airbnb-pink";
-    case "Airbnb": return "bg-airbnb-pink";
-    case "Walk-in": return "bg-coral";
-    case "Referral": return "bg-primary";
-    case "TikTok": return "bg-foreground";
+function getPaymentDotColor(status: string): string {
+  switch (status) {
+    case "Fully Paid": return "bg-primary";
+    case "Airbnb Paid": return "bg-airbnb-pink";
+    case "Partial DP": return "bg-warning-orange";
+    case "Unpaid": return "bg-destructive";
+    case "Refunded": return "bg-muted-foreground";
     default: return "bg-muted-foreground";
   }
 }
@@ -499,16 +498,19 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
       {/* Legend */}
       <div className="flex flex-wrap items-center gap-3 sm:gap-4 px-4 sm:px-6 py-2 sm:py-3 border-t border-border text-[10px] font-sans text-muted-foreground shrink-0">
         <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-ocean" /> Facebook
+          <span className="h-2 w-2 rounded-full bg-primary" /> Fully Paid
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-airbnb-pink" /> Airbnb / IG
+          <span className="h-2 w-2 rounded-full bg-airbnb-pink" /> Airbnb Paid
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-coral" /> Walk-in
+          <span className="h-2 w-2 rounded-full bg-warning-orange" /> Partial DP
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-primary" /> Referral
+          <span className="h-2 w-2 rounded-full bg-destructive" /> Unpaid
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-muted-foreground" /> Refunded
         </span>
         <span className="flex items-center gap-1.5 border-l border-border pl-3">
           <TrendingUp className="h-3 w-3 text-primary/70" /> Peak / Markup
@@ -527,7 +529,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
 function BookingCell({ booking }: { booking: Booking }) {
   return (
     <div className="px-2 flex items-center gap-1 truncate h-[22px]">
-      <span className={cn("h-2 w-2 rounded-full shrink-0", getSourceDotColor(booking.booking_source))} />
+      <span className={cn("h-2 w-2 rounded-full shrink-0", getPaymentDotColor(booking.payment_status))} />
       <span className="text-[9px] text-background font-medium truncate leading-none">{booking.guest_name}</span>
       <span className="text-[9px] text-background/60 shrink-0 leading-none">{booking.pax}</span>
       {booking.pets && <PawPrint className="h-2 w-2 text-background/60 shrink-0" />}
