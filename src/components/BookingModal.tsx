@@ -491,6 +491,9 @@ export function BookingModal({
         towel_rent_fee: (booking as any).towel_rent_fee ?? 0,
         bonfire: (booking as any).bonfire ?? false,
         bonfire_fee: (booking as any).bonfire_fee ?? 0,
+        daytour_fee: (booking as any).daytour_fee ?? 0,
+        other_extras_fee: (booking as any).other_extras_fee ?? 0,
+        other_extras_note: (booking as any).other_extras_note ?? "",
       };
       form.reset(vals);
       originalValuesRef.current = { ...vals };
@@ -513,8 +516,8 @@ export function BookingModal({
         discount_type: "fixed",
         discount_reason: "",
         payment_status: "Unpaid",
-        booking_status: "Inquiry",
-        booking_source: "Other",
+        booking_status: "Confirmed",
+        booking_source: "Facebook Direct",
         mode_of_payment: "",
         email: "",
         phone: "",
@@ -536,6 +539,9 @@ export function BookingModal({
         towel_rent_fee: 0,
         bonfire: false,
         bonfire_fee: 0,
+        daytour_fee: 0,
+        other_extras_fee: 0,
+        other_extras_note: "",
       });
       setAdditionalUnitIds([]);
       setAdditionalPet(false);
