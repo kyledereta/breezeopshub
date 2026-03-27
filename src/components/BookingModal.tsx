@@ -259,16 +259,8 @@ export function BookingModal({
     }
   }, [combinedMaxPax, isEditing, form]);
 
-  // Auto-set deposit_paid based on payment status
+  // Watch payment status (used by auto-sync effect below)
   const watchPaymentStatus = form.watch("payment_status");
-  useEffect(() => {
-    if (watchPaymentStatus === "Unpaid") {
-      form.setValue("deposit_paid", 0);
-    } else if (watchPaymentStatus === "Fully Paid") {
-      const total = form.getValues("total_amount");
-      form.setValue("deposit_paid", total);
-    }
-  }, [watchPaymentStatus, form]);
 
   // Check for booking conflicts (all selected units)
   useEffect(() => {
@@ -478,7 +470,54 @@ export function BookingModal({
     form,
   ]);
 
-  // Reset form when modal opens with new data
+  // Auto-sync payment_status based on deposit, extras paid, and remaining paid
+  const watchTotalAmount = form.watch("total_amount");
+  const watchDepositPaid = form.watch("deposit_paid");
+
+  useEffect(() => {
+    const total = Number(watchTotalAmount) || 0;
+    const deposit = Number(watchDepositPaid) || 0;
+    if (total <= 0) return;
+
+    // Calculate paid extras
+    let paidExtrasTotal = 0;
+    if (watchUtensilRental && extrasPaidStatus.utensil_rental) paidExtrasTotal += Number(watchUtensilFee) || 0;
+    if (watchKaraoke && extrasPaidStatus.karaoke) paidExtrasTotal += Number(watchKaraokeFee) || 0;
+    if (watchKitchenUse && extrasPaidStatus.kitchen_use) paidExtrasTotal += Number(watchKitchenFee) || 0;
+    if (watchWaterJug && extrasPaidStatus.water_jug) paidExtrasTotal += Number(watchWaterJugFee) || 0;
+    if (watchTowelRent && extrasPaidStatus.towel_rent) paidExtrasTotal += Number(watchTowelRentFee) || 0;
+    if (watchBonfire && extrasPaidStatus.bonfire) paidExtrasTotal += Number(watchBonfireFee) || 0;
+    if (watchPets && additionalPet && extrasPaidStatus.pet_fee) paidExtrasTotal += Number(watchPetFee) || 0;
+    if (watchDaytour && extrasPaidStatus.daytour) paidExtrasTotal += Number(watchDaytourFee) || 0;
+    if (extrasPaidStatus.other_extras) paidExtrasTotal += Number(watchOtherExtrasFee) || 0;
+
+    const remaining = total - deposit - paidExtrasTotal;
+    const fullySettled = remaining <= 0 || remainingPaid;
+
+    // Don't override Airbnb Paid or Refunded
+    if (watchPaymentStatus === "Airbnb Paid" || watchPaymentStatus === "Refunded") return;
+
+    let newStatus: string;
+    if (fullySettled) {
+      newStatus = "Fully Paid";
+    } else if (deposit > 0 || paidExtrasTotal > 0) {
+      newStatus = "Partial DP";
+    } else {
+      newStatus = "Unpaid";
+    }
+
+    if (newStatus !== watchPaymentStatus) {
+      form.setValue("payment_status", newStatus);
+    }
+  }, [
+    watchTotalAmount, watchDepositPaid, remainingPaid, extrasPaidStatus,
+    watchUtensilRental, watchUtensilFee, watchKaraoke, watchKaraokeFee,
+    watchKitchenUse, watchKitchenFee, watchWaterJug, watchWaterJugFee,
+    watchTowelRent, watchTowelRentFee, watchBonfire, watchBonfireFee,
+    watchPets, watchPetFee, additionalPet, watchDaytour, watchDaytourFee,
+    watchOtherExtrasFee, watchPaymentStatus, form,
+  ]);
+
   useEffect(() => {
     if (!open) return;
 
