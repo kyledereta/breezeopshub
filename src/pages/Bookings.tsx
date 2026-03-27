@@ -1,9 +1,10 @@
 import { useState, useMemo } from "react";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, startOfMonth, endOfMonth } from "date-fns";
 import { AppLayout } from "@/components/AppLayout";
 import { useBookings, type Booking } from "@/hooks/useBookings";
 import { useUnits } from "@/hooks/useUnits";
 import { BookingModal } from "@/components/BookingModal";
+import { BookingDetailSheet } from "@/components/BookingDetailSheet";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -16,10 +17,10 @@ import { Constants } from "@/integrations/supabase/types";
 
 function getPaymentBadgeClass(status: string) {
   switch (status) {
-    case "Fully Paid": return "bg-primary/20 text-primary border-primary/30";
+    case "Fully Paid": return "bg-[hsl(142,71%,45%)]/20 text-[hsl(142,71%,45%)] border-[hsl(142,71%,45%)]/30";
     case "Airbnb Paid": return "bg-airbnb-pink/20 text-airbnb-pink border-airbnb-pink/30";
-    case "Partial DP": return "bg-warning-orange/20 text-warning-orange border-warning-orange/30";
-    case "Unpaid": return "bg-destructive/20 text-destructive border-destructive/30";
+    case "Partial DP": return "bg-[hsl(48,96%,53%)]/20 text-[hsl(48,96%,40%)] border-[hsl(48,96%,53%)]/30";
+    case "Unpaid": return "bg-[hsl(0,100%,50%)]/20 text-[hsl(0,100%,50%)] border-[hsl(0,100%,50%)]/30";
     default: return "bg-muted text-muted-foreground border-border";
   }
 }
@@ -36,12 +37,27 @@ function getStatusBadgeClass(status: string) {
 }
 
 export default function BookingsPage() {
-  const { data: allBookings = [], isLoading: bookingsLoading } = useBookings();
+  const now = new Date();
+  const [filterMonth, setFilterMonth] = useState(now.getMonth().toString());
+  const [filterYear, setFilterYear] = useState(now.getFullYear().toString());
+
+  const rangeStart = useMemo(() => {
+    if (filterMonth === "all") return undefined;
+    return format(startOfMonth(new Date(parseInt(filterYear), parseInt(filterMonth))), "yyyy-MM-dd");
+  }, [filterMonth, filterYear]);
+
+  const rangeEnd = useMemo(() => {
+    if (filterMonth === "all") return undefined;
+    return format(endOfMonth(new Date(parseInt(filterYear), parseInt(filterMonth))), "yyyy-MM-dd");
+  }, [filterMonth, filterYear]);
+
+  const { data: allBookings = [], isLoading: bookingsLoading } = useBookings(rangeStart, rangeEnd);
   const { data: units = [], isLoading: unitsLoading } = useUnits();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
   const unitMap = useMemo(() => {
@@ -71,7 +87,13 @@ export default function BookingsPage() {
 
   const isLoading = bookingsLoading || unitsLoading;
 
+  const openView = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setSheetOpen(true);
+  };
+
   const openEdit = (booking: Booking) => {
+    setSheetOpen(false);
     setSelectedBooking(booking);
     setModalOpen(true);
   };
@@ -117,9 +139,35 @@ export default function BookingsPage() {
               className="pl-9 bg-background border-border"
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            {/* Month filter */}
+            <Select value={filterMonth} onValueChange={setFilterMonth}>
+              <SelectTrigger className="w-[130px] bg-background border-border">
+                <SelectValue placeholder="Month" />
+              </SelectTrigger>
+              <SelectContent className="bg-popover border-border">
+                <SelectItem value="all">All Months</SelectItem>
+                {Array.from({ length: 12 }, (_, i) => (
+                  <SelectItem key={i} value={i.toString()}>
+                    {format(new Date(2024, i, 1), "MMMM")}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {/* Year filter */}
+            <Select value={filterYear} onValueChange={setFilterYear}>
+              <SelectTrigger className="w-[100px] bg-background border-border">
+                <SelectValue placeholder="Year" />
+              </SelectTrigger>
+              <SelectContent className="bg-popover border-border">
+                {Array.from({ length: 5 }, (_, i) => {
+                  const year = now.getFullYear() - 1 + i;
+                  return <SelectItem key={year} value={year.toString()}>{year}</SelectItem>;
+                })}
+              </SelectContent>
+            </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-[150px] bg-background border-border">
+              <SelectTrigger className="w-[140px] bg-background border-border">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent className="bg-popover border-border">
@@ -130,7 +178,7 @@ export default function BookingsPage() {
               </SelectContent>
             </Select>
             <Select value={paymentFilter} onValueChange={setPaymentFilter}>
-              <SelectTrigger className="w-full sm:w-[150px] bg-background border-border">
+              <SelectTrigger className="w-[140px] bg-background border-border">
                 <SelectValue placeholder="Payment" />
               </SelectTrigger>
               <SelectContent className="bg-popover border-border">
@@ -170,7 +218,7 @@ export default function BookingsPage() {
                   <TableRow
                     key={booking.id}
                     className="cursor-pointer hover:bg-muted/20 border-b border-border"
-                    onClick={() => openEdit(booking)}
+                    onClick={() => openView(booking)}
                   >
                     <TableCell className="text-xs text-muted-foreground font-mono">{booking.booking_ref}</TableCell>
                     <TableCell className="text-sm font-medium text-foreground">{booking.guest_name}</TableCell>
@@ -204,6 +252,13 @@ export default function BookingsPage() {
           )}
         </div>
       </div>
+
+      <BookingDetailSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        booking={selectedBooking}
+        onEdit={openEdit}
+      />
 
       <BookingModal
         open={modalOpen}
