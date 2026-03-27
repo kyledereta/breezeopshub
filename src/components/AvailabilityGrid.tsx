@@ -195,7 +195,16 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
     return map;
   }, [bookings, days]);
 
-  // Build group lookup for connector lines
+  // Blocked dates lookup: "unitId-dateStr" → reason
+  const blockedMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const bd of blockedDates) {
+      map.set(`${bd.unit_id}-${bd.blocked_date}`, bd.reason || "Blocked");
+    }
+    return map;
+  }, [blockedDates]);
+
+
   const flatUnitOrder = useMemo(() => {
     const result: string[] = [];
     for (const { units: areaUnits } of groupedUnits) {
