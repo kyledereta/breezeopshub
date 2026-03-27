@@ -170,6 +170,28 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
     return map;
   }, [bookings, days]);
 
+  // Build group lookup for connector lines
+  const flatUnitOrder = useMemo(() => {
+    const result: string[] = [];
+    for (const { units: areaUnits } of groupedUnits) {
+      for (const u of areaUnits) result.push(u.id);
+    }
+    return result;
+  }, [groupedUnits]);
+
+  const hasGroupConnectorBelow = useCallback((unitId: string, dateStr: string) => {
+    const booking = bookingMap.get(`${unitId}-${dateStr}`);
+    if (!booking) return false;
+    const gid = (booking as any).booking_group_id;
+    if (!gid) return false;
+    const unitIndex = flatUnitOrder.indexOf(unitId);
+    if (unitIndex < 0 || unitIndex >= flatUnitOrder.length - 1) return false;
+    const nextUnitId = flatUnitOrder[unitIndex + 1];
+    const nextBooking = bookingMap.get(`${nextUnitId}-${dateStr}`);
+    if (!nextBooking) return false;
+    return (nextBooking as any).booking_group_id === gid;
+  }, [bookingMap, flatUnitOrder]);
+
   // Compute daily occupancy
   const dailyOccupancy = useMemo(() => {
     const availableUnits = units.filter((u) => (u.unit_status || "Available") === "Available");
