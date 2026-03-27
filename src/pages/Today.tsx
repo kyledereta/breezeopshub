@@ -286,7 +286,7 @@ export default function TodayPage() {
 
   const totalPaxInHouse = inHouse.reduce((sum, b) => sum + b.pax, 0);
   const occupancyRate = units.length > 0 ? Math.round((inHouse.length / units.length) * 100) : 0;
-  const pendingTotal = pendingBalances.reduce((s, b) => s + (b.total_amount - b.deposit_paid), 0);
+  const pendingTotal = pendingBalances.reduce((s, b) => s + (b.total_amount - b.deposit_paid) + getUnpaidExtrasTotal(b), 0);
   const isLoading = bookingsLoading || unitsLoading;
 
   const groupedUnits = useMemo(() => groupUnitsByArea(units), [units]);
