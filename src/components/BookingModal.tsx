@@ -97,6 +97,8 @@ const bookingSchema = z.object({
   towel_rent_fee: z.coerce.number().min(0),
   bonfire: z.boolean(),
   bonfire_fee: z.coerce.number().min(0),
+  daytour: z.boolean(),
+  is_daytour_booking: z.boolean(),
   daytour_fee: z.coerce.number().min(0),
   other_extras_fee: z.coerce.number().min(0),
   other_extras_note: z.string().max(300).optional().or(z.literal("")),
@@ -198,6 +200,8 @@ export function BookingModal({
       towel_rent_fee: 0,
       bonfire: false,
       bonfire_fee: 0,
+      daytour: false,
+      is_daytour_booking: false,
       daytour_fee: 0,
       other_extras_fee: 0,
       other_extras_note: "",
@@ -218,6 +222,8 @@ export function BookingModal({
   const watchWaterJug = form.watch("water_jug");
   const watchTowelRent = form.watch("towel_rent");
   const watchBonfire = form.watch("bonfire");
+  const watchDaytour = form.watch("daytour");
+  const watchIsDaytourBooking = form.watch("is_daytour_booking");
   const watchDaytourFee = form.watch("daytour_fee");
   const watchOtherExtrasFee = form.watch("other_extras_fee");
 
@@ -371,6 +377,16 @@ export function BookingModal({
     }
   }, [watchBonfire, form]);
 
+  // Auto-set daytour fee when toggled (150 × pax)
+  useEffect(() => {
+    if (watchDaytour) {
+      form.setValue("daytour_fee", 150 * (watchPax || 1));
+    } else {
+      form.setValue("daytour_fee", 0);
+      form.setValue("is_daytour_booking", false);
+    }
+  }, [watchDaytour, watchPax, form]);
+
   // Auto-set pet fee based on additional pet
   useEffect(() => {
     if (watchPets && additionalPet) {
@@ -404,7 +420,7 @@ export function BookingModal({
       const nights = differenceInCalendarDays(checkOutDate, checkInDate);
       if (nights <= 0) return;
 
-      const base = selectedUnits.reduce((sum, u) => sum + u.nightly_rate * nights, 0);
+      const base = watchIsDaytourBooking ? 0 : selectedUnits.reduce((sum, u) => sum + u.nightly_rate * nights, 0);
       const extras =
         (watchUtensilRental ? Number(watchUtensilFee) || 0 : 0) +
         (watchKaraoke ? Number(watchKaraokeFee) || 0 : 0) +
@@ -414,7 +430,7 @@ export function BookingModal({
         (watchWaterJug ? Number(watchWaterJugFee) || 0 : 0) +
         (watchTowelRent ? Number(watchTowelRentFee) || 0 : 0) +
         (watchBonfire ? Number(watchBonfireFee) || 0 : 0) +
-        (Number(watchDaytourFee) || 0) +
+        (watchDaytour ? Number(watchDaytourFee) || 0 : 0) +
         (Number(watchOtherExtrasFee) || 0);
 
       const discountAmount =
@@ -442,7 +458,8 @@ export function BookingModal({
     watchWaterJug, watchWaterJugFee,
     watchTowelRent, watchTowelRentFee,
     watchBonfire, watchBonfireFee,
-    watchDaytourFee, watchOtherExtrasFee,
+    watchDaytour, watchDaytourFee, watchOtherExtrasFee,
+    watchIsDaytourBooking,
     watchDiscountType, watchDiscountGiven,
     form,
   ]);
@@ -491,6 +508,8 @@ export function BookingModal({
         towel_rent_fee: (booking as any).towel_rent_fee ?? 0,
         bonfire: (booking as any).bonfire ?? false,
         bonfire_fee: (booking as any).bonfire_fee ?? 0,
+        daytour: (booking as any).daytour ?? false,
+        is_daytour_booking: (booking as any).is_daytour_booking ?? false,
         daytour_fee: (booking as any).daytour_fee ?? 0,
         other_extras_fee: (booking as any).other_extras_fee ?? 0,
         other_extras_note: (booking as any).other_extras_note ?? "",
@@ -539,6 +558,8 @@ export function BookingModal({
         towel_rent_fee: 0,
         bonfire: false,
         bonfire_fee: 0,
+        daytour: false,
+        is_daytour_booking: false,
         daytour_fee: 0,
         other_extras_fee: 0,
         other_extras_note: "",
@@ -603,7 +624,9 @@ export function BookingModal({
         towel_rent_fee: values.towel_rent ? values.towel_rent_fee : 0,
         bonfire: values.bonfire,
         bonfire_fee: values.bonfire ? values.bonfire_fee : 0,
-        daytour_fee: values.daytour_fee || 0,
+        daytour: values.daytour,
+        is_daytour_booking: values.is_daytour_booking,
+        daytour_fee: values.daytour ? values.daytour_fee : 0,
         other_extras_fee: values.other_extras_fee || 0,
         other_extras_note: values.other_extras_note || null,
       };
@@ -1372,19 +1395,21 @@ export function BookingModal({
                     )}
                   />
                 )}
-                {/* Daytour Fee */}
-                <FormField
-                  control={form.control}
-                  name="daytour_fee"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Daytour Fee (₱150/head × PAX)</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                {/* Daytour Fee (conditional on daytour toggle) */}
+                {watchDaytour && (
+                  <FormField
+                    control={form.control}
+                    name="daytour_fee"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Daytour Fee (₱150/head × {watchPax} PAX)</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                )}
                 {/* Other Extras */}
                 <div className="space-y-2">
                   <FormField
@@ -1440,6 +1465,41 @@ export function BookingModal({
                           onCheckedChange={(v) => setAdditionalPet(!!v)}
                         />
                         <span className="text-xs text-muted-foreground">Additional pet (+₱300)</span>
+                      </div>
+                    )}
+                  </FormItem>
+                )}
+              />
+
+              {/* Daytour toggle */}
+              <FormField
+                control={form.control}
+                name="daytour"
+                render={({ field }) => (
+                  <FormItem className="space-y-0 rounded-lg border border-border p-3">
+                    <div className="flex items-center gap-3">
+                      <FormControl>
+                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                      <div>
+                        <FormLabel className="text-xs text-foreground">Day Tour</FormLabel>
+                        <p className="text-[10px] text-muted-foreground">
+                          ₱150/head daytour fee
+                        </p>
+                      </div>
+                    </div>
+                    {watchDaytour && (
+                      <div className="mt-2 pt-2 border-t border-border space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            checked={watchIsDaytourBooking}
+                            onCheckedChange={(v) => form.setValue("is_daytour_booking", !!v)}
+                          />
+                          <span className="text-xs text-muted-foreground">Day Tour Only (no nightly rate, fees only)</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">
+                          Fee: ₱{(Number(watchDaytourFee) || 0).toLocaleString()}
+                        </p>
                       </div>
                     )}
                   </FormItem>
@@ -1787,7 +1847,7 @@ export function BookingModal({
                 const nights = differenceInCalendarDays(checkOutDate, checkInDate);
                 if (nights <= 0) return null;
 
-                const unitBreakdowns = selectedUnits.map((u) => ({
+                const unitBreakdowns = watchIsDaytourBooking ? [] : selectedUnits.map((u) => ({
                   name: u.name,
                   subtotal: u.nightly_rate * nights,
                   rate: u.nightly_rate,
@@ -1802,7 +1862,7 @@ export function BookingModal({
                   (watchWaterJug ? Number(watchWaterJugFee) || 0 : 0) +
                   (watchTowelRent ? Number(watchTowelRentFee) || 0 : 0) +
                   (watchBonfire ? Number(watchBonfireFee) || 0 : 0) +
-                  (Number(watchDaytourFee) || 0) +
+                  (watchDaytour ? Number(watchDaytourFee) || 0 : 0) +
                   (Number(watchOtherExtrasFee) || 0);
                 const discountAmount =
                   watchDiscountType === "percentage"
@@ -1812,7 +1872,10 @@ export function BookingModal({
 
                 return (
                   <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-1.5">
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">Computation Summary</h3>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">
+                      Computation Summary
+                      {watchIsDaytourBooking && <span className="ml-2 bg-ocean text-white text-[8px] px-1.5 py-0.5 rounded font-bold">DAY TOUR</span>}
+                    </h3>
                     {unitBreakdowns.map((ub) => (
                       <div key={ub.name} className="flex justify-between text-xs">
                         <span className="text-muted-foreground">{ub.name} (₱{ub.rate.toLocaleString()} × {nights}n)</span>

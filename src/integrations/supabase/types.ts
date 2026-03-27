@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      blocked_dates: {
+        Row: {
+          blocked_date: string
+          created_at: string
+          id: string
+          reason: string | null
+          unit_id: string
+        }
+        Insert: {
+          blocked_date: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          unit_id: string
+        }
+        Update: {
+          blocked_date?: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          unit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocked_dates_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       booking_audit_log: {
         Row: {
           booking_id: string
@@ -60,6 +92,7 @@ export type Database = {
           check_in: string
           check_out: string
           created_at: string
+          daytour: boolean
           daytour_fee: number
           deleted_at: string | null
           deletion_reason: string | null
@@ -76,6 +109,7 @@ export type Database = {
           guest_id: string | null
           guest_name: string
           id: string
+          is_daytour_booking: boolean
           is_primary: boolean
           karaoke: boolean
           karaoke_fee: number
@@ -116,6 +150,7 @@ export type Database = {
           check_in: string
           check_out: string
           created_at?: string
+          daytour?: boolean
           daytour_fee?: number
           deleted_at?: string | null
           deletion_reason?: string | null
@@ -132,6 +167,7 @@ export type Database = {
           guest_id?: string | null
           guest_name: string
           id?: string
+          is_daytour_booking?: boolean
           is_primary?: boolean
           karaoke?: boolean
           karaoke_fee?: number
@@ -172,6 +208,7 @@ export type Database = {
           check_in?: string
           check_out?: string
           created_at?: string
+          daytour?: boolean
           daytour_fee?: number
           deleted_at?: string | null
           deletion_reason?: string | null
@@ -188,6 +225,7 @@ export type Database = {
           guest_id?: string | null
           guest_name?: string
           id?: string
+          is_daytour_booking?: boolean
           is_primary?: boolean
           karaoke?: boolean
           karaoke_fee?: number

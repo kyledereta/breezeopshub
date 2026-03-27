@@ -42,7 +42,8 @@ export async function logBookingChanges(
     "water_jug", "water_jug_qty", "water_jug_fee",
     "towel_rent", "towel_rent_qty", "towel_rent_fee",
     "bonfire", "bonfire_fee", "extension_fee", "security_deposit",
-    "daytour_fee", "other_extras_fee", "other_extras_note", "mode_of_payment",
+    "daytour", "is_daytour_booking", "daytour_fee",
+    "other_extras_fee", "other_extras_note", "mode_of_payment",
   ];
 
   const changes: { booking_id: string; field_name: string; old_value: string | null; new_value: string | null }[] = [];

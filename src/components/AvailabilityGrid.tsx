@@ -14,13 +14,17 @@ import {
   isWeekend,
   getDay,
 } from "date-fns";
-import { Home, Tent, TreePalm, Crown, Fan, PawPrint, Users, Facebook, Instagram, Globe, MapPin, Share2, UtensilsCrossed, TrendingUp, Link2 } from "lucide-react";
+import { Home, Tent, TreePalm, Crown, Fan, PawPrint, Users, Facebook, Instagram, Globe, MapPin, Share2, UtensilsCrossed, TrendingUp, Link2, Ban } from "lucide-react";
 import { getPHHolidaysForMonth } from "@/lib/phHolidays";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
 import { useUnits, groupUnitsByArea } from "@/hooks/useUnits";
 import { useBookings, type Booking } from "@/hooks/useBookings";
+import { useBlockedDates, useBlockDate, useUnblockDate } from "@/hooks/useBlockedDates";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 // Payment status → cell color mapping
 function getBookingColor(_booking: Booking): string {
@@ -128,8 +132,13 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
 
   const { data: units = [], isLoading: unitsLoading } = useUnits();
   const { data: bookings = [], isLoading: bookingsLoading } = useBookings(startStr, endStr);
+  const { data: blockedDates = [] } = useBlockedDates(startStr, endStr);
+  const blockDate = useBlockDate();
+  const unblockDate = useUnblockDate();
   const todayRef = useRef<HTMLTableCellElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [blockPopover, setBlockPopover] = useState<{ unitId: string; date: Date } | null>(null);
+  const [blockReason, setBlockReason] = useState("");
 
   const scrollToToday = useCallback(() => {
     setTimeout(() => {
@@ -186,7 +195,16 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
     return map;
   }, [bookings, days]);
 
-  // Build group lookup for connector lines
+  // Blocked dates lookup: "unitId-dateStr" → reason
+  const blockedMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const bd of blockedDates) {
+      map.set(`${bd.unit_id}-${bd.blocked_date}`, bd.reason || "Blocked");
+    }
+    return map;
+  }, [blockedDates]);
+
+
   const flatUnitOrder = useMemo(() => {
     const result: string[] = [];
     for (const { units: areaUnits } of groupedUnits) {
@@ -557,17 +575,95 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                         );
                       }
 
+                      // Blocked date cell
+                      const blockedReason = blockedMap.get(key);
+                      if (blockedReason) {
+                        return (
+                          <Tooltip key={key}>
+                            <TooltipTrigger asChild>
+                              <td
+                                className={cn(
+                                  "border-b border-r border-border cursor-pointer transition-colors",
+                                  "bg-destructive/10 hover:bg-destructive/20"
+                                )}
+                                onClick={() => {
+                                  unblockDate.mutate({ unit_id: unit.id, blocked_date: dateStr }, {
+                                    onSuccess: () => toast.success("Day unblocked"),
+                                  });
+                                }}
+                              >
+                                <div className="flex items-center justify-center h-full">
+                                  <Ban className="h-3 w-3 text-destructive/60" />
+                                </div>
+                              </td>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom" className="text-xs">
+                              <p className="font-medium text-destructive">Blocked</p>
+                              <p className="text-muted-foreground">{blockedReason}</p>
+                              <p className="text-[9px] text-muted-foreground mt-1">Click to unblock</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        );
+                      }
+
                       // Empty / available cell
+                      const isBlockPopoverOpen = blockPopover?.unitId === unit.id && isSameDay(blockPopover.date, day);
                       return (
-                        <td
+                        <Popover
                           key={key}
-                          className={cn(
-                            "border-b border-r border-border cursor-pointer hover:bg-primary/10 transition-colors",
-                            isToday(day) && "bg-primary/5",
-                            isWeekend(day) && "bg-muted/15"
-                          )}
-                          onClick={() => onCellClick?.(unit.id, day)}
-                        />
+                          open={isBlockPopoverOpen}
+                          onOpenChange={(open) => {
+                            if (!open) setBlockPopover(null);
+                          }}
+                        >
+                          <PopoverTrigger asChild>
+                            <td
+                              className={cn(
+                                "border-b border-r border-border cursor-pointer hover:bg-primary/10 transition-colors",
+                                isToday(day) && "bg-primary/5",
+                                isWeekend(day) && "bg-muted/15"
+                              )}
+                              onClick={() => {
+                                setBlockPopover({ unitId: unit.id, date: day });
+                                setBlockReason("");
+                              }}
+                            />
+                          </PopoverTrigger>
+                          <PopoverContent className="w-48 p-2 space-y-2" side="bottom" align="start">
+                            <Button
+                              size="sm"
+                              className="w-full text-xs"
+                              onClick={() => {
+                                setBlockPopover(null);
+                                onCellClick?.(unit.id, day);
+                              }}
+                            >
+                              New Booking
+                            </Button>
+                            <div className="space-y-1.5">
+                              <Input
+                                placeholder="Reason (optional)"
+                                value={blockReason}
+                                onChange={(e) => setBlockReason(e.target.value)}
+                                className="h-7 text-xs"
+                              />
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                className="w-full text-xs"
+                                onClick={() => {
+                                  blockDate.mutate(
+                                    { unit_id: unit.id, blocked_date: dateStr, reason: blockReason || undefined },
+                                    { onSuccess: () => toast.success("Day blocked") }
+                                  );
+                                  setBlockPopover(null);
+                                }}
+                              >
+                                <Ban className="h-3 w-3 mr-1" /> Block Day
+                              </Button>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                       );
                     })}
                   </tr>
@@ -605,6 +701,12 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-sm bg-muted/30" /> Weekend
         </span>
+        <span className="flex items-center gap-1.5">
+          <Ban className="h-3 w-3 text-destructive/60" /> Blocked
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="bg-ocean text-[8px] text-white font-bold rounded px-1 leading-tight">DT</span> Day Tour
+        </span>
       </div>
     </div>
   );
@@ -612,14 +714,20 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
 
 function BookingCell({ booking }: { booking: Booking }) {
   const isGrouped = !!(booking as any).booking_group_id;
+  const hasDaytour = (booking as any).daytour_fee > 0 || (booking as any).daytour || (booking as any).is_daytour_booking;
   return (
-    <div className="px-2 flex items-center gap-1 truncate h-[22px]">
+    <div className="relative px-2 flex items-center gap-1 truncate h-[22px]">
       <span className={cn("h-2 w-2 rounded-full shrink-0", getPaymentDotColor(booking.payment_status))} />
       {isGrouped && <Link2 className="h-2 w-2 text-background/70 shrink-0" />}
       <span className="text-[9px] text-background font-medium truncate leading-none">{booking.guest_name}</span>
       <span className="text-[9px] text-background/60 shrink-0 leading-none">{booking.pax}</span>
       {booking.pets && <PawPrint className="h-2 w-2 text-background/60 shrink-0" />}
       {booking.utensil_rental && <UtensilsCrossed className="h-2 w-2 text-background/60 shrink-0" />}
+      {hasDaytour && (
+        <span className="absolute -top-1.5 -right-0.5 bg-ocean text-[6px] text-white font-bold rounded px-0.5 leading-tight">
+          DT
+        </span>
+      )}
     </div>
   );
 }
