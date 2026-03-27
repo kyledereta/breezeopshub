@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { NotificationBell } from "@/components/NotificationBell";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -21,6 +22,7 @@ export function AppLayout({ children, onNewBooking }: AppLayoutProps) {
             <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
             <div className="flex items-center gap-2">
               <GlobalSearch />
+              <ThemeToggle />
               <NotificationBell />
             </div>
           </header>
