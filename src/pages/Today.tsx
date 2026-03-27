@@ -1,4 +1,5 @@
 import { useMemo, useState, useCallback } from "react";
+import { getUnpaidExtras, getUnpaidExtrasTotal, hasUnpaidExtras } from "@/lib/unpaidExtras";
 import { format, parseISO, addDays, eachDayOfInterval, isWithinInterval, isSameDay, startOfMonth, endOfMonth } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
@@ -158,7 +159,7 @@ export default function TodayPage() {
       if (b.booking_status === "Checked In" && ci <= todayStr && co >= todayStr) {
         inHouse.push(b);
       }
-      if (b.payment_status === "Unpaid" || b.payment_status === "Partial DP") {
+      if (b.payment_status === "Unpaid" || b.payment_status === "Partial DP" || hasUnpaidExtras(b)) {
         pendingBalances.push(b);
       }
       // Today's revenue: bookings checked in today (revenue attributed to check-in month)
