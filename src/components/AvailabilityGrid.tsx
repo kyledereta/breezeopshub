@@ -50,11 +50,20 @@ function getUnitIcon(name: string) {
 }
 
 // Booking source → icon mapping
+// Airbnb SVG icon component
+function AirbnbIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm5.7 17.4c-.3.6-.8 1-1.4 1.2-.2.1-.5.1-.7.1-.4 0-.8-.1-1.3-.4-.6-.3-1.2-.9-1.9-1.6-.9-1-1.7-2.2-2.4-3.3-.7 1.1-1.5 2.3-2.4 3.3-.7.7-1.3 1.3-1.9 1.6-.5.3-.9.4-1.3.4-.2 0-.5 0-.7-.1-.6-.2-1.1-.6-1.4-1.2-.3-.6-.4-1.3-.2-2 .1-.5.3-1 .6-1.6.3-.6.8-1.3 1.4-2.1 1-1.3 2.3-2.7 3.6-4.2.2-.2.3-.4.5-.5l.4-.5.4.5c.2.2.3.4.5.5 1.3 1.5 2.6 2.9 3.6 4.2.6.8 1.1 1.5 1.4 2.1.3.6.5 1.1.6 1.6.2.7.1 1.4-.2 2z"/>
+    </svg>
+  );
+}
+
 function getSourceIcon(source: string) {
   switch (source) {
     case "Facebook Direct": return Facebook;
     case "Instagram": return Instagram;
-    case "Airbnb": return Globe;
+    case "Airbnb": return null; // handled separately
     case "Walk-in": return MapPin;
     case "Referral": return Share2;
     case "TikTok": return Globe;
@@ -482,13 +491,17 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
 function BookingCell({ booking }: { booking: Booking }) {
   const SourceIcon = getSourceIcon(booking.booking_source);
   return (
-    <div className="px-1.5 py-1.5 min-h-[32px] flex items-center gap-1.5 truncate">
-      <SourceIcon className="h-3 w-3 shrink-0 text-background/80" />
+    <div className="px-2 py-1 min-h-[28px] flex items-center gap-1 truncate">
+      {booking.booking_source === "Airbnb" ? (
+        <AirbnbIcon className="h-3 w-3 shrink-0 text-background/80" />
+      ) : SourceIcon ? (
+        <SourceIcon className="h-3 w-3 shrink-0 text-background/80" />
+      ) : null}
       <span className="text-[10px] text-background font-medium truncate">{booking.guest_name}</span>
-      <span className="text-[10px] text-background/70">{booking.pax}</span>
-      {booking.pets && <PawPrint className="h-2.5 w-2.5 text-background/70 shrink-0" />}
-      {booking.utensil_rental && <UtensilsCrossed className="h-2.5 w-2.5 text-background/70 shrink-0" />}
-      {booking.key_deposit && <span className="text-[8px] text-background/70">🔑</span>}
+      <span className="text-[10px] text-background/60 shrink-0">{booking.pax}</span>
+      {booking.pets && <PawPrint className="h-2.5 w-2.5 text-background/60 shrink-0" />}
+      {booking.utensil_rental && <UtensilsCrossed className="h-2.5 w-2.5 text-background/60 shrink-0" />}
+      {booking.key_deposit && <span className="text-[8px] text-background/60">🔑</span>}
     </div>
   );
 }
@@ -502,8 +515,11 @@ function BookingTooltip({ booking }: { booking: Booking }) {
       <div className="space-y-1.5">
         <div className="flex items-center gap-2">
           {(() => {
+            if (booking.booking_source === "Airbnb") {
+              return <AirbnbIcon className={cn("h-3.5 w-3.5 shrink-0", getSourceColor(booking.booking_source))} />;
+            }
             const SourceIcon = getSourceIcon(booking.booking_source);
-            return <SourceIcon className={cn("h-3.5 w-3.5 shrink-0", getSourceColor(booking.booking_source))} />;
+            return SourceIcon ? <SourceIcon className={cn("h-3.5 w-3.5 shrink-0", getSourceColor(booking.booking_source))} /> : null;
           })()}
           <span className="font-medium text-sm text-foreground">{booking.guest_name}</span>
         </div>
