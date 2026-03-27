@@ -1467,9 +1467,15 @@ export function BookingModal({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">Daytour Fee (₱150/head × {watchPax} PAX)</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
-                        </FormControl>
+                        <div className="flex items-center gap-2">
+                          <FormControl>
+                            <Input {...field} type="number" min={0} step="any" className="bg-background border-border flex-1" />
+                          </FormControl>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="text-[9px] text-muted-foreground">{extrasPaidStatus.daytour ? "Paid" : "Unpaid"}</span>
+                            <Switch checked={!!extrasPaidStatus.daytour} onCheckedChange={() => toggleExtraPaid("daytour")} className="scale-75" />
+                          </div>
+                        </div>
                       </FormItem>
                     )}
                   />
@@ -1482,9 +1488,17 @@ export function BookingModal({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">Other Extras Fee (₱)</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
-                        </FormControl>
+                        <div className="flex items-center gap-2">
+                          <FormControl>
+                            <Input {...field} type="number" min={0} step="any" className="bg-background border-border flex-1" />
+                          </FormControl>
+                          {Number(watchOtherExtrasFee) > 0 && (
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <span className="text-[9px] text-muted-foreground">{extrasPaidStatus.other_extras ? "Paid" : "Unpaid"}</span>
+                              <Switch checked={!!extrasPaidStatus.other_extras} onCheckedChange={() => toggleExtraPaid("other_extras")} className="scale-75" />
+                            </div>
+                          )}
+                        </div>
                       </FormItem>
                     )}
                   />
