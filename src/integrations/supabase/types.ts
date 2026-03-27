@@ -313,6 +313,7 @@ export type Database = {
           nightly_rate: number
           notes: string | null
           peak_rate: number
+          status_updated_at: string | null
           unit_status: Database["public"]["Enums"]["unit_status"]
         }
         Insert: {
@@ -326,6 +327,7 @@ export type Database = {
           nightly_rate: number
           notes?: string | null
           peak_rate: number
+          status_updated_at?: string | null
           unit_status?: Database["public"]["Enums"]["unit_status"]
         }
         Update: {
@@ -339,6 +341,7 @@ export type Database = {
           nightly_rate?: number
           notes?: string | null
           peak_rate?: number
+          status_updated_at?: string | null
           unit_status?: Database["public"]["Enums"]["unit_status"]
         }
         Relationships: []
