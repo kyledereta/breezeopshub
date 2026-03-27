@@ -1847,7 +1847,7 @@ export function BookingModal({
                 const nights = differenceInCalendarDays(checkOutDate, checkInDate);
                 if (nights <= 0) return null;
 
-                const unitBreakdowns = selectedUnits.map((u) => ({
+                const unitBreakdowns = watchIsDaytourBooking ? [] : selectedUnits.map((u) => ({
                   name: u.name,
                   subtotal: u.nightly_rate * nights,
                   rate: u.nightly_rate,
@@ -1862,7 +1862,7 @@ export function BookingModal({
                   (watchWaterJug ? Number(watchWaterJugFee) || 0 : 0) +
                   (watchTowelRent ? Number(watchTowelRentFee) || 0 : 0) +
                   (watchBonfire ? Number(watchBonfireFee) || 0 : 0) +
-                  (Number(watchDaytourFee) || 0) +
+                  (watchDaytour ? Number(watchDaytourFee) || 0 : 0) +
                   (Number(watchOtherExtrasFee) || 0);
                 const discountAmount =
                   watchDiscountType === "percentage"
@@ -1872,7 +1872,10 @@ export function BookingModal({
 
                 return (
                   <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-1.5">
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">Computation Summary</h3>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">
+                      Computation Summary
+                      {watchIsDaytourBooking && <span className="ml-2 bg-ocean text-white text-[8px] px-1.5 py-0.5 rounded font-bold">DAY TOUR</span>}
+                    </h3>
                     {unitBreakdowns.map((ub) => (
                       <div key={ub.name} className="flex justify-between text-xs">
                         <span className="text-muted-foreground">{ub.name} (₱{ub.rate.toLocaleString()} × {nights}n)</span>
