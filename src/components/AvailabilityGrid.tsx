@@ -28,10 +28,10 @@ function getBookingColor(_booking: Booking): string {
 
 function getPaymentDotColor(status: string): string {
   switch (status) {
-    case "Fully Paid": return "bg-primary";
+    case "Fully Paid": return "bg-[hsl(142,71%,45%)]";
     case "Airbnb Paid": return "bg-airbnb-pink";
-    case "Partial DP": return "bg-warning-orange";
-    case "Unpaid": return "bg-destructive";
+    case "Partial DP": return "bg-[hsl(48,96%,53%)]";
+    case "Unpaid": return "bg-[hsl(0,100%,50%)]";
     case "Refunded": return "bg-muted-foreground";
     default: return "bg-muted-foreground";
   }
@@ -498,16 +498,16 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
       {/* Legend */}
       <div className="flex flex-wrap items-center gap-3 sm:gap-4 px-4 sm:px-6 py-2 sm:py-3 border-t border-border text-[10px] font-sans text-muted-foreground shrink-0">
         <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-primary" /> Fully Paid
+          <span className="h-2 w-2 rounded-full bg-[hsl(142,71%,45%)]" /> Fully Paid
         </span>
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-airbnb-pink" /> Airbnb Paid
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-warning-orange" /> Partial DP
+          <span className="h-2 w-2 rounded-full bg-[hsl(48,96%,53%)]" /> Partial DP
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-destructive" /> Unpaid
+          <span className="h-2 w-2 rounded-full bg-[hsl(0,100%,50%)]" /> Unpaid
         </span>
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-muted-foreground" /> Refunded
