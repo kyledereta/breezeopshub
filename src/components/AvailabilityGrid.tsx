@@ -132,8 +132,13 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
 
   const { data: units = [], isLoading: unitsLoading } = useUnits();
   const { data: bookings = [], isLoading: bookingsLoading } = useBookings(startStr, endStr);
+  const { data: blockedDates = [] } = useBlockedDates(startStr, endStr);
+  const blockDate = useBlockDate();
+  const unblockDate = useUnblockDate();
   const todayRef = useRef<HTMLTableCellElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [blockPopover, setBlockPopover] = useState<{ unitId: string; date: Date } | null>(null);
+  const [blockReason, setBlockReason] = useState("");
 
   const scrollToToday = useCallback(() => {
     setTimeout(() => {
