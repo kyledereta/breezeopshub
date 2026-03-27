@@ -420,7 +420,7 @@ export function BookingModal({
       const nights = differenceInCalendarDays(checkOutDate, checkInDate);
       if (nights <= 0) return;
 
-      const base = selectedUnits.reduce((sum, u) => sum + u.nightly_rate * nights, 0);
+      const base = watchIsDaytourBooking ? 0 : selectedUnits.reduce((sum, u) => sum + u.nightly_rate * nights, 0);
       const extras =
         (watchUtensilRental ? Number(watchUtensilFee) || 0 : 0) +
         (watchKaraoke ? Number(watchKaraokeFee) || 0 : 0) +
@@ -430,7 +430,7 @@ export function BookingModal({
         (watchWaterJug ? Number(watchWaterJugFee) || 0 : 0) +
         (watchTowelRent ? Number(watchTowelRentFee) || 0 : 0) +
         (watchBonfire ? Number(watchBonfireFee) || 0 : 0) +
-        (Number(watchDaytourFee) || 0) +
+        (watchDaytour ? Number(watchDaytourFee) || 0 : 0) +
         (Number(watchOtherExtrasFee) || 0);
 
       const discountAmount =
@@ -458,7 +458,8 @@ export function BookingModal({
     watchWaterJug, watchWaterJugFee,
     watchTowelRent, watchTowelRentFee,
     watchBonfire, watchBonfireFee,
-    watchDaytourFee, watchOtherExtrasFee,
+    watchDaytour, watchDaytourFee, watchOtherExtrasFee,
+    watchIsDaytourBooking,
     watchDiscountType, watchDiscountGiven,
     form,
   ]);
