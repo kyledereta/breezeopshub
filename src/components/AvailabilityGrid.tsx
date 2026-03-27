@@ -519,17 +519,17 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
 function BookingCell({ booking }: { booking: Booking }) {
   const SourceIcon = getSourceIcon(booking.booking_source);
   return (
-    <div className="px-2 py-1 min-h-[28px] flex items-center gap-1 truncate">
+    <div className="px-1.5 py-0.5 min-h-[22px] flex items-center gap-1 truncate">
       {booking.booking_source === "Airbnb" ? (
-        <AirbnbIcon className="h-3 w-3 shrink-0 text-background/80" />
+        <AirbnbIcon className="h-2.5 w-2.5 shrink-0 text-background/80" />
       ) : SourceIcon ? (
-        <SourceIcon className="h-3 w-3 shrink-0 text-background/80" />
+        <SourceIcon className="h-2.5 w-2.5 shrink-0 text-background/80" />
       ) : null}
-      <span className="text-[10px] text-background font-medium truncate">{booking.guest_name}</span>
-      <span className="text-[10px] text-background/60 shrink-0">{booking.pax}</span>
-      {booking.pets && <PawPrint className="h-2.5 w-2.5 text-background/60 shrink-0" />}
-      {booking.utensil_rental && <UtensilsCrossed className="h-2.5 w-2.5 text-background/60 shrink-0" />}
-      {booking.key_deposit && <span className="text-[8px] text-background/60">🔑</span>}
+      <span className="text-[9px] text-background font-medium truncate leading-none">{booking.guest_name}</span>
+      <span className="text-[9px] text-background/60 shrink-0 leading-none">{booking.pax}</span>
+      {booking.pets && <PawPrint className="h-2 w-2 text-background/60 shrink-0" />}
+      {booking.utensil_rental && <UtensilsCrossed className="h-2 w-2 text-background/60 shrink-0" />}
+      {booking.key_deposit && <span className="text-[7px] text-background/60">🔑</span>}
     </div>
   );
 }
