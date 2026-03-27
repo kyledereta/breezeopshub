@@ -607,6 +607,27 @@ export function BookingModal({
 
       if (isEditing) {
         await updateBooking.mutateAsync({ id: booking.id, ...fullPayload });
+        // Sync secondary bookings in the same group
+        if ((booking as any).booking_group_id && (booking as any).is_primary) {
+          const sharedFields = {
+            guest_name: fullPayload.guest_name,
+            guest_id: fullPayload.guest_id,
+            check_in: fullPayload.check_in,
+            check_out: fullPayload.check_out,
+            pax: fullPayload.pax,
+            booking_status: fullPayload.booking_status,
+            booking_source: fullPayload.booking_source,
+            email: fullPayload.email,
+            phone: fullPayload.phone,
+            notes: fullPayload.notes,
+            payment_status: fullPayload.payment_status,
+          };
+          await supabase
+            .from("bookings")
+            .update(sharedFields)
+            .eq("booking_group_id", (booking as any).booking_group_id)
+            .eq("is_primary", false);
+        }
         // Log audit trail
         if (originalValuesRef.current) {
           await logBookingChanges(booking.id, originalValuesRef.current, fullPayload);
@@ -616,10 +637,41 @@ export function BookingModal({
       } else {
         // Create one booking per selected unit (multi-unit support)
         const allUnitIds = [values.unit_id, ...additionalUnitIds];
-        for (const unitId of allUnitIds) {
-          await createBooking.mutateAsync({ ...fullPayload, unit_id: unitId });
+        if (allUnitIds.length > 1) {
+          const groupId = crypto.randomUUID();
+          // Primary booking (first unit) holds all payment/total info
+          await createBooking.mutateAsync({
+            ...fullPayload,
+            unit_id: allUnitIds[0],
+            booking_group_id: groupId,
+            is_primary: true,
+          } as any);
+          // Secondary bookings share dates/guest but zero out financials
+          for (const unitId of allUnitIds.slice(1)) {
+            await createBooking.mutateAsync({
+              ...fullPayload,
+              unit_id: unitId,
+              booking_group_id: groupId,
+              is_primary: false,
+              total_amount: 0,
+              deposit_paid: 0,
+              security_deposit: 0,
+              discount_given: 0,
+              extra_pax_fee: 0,
+              utensil_rental_fee: 0,
+              karaoke_fee: 0,
+              pet_fee: 0,
+              kitchen_use_fee: 0,
+              water_jug_fee: 0,
+              towel_rent_fee: 0,
+              bonfire_fee: 0,
+              extension_fee: 0,
+            } as any);
+          }
+        } else {
+          await createBooking.mutateAsync(fullPayload);
         }
-        toast.success(allUnitIds.length > 1 ? `${allUnitIds.length} bookings created` : "Booking created");
+        toast.success(allUnitIds.length > 1 ? `${allUnitIds.length} units booked as one group` : "Booking created");
       }
 
       // Update guest total_stays and tier after checkout
