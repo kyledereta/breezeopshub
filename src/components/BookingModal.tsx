@@ -392,6 +392,9 @@ export function BookingModal({
         pet_fee: (booking as any).pet_fee ?? 0,
         kitchen_use: (booking as any).kitchen_use ?? false,
         kitchen_use_fee: (booking as any).kitchen_use_fee ?? 0,
+        water_jug: (booking as any).water_jug ?? false,
+        water_jug_qty: (booking as any).water_jug_qty ?? 0,
+        water_jug_fee: (booking as any).water_jug_fee ?? 0,
       };
       form.reset(vals);
       originalValuesRef.current = { ...vals };
@@ -428,6 +431,9 @@ export function BookingModal({
         pet_fee: 0,
         kitchen_use: false,
         kitchen_use_fee: 0,
+        water_jug: false,
+        water_jug_qty: 0,
+        water_jug_fee: 0,
       });
       setAdditionalUnitIds([]);
       setAdditionalPet(false);
@@ -467,6 +473,9 @@ export function BookingModal({
         pet_fee: values.pets ? values.pet_fee : 0,
         kitchen_use: values.kitchen_use,
         kitchen_use_fee: values.kitchen_use ? values.kitchen_use_fee : 0,
+        water_jug: values.water_jug,
+        water_jug_qty: values.water_jug ? values.water_jug_qty : 0,
+        water_jug_fee: values.water_jug ? values.water_jug_fee : 0,
       };
 
       // Upload ID files if any
