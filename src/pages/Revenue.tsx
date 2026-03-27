@@ -179,6 +179,7 @@ export default function RevenuePage() {
           <div className="flex-1 overflow-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
             {/* Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+              <StatCard icon={DollarSign} label="Today's Revenue" value={`₱${todayRevenue.toLocaleString()}`} sub={`${todayArrivals.length} arrivals`} />
               <StatCard icon={Banknote} label="This Month" value={`₱${(currentMonthData?.revenue ?? 0).toLocaleString()}`} sub={`${currentMonthData?.bookings ?? 0} bookings`} />
               <StatCard icon={TrendingUp} label="All-Time Revenue" value={`₱${totalRevenue.toLocaleString()}`} sub={`${activeBookings.length} total bookings`} />
               <StatCard icon={CalendarCheck} label="Occupancy Rate" value={`${currentOccupancy}%`} sub={`${currentMonthData?.occupiedNights ?? 0} of ${currentMonthData?.totalNights ?? 0} unit-nights`} />
