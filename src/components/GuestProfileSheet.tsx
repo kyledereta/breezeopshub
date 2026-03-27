@@ -190,6 +190,41 @@ export function GuestProfileSheet({ guest, open, onOpenChange }: GuestProfileShe
             </div>
           )}
         </div>
+        <Separator className="my-4" />
+
+        {/* Delete Guest */}
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" size="sm" className="w-full">
+              <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete Guest
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent className="bg-card border-border">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete {guest.guest_name}?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently remove this guest from the database. Bookings linked to this guest will have their guest reference cleared. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={async () => {
+                  try {
+                    await deleteGuest.mutateAsync(guest.id);
+                    toast.success("Guest deleted");
+                    onOpenChange(false);
+                  } catch (err: any) {
+                    toast.error(err.message ?? "Failed to delete guest");
+                  }
+                }}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </SheetContent>
     </Sheet>
   );
