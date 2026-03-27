@@ -107,6 +107,7 @@ export type Database = {
           email: string | null
           extension_fee: number
           extra_pax_fee: number
+          extras_paid_status: Json
           guest_id: string | null
           guest_name: string
           has_car: boolean
@@ -167,6 +168,7 @@ export type Database = {
           email?: string | null
           extension_fee?: number
           extra_pax_fee?: number
+          extras_paid_status?: Json
           guest_id?: string | null
           guest_name: string
           has_car?: boolean
@@ -227,6 +229,7 @@ export type Database = {
           email?: string | null
           extension_fee?: number
           extra_pax_fee?: number
+          extras_paid_status?: Json
           guest_id?: string | null
           guest_name?: string
           has_car?: boolean
@@ -505,6 +508,7 @@ export type Database = {
         | "Fully Paid"
         | "Airbnb Paid"
         | "Refunded"
+        | "Unpaid Extras"
       unit_status: "Available" | "Under Construction" | "Maintenance" | "Closed"
     }
     CompositeTypes: {
@@ -666,6 +670,7 @@ export const Constants = {
         "Fully Paid",
         "Airbnb Paid",
         "Refunded",
+        "Unpaid Extras",
       ],
       unit_status: ["Available", "Under Construction", "Maintenance", "Closed"],
     },
