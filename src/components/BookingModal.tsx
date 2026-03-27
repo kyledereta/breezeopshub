@@ -1087,7 +1087,37 @@ export function BookingModal({
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={form.control}
+                  name="water_jug"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center gap-3 space-y-0 rounded-lg border border-border p-3">
+                      <FormControl>
+                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                      <div>
+                        <FormLabel className="text-xs text-foreground">Water Jug</FormLabel>
+                        <p className="text-[10px] text-muted-foreground">₱100 per jug</p>
+                      </div>
+                    </FormItem>
+                  )}
+                />
               </div>
+              {watchWaterJug && (
+                <FormField
+                  control={form.control}
+                  name="water_jug_qty"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Number of Jugs</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="number" min={1} step={1} className="bg-background border-border" />
+                      </FormControl>
+                      <p className="text-[10px] text-muted-foreground">Total: ₱{((Number(field.value) || 0) * 100).toLocaleString()}</p>
+                    </FormItem>
+                  )}
+                />
+              )}
               <FormField
                 control={form.control}
                 name="pets"
@@ -1505,7 +1535,8 @@ export function BookingModal({
                   (watchKaraoke ? Number(watchKaraokeFee) || 0 : 0) +
                   (watchKitchenUse ? Number(watchKitchenFee) || 0 : 0) +
                   (watchPets ? Number(watchPetFee) || 0 : 0) +
-                  (Number(watchExtraPaxFee) || 0);
+                  (Number(watchExtraPaxFee) || 0) +
+                  (watchWaterJug ? Number(watchWaterJugFee) || 0 : 0);
                 const discountAmount =
                   watchDiscountType === "percentage"
                     ? Math.round(((base + extras) * Number(watchDiscountGiven)) / 100)
@@ -1549,6 +1580,12 @@ export function BookingModal({
                       <div className="flex justify-between text-xs">
                         <span className="text-muted-foreground">Extra PAX Fee</span>
                         <span className="text-foreground">₱{(Number(watchExtraPaxFee) || 0).toLocaleString()}</span>
+                      </div>
+                    )}
+                    {watchWaterJug && Number(watchWaterJugFee) > 0 && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Water Jug (×{Number(form.watch("water_jug_qty")) || 0})</span>
+                        <span className="text-foreground">₱{(Number(watchWaterJugFee) || 0).toLocaleString()}</span>
                       </div>
                     )}
                     {discountAmount > 0 && (
