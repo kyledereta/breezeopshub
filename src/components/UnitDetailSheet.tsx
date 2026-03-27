@@ -17,9 +17,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Unit } from "@/hooks/useUnits";
+import { useUnitStatusLog, logUnitStatusChange } from "@/hooks/useUnitStatusLog";
 import {
   Home, Tent, TreePalm, Crown, Fan, Snowflake,
-  CheckCircle, Construction, AlertTriangle, XCircle,
+  CheckCircle, Construction, AlertTriangle, XCircle, Clock, ArrowRight,
 } from "lucide-react";
 
 interface UnitDetailSheetProps {
@@ -46,6 +47,7 @@ const STATUS_CONFIG: Record<string, { color: string; icon: any; label: string }>
 export function UnitDetailSheet({ open, onOpenChange, unit }: UnitDetailSheetProps) {
   const qc = useQueryClient();
   const [saving, setSaving] = useState(false);
+  const { data: statusLog = [] } = useUnitStatusLog(unit?.id);
 
   const updateUnit = useMutation({
     mutationFn: async ({ id, ...updates }: { id: string; [key: string]: any }) => {
@@ -63,9 +65,12 @@ export function UnitDetailSheet({ open, onOpenChange, unit }: UnitDetailSheetPro
   const IconComp = getUnitIcon(unit.name);
 
   const handleStatusChange = async (newStatus: string) => {
+    if (newStatus === status) return;
     setSaving(true);
     try {
       await updateUnit.mutateAsync({ id: unit.id, unit_status: newStatus, status_updated_at: new Date().toISOString() });
+      await logUnitStatusChange(unit.id, status, newStatus);
+      qc.invalidateQueries({ queryKey: ["unit_status_log", unit.id] });
       toast.success(`${unit.name} marked as ${newStatus}`);
     } catch (err: any) {
       toast.error(err.message ?? "Failed to update");
@@ -159,12 +164,42 @@ export function UnitDetailSheet({ open, onOpenChange, unit }: UnitDetailSheetPro
                   );
                 })}
               </div>
-              {(unit as any).status_updated_at && (
-                <p className="text-[10px] text-muted-foreground mt-2">
-                  Last updated: {format(parseISO((unit as any).status_updated_at), "MMM d, yyyy · h:mm a")}
-                </p>
-              )}
             </div>
+
+            {/* Status Change History */}
+            {statusLog.length > 0 && (
+              <>
+                <Separator className="bg-border" />
+                <div className="space-y-2">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">Status History</h3>
+                  <div className="space-y-2 max-h-[200px] overflow-auto">
+                    {statusLog.map((entry) => {
+                      const oldConf = STATUS_CONFIG[entry.old_status || "Available"] || STATUS_CONFIG["Available"];
+                      const newConf = STATUS_CONFIG[entry.new_status] || STATUS_CONFIG["Available"];
+                      return (
+                        <div key={entry.id} className="flex items-start gap-2 text-xs">
+                          <Clock className="h-3 w-3 text-muted-foreground mt-0.5 shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1 flex-wrap">
+                              <span className={cn("px-1.5 py-0.5 rounded text-[10px] border", oldConf.color)}>
+                                {entry.old_status || "—"}
+                              </span>
+                              <ArrowRight className="h-2.5 w-2.5 text-muted-foreground" />
+                              <span className={cn("px-1.5 py-0.5 rounded text-[10px] border font-medium", newConf.color)}>
+                                {entry.new_status}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                              {format(parseISO(entry.changed_at), "MMM d, yyyy · h:mm a")}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Notes */}
             {unit.notes && (
