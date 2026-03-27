@@ -76,6 +76,7 @@ export type Database = {
           pets: boolean
           phone: string | null
           referral_code: string | null
+          security_deposit: number
           total_amount: number
           unit_id: string | null
           updated_at: string
@@ -109,6 +110,7 @@ export type Database = {
           pets?: boolean
           phone?: string | null
           referral_code?: string | null
+          security_deposit?: number
           total_amount?: number
           unit_id?: string | null
           updated_at?: string
@@ -142,6 +144,7 @@ export type Database = {
           pets?: boolean
           phone?: string | null
           referral_code?: string | null
+          security_deposit?: number
           total_amount?: number
           unit_id?: string | null
           updated_at?: string
@@ -340,7 +343,7 @@ export type Database = {
         | "Cancelled"
         | "Rescheduled"
         | "Hold"
-      deposit_status: "Pending" | "Returned" | "Deducted"
+      deposit_status: "Pending" | "Returned" | "Deducted" | "Collected"
       guest_segment:
         | "Local Family"
         | "Couple"
@@ -500,7 +503,7 @@ export const Constants = {
         "Rescheduled",
         "Hold",
       ],
-      deposit_status: ["Pending", "Returned", "Deducted"],
+      deposit_status: ["Pending", "Returned", "Deducted", "Collected"],
       guest_segment: [
         "Local Family",
         "Couple",
