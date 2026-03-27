@@ -286,7 +286,13 @@ export default function TodayPage() {
 
   const totalPaxInHouse = inHouse.reduce((sum, b) => sum + b.pax, 0);
   const occupancyRate = units.length > 0 ? Math.round((inHouse.length / units.length) * 100) : 0;
-  const pendingTotal = pendingBalances.reduce((s, b) => s + (b.total_amount - b.deposit_paid) + getUnpaidExtrasTotal(b), 0);
+  const pendingTotal = pendingBalances.reduce((s, b) => {
+    const balance = b.total_amount - b.deposit_paid;
+    const unpaidExtrasAmt = getUnpaidExtrasTotal(b);
+    // If fully paid but has unpaid extras, show only the extras amount
+    if (balance <= 0 && unpaidExtrasAmt > 0) return s + unpaidExtrasAmt;
+    return s + Math.max(balance, 0);
+  }, 0);
   const isLoading = bookingsLoading || unitsLoading;
 
   const groupedUnits = useMemo(() => groupUnitsByArea(units), [units]);
