@@ -575,17 +575,95 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                         );
                       }
 
+                      // Blocked date cell
+                      const blockedReason = blockedMap.get(key);
+                      if (blockedReason) {
+                        return (
+                          <Tooltip key={key}>
+                            <TooltipTrigger asChild>
+                              <td
+                                className={cn(
+                                  "border-b border-r border-border cursor-pointer transition-colors",
+                                  "bg-destructive/10 hover:bg-destructive/20"
+                                )}
+                                onClick={() => {
+                                  unblockDate.mutate({ unit_id: unit.id, blocked_date: dateStr }, {
+                                    onSuccess: () => toast.success("Day unblocked"),
+                                  });
+                                }}
+                              >
+                                <div className="flex items-center justify-center h-full">
+                                  <Ban className="h-3 w-3 text-destructive/60" />
+                                </div>
+                              </td>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom" className="text-xs">
+                              <p className="font-medium text-destructive">Blocked</p>
+                              <p className="text-muted-foreground">{blockedReason}</p>
+                              <p className="text-[9px] text-muted-foreground mt-1">Click to unblock</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        );
+                      }
+
                       // Empty / available cell
+                      const isBlockPopoverOpen = blockPopover?.unitId === unit.id && isSameDay(blockPopover.date, day);
                       return (
-                        <td
+                        <Popover
                           key={key}
-                          className={cn(
-                            "border-b border-r border-border cursor-pointer hover:bg-primary/10 transition-colors",
-                            isToday(day) && "bg-primary/5",
-                            isWeekend(day) && "bg-muted/15"
-                          )}
-                          onClick={() => onCellClick?.(unit.id, day)}
-                        />
+                          open={isBlockPopoverOpen}
+                          onOpenChange={(open) => {
+                            if (!open) setBlockPopover(null);
+                          }}
+                        >
+                          <PopoverTrigger asChild>
+                            <td
+                              className={cn(
+                                "border-b border-r border-border cursor-pointer hover:bg-primary/10 transition-colors",
+                                isToday(day) && "bg-primary/5",
+                                isWeekend(day) && "bg-muted/15"
+                              )}
+                              onClick={() => {
+                                setBlockPopover({ unitId: unit.id, date: day });
+                                setBlockReason("");
+                              }}
+                            />
+                          </PopoverTrigger>
+                          <PopoverContent className="w-48 p-2 space-y-2" side="bottom" align="start">
+                            <Button
+                              size="sm"
+                              className="w-full text-xs"
+                              onClick={() => {
+                                setBlockPopover(null);
+                                onCellClick?.(unit.id, day);
+                              }}
+                            >
+                              New Booking
+                            </Button>
+                            <div className="space-y-1.5">
+                              <Input
+                                placeholder="Reason (optional)"
+                                value={blockReason}
+                                onChange={(e) => setBlockReason(e.target.value)}
+                                className="h-7 text-xs"
+                              />
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                className="w-full text-xs"
+                                onClick={() => {
+                                  blockDate.mutate(
+                                    { unit_id: unit.id, blocked_date: dateStr, reason: blockReason || undefined },
+                                    { onSuccess: () => toast.success("Day blocked") }
+                                  );
+                                  setBlockPopover(null);
+                                }}
+                              >
+                                <Ban className="h-3 w-3 mr-1" /> Block Day
+                              </Button>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                       );
                     })}
                   </tr>
