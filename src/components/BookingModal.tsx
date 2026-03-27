@@ -91,6 +91,11 @@ const bookingSchema = z.object({
   water_jug: z.boolean(),
   water_jug_qty: z.coerce.number().min(0),
   water_jug_fee: z.coerce.number().min(0),
+  towel_rent: z.boolean(),
+  towel_rent_qty: z.coerce.number().min(0),
+  towel_rent_fee: z.coerce.number().min(0),
+  bonfire: z.boolean(),
+  bonfire_fee: z.coerce.number().min(0),
 }).refine((data) => data.check_out > data.check_in, {
   message: "Check-out must be after check-in",
   path: ["check_out"],
@@ -181,6 +186,11 @@ export function BookingModal({
       water_jug: false,
       water_jug_qty: 0,
       water_jug_fee: 0,
+      towel_rent: false,
+      towel_rent_qty: 0,
+      towel_rent_fee: 0,
+      bonfire: false,
+      bonfire_fee: 0,
     },
   });
 
@@ -196,6 +206,8 @@ export function BookingModal({
   const watchPets = form.watch("pets");
   const watchKitchenUse = form.watch("kitchen_use");
   const watchWaterJug = form.watch("water_jug");
+  const watchTowelRent = form.watch("towel_rent");
+  const watchBonfire = form.watch("bonfire");
 
   // Get selected unit's max_pax
   const selectedUnit = useMemo(() => units.find((u) => u.id === watchUnitId), [units, watchUnitId]);
@@ -293,6 +305,34 @@ export function BookingModal({
       form.setValue("water_jug_fee", 0);
     }
   }, [watchWaterJug, watchWaterJugQty, form]);
+
+  // Auto-set towel rent fee when toggled or qty changes
+  const watchTowelRentQty = form.watch("towel_rent_qty");
+  useEffect(() => {
+    if (watchTowelRent) {
+      const qty = Number(watchTowelRentQty) || 0;
+      if (qty === 0) {
+        form.setValue("towel_rent_qty", 1);
+        form.setValue("towel_rent_fee", 100);
+      } else {
+        form.setValue("towel_rent_fee", qty * 100);
+      }
+    } else {
+      form.setValue("towel_rent_qty", 0);
+      form.setValue("towel_rent_fee", 0);
+    }
+  }, [watchTowelRent, watchTowelRentQty, form]);
+
+  // Auto-set bonfire fee when toggled
+  useEffect(() => {
+    if (watchBonfire) {
+      if (form.getValues("bonfire_fee") === 0) {
+        form.setValue("bonfire_fee", 300);
+      }
+    } else {
+      form.setValue("bonfire_fee", 0);
+    }
+  }, [watchBonfire, form]);
 
   // Auto-set pet fee based on additional pet
   useEffect(() => {
