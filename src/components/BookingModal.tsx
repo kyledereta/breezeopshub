@@ -414,6 +414,10 @@ export function BookingModal({
 
       const total = Math.max(0, base + extras - discountAmount);
       form.setValue("total_amount", total);
+      // Auto-sync deposit when Fully Paid
+      if (form.getValues("payment_status") === "Fully Paid") {
+        form.setValue("deposit_paid", total);
+      }
     } catch {
       // Invalid dates, skip
     }
