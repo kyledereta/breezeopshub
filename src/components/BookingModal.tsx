@@ -200,6 +200,8 @@ export function BookingModal({
       towel_rent_fee: 0,
       bonfire: false,
       bonfire_fee: 0,
+      daytour: false,
+      is_daytour_booking: false,
       daytour_fee: 0,
       other_extras_fee: 0,
       other_extras_note: "",
@@ -220,6 +222,8 @@ export function BookingModal({
   const watchWaterJug = form.watch("water_jug");
   const watchTowelRent = form.watch("towel_rent");
   const watchBonfire = form.watch("bonfire");
+  const watchDaytour = form.watch("daytour");
+  const watchIsDaytourBooking = form.watch("is_daytour_booking");
   const watchDaytourFee = form.watch("daytour_fee");
   const watchOtherExtrasFee = form.watch("other_extras_fee");
 
