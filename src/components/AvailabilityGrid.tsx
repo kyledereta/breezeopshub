@@ -29,15 +29,15 @@ function getBookingColor(_booking: Booking): string {
 function getBookingRing(booking: Booking): string {
   switch (booking.payment_status) {
     case "Fully Paid":
-      return "ring-2 ring-primary";
+      return "ring-1 ring-primary";
     case "Airbnb Paid":
-      return "ring-2 ring-airbnb-pink";
+      return "ring-1 ring-airbnb-pink";
     case "Partial DP":
-      return "ring-2 ring-warning-orange";
+      return "ring-1 ring-warning-orange";
     case "Unpaid":
-      return "ring-2 ring-destructive";
+      return "ring-1 ring-destructive";
     case "Refunded":
-      return "ring-2 ring-muted-foreground";
+      return "ring-1 ring-muted-foreground";
     default:
       return "";
   }
@@ -376,8 +376,8 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
 
                 {/* Unit rows */}
                 {areaUnits.map((unit) => (
-                  <tr key={unit.id} className="hover:bg-muted/20 transition-colors">
-                    <td className="sticky left-0 z-10 bg-card/80 backdrop-blur border-b border-r border-border px-3 py-2 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)]">
+                  <tr key={unit.id} className="hover:bg-muted/20 transition-colors h-[30px]">
+                    <td className="sticky left-0 z-10 bg-card/80 backdrop-blur border-b border-r border-border px-3 py-1 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)]">
                       <div className="flex items-center gap-1.5">
                         {(() => {
                           const IconComp = getUnitIcon(unit.name);
@@ -519,17 +519,16 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
 function BookingCell({ booking }: { booking: Booking }) {
   const SourceIcon = getSourceIcon(booking.booking_source);
   return (
-    <div className="px-1.5 py-0.5 min-h-[22px] flex items-center gap-1 truncate">
+    <div className="px-1.5 flex items-center gap-1 truncate h-[18px]">
       {booking.booking_source === "Airbnb" ? (
-        <AirbnbIcon className="h-2.5 w-2.5 shrink-0 text-background/80" />
+        <AirbnbIcon className="h-2 w-2 shrink-0 text-background/80" />
       ) : SourceIcon ? (
-        <SourceIcon className="h-2.5 w-2.5 shrink-0 text-background/80" />
+        <SourceIcon className="h-2 w-2 shrink-0 text-background/80" />
       ) : null}
-      <span className="text-[9px] text-background font-medium truncate leading-none">{booking.guest_name}</span>
-      <span className="text-[9px] text-background/60 shrink-0 leading-none">{booking.pax}</span>
+      <span className="text-[8px] text-background font-medium truncate leading-none">{booking.guest_name}</span>
+      <span className="text-[8px] text-background/60 shrink-0 leading-none">{booking.pax}</span>
       {booking.pets && <PawPrint className="h-2 w-2 text-background/60 shrink-0" />}
       {booking.utensil_rental && <UtensilsCrossed className="h-2 w-2 text-background/60 shrink-0" />}
-      {booking.key_deposit && <span className="text-[7px] text-background/60">🔑</span>}
     </div>
   );
 }
