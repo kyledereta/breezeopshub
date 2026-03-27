@@ -68,9 +68,24 @@ export default function BookingsPage() {
     return m;
   }, [units]);
 
+  // Build a map of group IDs to all unit names for grouped bookings
+  const groupUnitNames = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const b of allBookings) {
+      const gid = (b as any).booking_group_id;
+      if (!gid) continue;
+      const name = unitMap.get(b.unit_id ?? "") ?? "";
+      if (!map.has(gid)) map.set(gid, []);
+      map.get(gid)!.push(name);
+    }
+    return map;
+  }, [allBookings, unitMap]);
+
   const filteredBookings = useMemo(() => {
     return allBookings
       .filter((b) => {
+        // Hide secondary (non-primary) grouped bookings — they show under the primary
+        if ((b as any).booking_group_id && (b as any).is_primary === false) return false;
         if (statusFilter !== "all" && b.booking_status !== statusFilter) return false;
         if (paymentFilter !== "all" && b.payment_status !== paymentFilter) return false;
         if (search) {
@@ -225,7 +240,11 @@ export default function BookingsPage() {
                     >
                       <TableCell className="text-xs text-muted-foreground font-mono">{booking.booking_ref}</TableCell>
                       <TableCell className="text-sm font-medium text-foreground">{booking.guest_name}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{unitMap.get(booking.unit_id ?? "") ?? "—"}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {(booking as any).booking_group_id
+                          ? (groupUnitNames.get((booking as any).booking_group_id) ?? []).join(" + ")
+                          : unitMap.get(booking.unit_id ?? "") ?? "—"}
+                      </TableCell>
                       <TableCell className="text-xs text-foreground">{format(parseISO(booking.check_in), "MMM d, yyyy")}</TableCell>
                       <TableCell className="text-xs text-foreground">{format(parseISO(booking.check_out), "MMM d, yyyy")}</TableCell>
                       <TableCell className="text-xs text-foreground text-center">{booking.pax}</TableCell>
