@@ -22,21 +22,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 
 // Payment status → cell color mapping
-function getBookingColor(booking: Booking): string {
-  switch (booking.payment_status) {
-    case "Fully Paid":
-      return "bg-primary/80";
-    case "Airbnb Paid":
-      return "bg-airbnb-pink/70";
-    case "Partial DP":
-      return "bg-warning-orange/60";
-    case "Unpaid":
-      return "bg-destructive/60";
-    case "Refunded":
-      return "bg-muted";
-    default:
-      return "bg-muted";
-  }
+function getBookingColor(_booking: Booking): string {
+  return "bg-foreground";
 }
 
 function getStatusBadge(status: string) {
@@ -504,23 +491,13 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
 function BookingCell({ booking }: { booking: Booking }) {
   const SourceIcon = getSourceIcon(booking.booking_source);
   return (
-    <div className="px-1.5 py-1 min-h-[40px] flex flex-col justify-center gap-0.5">
-      <div className="flex items-center gap-1 truncate">
-        <SourceIcon className="h-3 w-3 shrink-0 text-white/90" />
-        <span className="text-[10px] text-white font-semibold truncate">{booking.guest_name}</span>
-      </div>
-      <div className="flex items-center gap-1.5 text-[9px] text-white/80">
-        <span className="flex items-center gap-0.5">
-          <Users className="h-2.5 w-2.5" />
-          {booking.pax}
-        </span>
-        {booking.pets && (
-          <PawPrint className="h-2.5 w-2.5 text-white/80" />
-        )}
-        {booking.utensil_rental && (
-          <UtensilsCrossed className="h-2.5 w-2.5 text-white/80" />
-        )}
-      </div>
+    <div className="px-1.5 py-1.5 min-h-[32px] flex items-center gap-1.5 truncate">
+      <SourceIcon className="h-3 w-3 shrink-0 text-background/80" />
+      <span className="text-[10px] text-background font-medium truncate">{booking.guest_name}</span>
+      <span className="text-[10px] text-background/70">{booking.pax}</span>
+      {booking.pets && <PawPrint className="h-2.5 w-2.5 text-background/70 shrink-0" />}
+      {booking.utensil_rental && <UtensilsCrossed className="h-2.5 w-2.5 text-background/70 shrink-0" />}
+      {booking.key_deposit && <span className="text-[8px] text-background/70">🔑</span>}
     </div>
   );
 }
