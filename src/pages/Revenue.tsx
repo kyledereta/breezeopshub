@@ -92,6 +92,48 @@ export default function RevenuePage() {
       .sort((a, b) => b.revenue - a.revenue);
   }, [allBookings]);
 
+  // TRevPAR breakdown — ancillary revenue categories
+  const trevparData = useMemo(() => {
+    let utensilTotal = 0;
+    let karaokeTotal = 0; // owner earns ₱500 per ₱1,500 charge
+    let petTotal = 0;
+    let kitchenTotal = 0;
+    let extraPaxTotal = 0;
+    let extensionTotal = 0;
+    let roomTotal = 0;
+
+    for (const b of allBookings) {
+      if (b.booking_status === "Cancelled") continue;
+      const utensil = b.utensil_rental_fee ?? 0;
+      const karaoke = b.karaoke_fee ? 500 : 0; // owner keeps ₱500 from ₱1,500
+      const pet = b.pet_fee ?? 0;
+      const kitchen = b.kitchen_use_fee ?? 0;
+      const extraPax = b.extra_pax_fee ?? 0;
+      const extension = b.extension_fee ?? 0;
+      const ancillaries = utensil + (b.karaoke_fee ?? 0) + pet + kitchen + extraPax + extension;
+      const room = Math.max(0, b.total_amount - ancillaries);
+
+      utensilTotal += utensil;
+      karaokeTotal += karaoke;
+      petTotal += pet;
+      kitchenTotal += kitchen;
+      extraPaxTotal += extraPax;
+      extensionTotal += extension;
+      roomTotal += room;
+    }
+
+    const items = [
+      { name: "Room Revenue", value: roomTotal, color: CHART_COLORS.primary },
+      { name: "Utensil Rental", value: utensilTotal, color: CHART_COLORS.ocean },
+      { name: "Karaoke (Owner Share)", value: karaokeTotal, color: CHART_COLORS.coral },
+      { name: "Pet Fee", value: petTotal, color: CHART_COLORS.pink },
+      { name: "Kitchen Use", value: kitchenTotal, color: CHART_COLORS.green },
+      { name: "Extra Pax", value: extraPaxTotal, color: "#8B8C89" },
+      { name: "Extension Fee", value: extensionTotal, color: "#B08D57" },
+    ];
+    return items.filter((i) => i.value > 0);
+  }, [allBookings]);
+
   // Summary stats
   const currentMonth = format(new Date(), "yyyy-MM");
   const currentMonthData = monthlyData.find((m) => m.month === currentMonth);
@@ -251,20 +293,67 @@ export default function RevenuePage() {
               </div>
             </div>
 
-            {/* ADR & RevPAR Trend */}
-            <div className="rounded-lg border border-border bg-card p-4">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-primary mb-4">ADR & RevPAR Trend (12 Months)</h3>
-              <ResponsiveContainer width="100%" height={240}>
-                <LineChart data={enrichedMonthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(156, 18%, 24%)" />
-                  <XAxis dataKey="label" tick={{ fill: "hsl(156, 10%, 55%)", fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: "hsl(156, 10%, 55%)", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `₱${(v / 1000).toFixed(0)}k`} />
-                  <RechartsTooltip content={<CustomTooltipContent />} />
-                  <Legend wrapperStyle={{ fontSize: 11, color: "hsl(156, 10%, 55%)" }} />
-                  <Line type="monotone" dataKey="adr" name="ADR" stroke={CHART_COLORS.primary} strokeWidth={2} dot={{ fill: CHART_COLORS.primary, r: 4 }} activeDot={{ r: 6 }} />
-                  <Line type="monotone" dataKey="revpar" name="RevPAR" stroke={CHART_COLORS.ocean} strokeWidth={2} dot={{ fill: CHART_COLORS.ocean, r: 3 }} />
-                </LineChart>
-              </ResponsiveContainer>
+            {/* TRevPAR Breakdown + ADR/RevPAR Trend */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+              <div className="rounded-lg border border-border bg-card p-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-primary mb-4">TRevPAR Breakdown</h3>
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie
+                      data={trevparData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      innerRadius={45}
+                      paddingAngle={2}
+                    >
+                      {trevparData.map((entry) => (
+                        <Cell key={entry.name} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null;
+                      const d = payload[0].payload;
+                      const total = trevparData.reduce((s, i) => s + i.value, 0);
+                      const pct = total > 0 ? ((d.value / total) * 100).toFixed(1) : "0";
+                      return (
+                        <div className="bg-popover border border-border rounded-lg p-2 shadow-xl text-xs">
+                          <div className="font-medium text-foreground">{d.name}</div>
+                          <div className="text-muted-foreground">₱{d.value.toLocaleString()} ({pct}%)</div>
+                        </div>
+                      );
+                    }} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="space-y-1.5 mt-2">
+                  {trevparData.map((s) => (
+                    <div key={s.name} className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
+                        <span className="text-muted-foreground">{s.name}</span>
+                      </div>
+                      <span className="text-foreground font-medium">₱{s.value.toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="lg:col-span-2 rounded-lg border border-border bg-card p-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-primary mb-4">ADR & RevPAR Trend (12 Months)</h3>
+                <ResponsiveContainer width="100%" height={280}>
+                  <LineChart data={enrichedMonthlyData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(156, 18%, 24%)" />
+                    <XAxis dataKey="label" tick={{ fill: "hsl(156, 10%, 55%)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: "hsl(156, 10%, 55%)", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `₱${(v / 1000).toFixed(0)}k`} />
+                    <RechartsTooltip content={<CustomTooltipContent />} />
+                    <Legend wrapperStyle={{ fontSize: 11, color: "hsl(156, 10%, 55%)" }} />
+                    <Line type="monotone" dataKey="adr" name="ADR" stroke={CHART_COLORS.primary} strokeWidth={2} dot={{ fill: CHART_COLORS.primary, r: 4 }} activeDot={{ r: 6 }} />
+                    <Line type="monotone" dataKey="revpar" name="RevPAR" stroke={CHART_COLORS.ocean} strokeWidth={2} dot={{ fill: CHART_COLORS.ocean, r: 3 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </div>
 
             {/* Occupancy Trend */}
