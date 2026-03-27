@@ -118,17 +118,34 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
     }
   };
 
+  const unitMap = useMemo(() => {
+    const m: Record<string, string> = {};
+    units.forEach((u) => { m[u.id] = u.name; });
+    return m;
+  }, [units]);
+
   const fieldLabel = (f: string) => {
     const map: Record<string, string> = {
       guest_name: "Guest Name", unit_id: "Unit", check_in: "Check-in", check_out: "Check-out",
       pax: "PAX", total_amount: "Total Amount", deposit_paid: "Downpayment", payment_status: "Payment",
       booking_status: "Status", booking_source: "Source", email: "Email", phone: "Phone",
       notes: "Notes", utensil_rental: "Utensil Rental", utensil_rental_fee: "Utensil Fee",
-      pets: "Pets", deposit_status: "Security Deposit", deposit_deducted_amount: "Deducted Amount",
+      pets: "Pets", pet_fee: "Pet Fee", deposit_status: "Security Deposit", deposit_deducted_amount: "Deducted Amount",
       extra_pax_fee: "Extra PAX Fee", discount_given: "Discount", discount_type: "Discount Type",
-      discount_reason: "Discount Reason",
+      discount_reason: "Discount Reason", karaoke: "Karaoke", karaoke_fee: "Karaoke Fee",
+      kitchen_use: "Kitchen Use", kitchen_use_fee: "Kitchen Use Fee",
+      water_jug: "Water Jug", water_jug_qty: "Water Jug Qty", water_jug_fee: "Water Jug Fee",
+      towel_rent: "Towel Rent", towel_rent_qty: "Towel Rent Qty", towel_rent_fee: "Towel Rent Fee",
+      bonfire: "Bonfire", bonfire_fee: "Bonfire Fee", extension_fee: "Extension Fee",
+      security_deposit: "Security Deposit Amount",
     };
     return map[f] || f;
+  };
+
+  const formatAuditValue = (fieldName: string, value: string | null) => {
+    if (!value) return "—";
+    if (fieldName === "unit_id") return unitMap[value] || value;
+    return value;
   };
 
   return (
@@ -360,7 +377,7 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
               <Separator className="bg-border" />
               <div className="space-y-3">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">
-                  Edit History
+                  Logs
                 </h3>
                 {auditLog.length === 0 ? (
                   <p className="text-xs text-muted-foreground italic">No changes recorded yet.</p>
@@ -375,9 +392,9 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
                           </span>
                         </div>
                         <div className="text-[11px] text-muted-foreground mt-0.5">
-                          <span className="line-through">{entry.old_value || "—"}</span>
+                          <span className="line-through">{formatAuditValue(entry.field_name, entry.old_value)}</span>
                           <span className="mx-1.5">→</span>
-                          <span className="text-foreground font-medium">{entry.new_value || "—"}</span>
+                          <span className="text-foreground font-medium">{formatAuditValue(entry.field_name, entry.new_value)}</span>
                         </div>
                       </div>
                     ))}
