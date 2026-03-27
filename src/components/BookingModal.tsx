@@ -535,6 +535,7 @@ export function BookingModal({
         setHasCar((booking as any).has_car ?? false);
         setCarDetails([]);
       }
+      setExtrasPaidStatus((booking as any).extras_paid_status && typeof (booking as any).extras_paid_status === 'object' ? (booking as any).extras_paid_status : {});
     } else {
       originalValuesRef.current = null;
       form.reset({
