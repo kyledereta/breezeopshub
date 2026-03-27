@@ -5,9 +5,17 @@ import {
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useGuestBookings, type Guest } from "@/hooks/useGuests";
+import { useDeleteGuest } from "@/hooks/useGuestMutations";
 import { supabase } from "@/integrations/supabase/client";
-import { CalendarCheck, Phone, Mail, MapPin, PawPrint, Star, IdCard } from "lucide-react";
+import { CalendarCheck, Phone, Mail, MapPin, PawPrint, Star, IdCard, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 const TIER_COLORS: Record<string, string> = {
   "New Guest": "bg-muted text-muted-foreground",

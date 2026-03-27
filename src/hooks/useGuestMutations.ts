@@ -29,6 +29,19 @@ export function useUpdateGuest() {
   });
 }
 
+export function useDeleteGuest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("guests").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["guests"] });
+    },
+  });
+}
+
 export function useLinkGuestToBooking() {
   const qc = useQueryClient();
   return useMutation({
