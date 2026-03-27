@@ -500,8 +500,6 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                       );
                     })}
                   </tr>
-                    )}
-                  </tr>
                   );
                 })}
               </>
