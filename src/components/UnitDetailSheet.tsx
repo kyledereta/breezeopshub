@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { format, parseISO } from "date-fns";
 import {
   Sheet,
   SheetContent,
@@ -64,7 +65,7 @@ export function UnitDetailSheet({ open, onOpenChange, unit }: UnitDetailSheetPro
   const handleStatusChange = async (newStatus: string) => {
     setSaving(true);
     try {
-      await updateUnit.mutateAsync({ id: unit.id, unit_status: newStatus });
+      await updateUnit.mutateAsync({ id: unit.id, unit_status: newStatus, status_updated_at: new Date().toISOString() });
       toast.success(`${unit.name} marked as ${newStatus}`);
     } catch (err: any) {
       toast.error(err.message ?? "Failed to update");
@@ -158,6 +159,11 @@ export function UnitDetailSheet({ open, onOpenChange, unit }: UnitDetailSheetPro
                   );
                 })}
               </div>
+              {(unit as any).status_updated_at && (
+                <p className="text-[10px] text-muted-foreground mt-2">
+                  Last updated: {format(parseISO((unit as any).status_updated_at), "MMM d, yyyy · h:mm a")}
+                </p>
+              )}
             </div>
 
             {/* Notes */}
