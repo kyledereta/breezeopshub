@@ -88,6 +88,9 @@ const bookingSchema = z.object({
   pet_fee: z.coerce.number().min(0),
   kitchen_use: z.boolean(),
   kitchen_use_fee: z.coerce.number().min(0),
+  water_jug: z.boolean(),
+  water_jug_qty: z.coerce.number().min(0),
+  water_jug_fee: z.coerce.number().min(0),
 }).refine((data) => data.check_out > data.check_in, {
   message: "Check-out must be after check-in",
   path: ["check_out"],
@@ -175,6 +178,9 @@ export function BookingModal({
       pet_fee: 0,
       kitchen_use: false,
       kitchen_use_fee: 0,
+      water_jug: false,
+      water_jug_qty: 0,
+      water_jug_fee: 0,
     },
   });
 
@@ -189,6 +195,7 @@ export function BookingModal({
   const watchKaraoke = form.watch("karaoke");
   const watchPets = form.watch("pets");
   const watchKitchenUse = form.watch("kitchen_use");
+  const watchWaterJug = form.watch("water_jug");
 
   // Get selected unit's max_pax
   const selectedUnit = useMemo(() => units.find((u) => u.id === watchUnitId), [units, watchUnitId]);
@@ -270,6 +277,23 @@ export function BookingModal({
     }
   }, [watchKitchenUse, form]);
 
+  // Auto-set water jug fee when toggled or qty changes
+  const watchWaterJugQty = form.watch("water_jug_qty");
+  useEffect(() => {
+    if (watchWaterJug) {
+      const qty = Number(watchWaterJugQty) || 0;
+      if (qty === 0) {
+        form.setValue("water_jug_qty", 1);
+        form.setValue("water_jug_fee", 100);
+      } else {
+        form.setValue("water_jug_fee", qty * 100);
+      }
+    } else {
+      form.setValue("water_jug_qty", 0);
+      form.setValue("water_jug_fee", 0);
+    }
+  }, [watchWaterJug, watchWaterJugQty, form]);
+
   // Auto-set pet fee based on additional pet
   useEffect(() => {
     if (watchPets && additionalPet) {
@@ -286,6 +310,7 @@ export function BookingModal({
   const watchKitchenFee = form.watch("kitchen_use_fee");
   const watchPetFee = form.watch("pet_fee");
   const watchExtraPaxFee = form.watch("extra_pax_fee");
+  const watchWaterJugFee = form.watch("water_jug_fee");
 
   // Auto-calculate total amount based on nightly rate × nights + all extras - discount
   // Supports multi-unit: sums nightly rates across all selected units
@@ -306,7 +331,8 @@ export function BookingModal({
         (watchKaraoke ? Number(watchKaraokeFee) || 0 : 0) +
         (watchKitchenUse ? Number(watchKitchenFee) || 0 : 0) +
         (watchPets ? Number(watchPetFee) || 0 : 0) +
-        (Number(watchExtraPaxFee) || 0);
+        (Number(watchExtraPaxFee) || 0) +
+        (watchWaterJug ? Number(watchWaterJugFee) || 0 : 0);
 
       const discountAmount =
         watchDiscountType === "percentage"
@@ -326,6 +352,7 @@ export function BookingModal({
     watchKitchenUse, watchKitchenFee,
     watchPets, watchPetFee,
     watchExtraPaxFee,
+    watchWaterJug, watchWaterJugFee,
     watchDiscountType, watchDiscountGiven,
     form,
   ]);
