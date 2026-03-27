@@ -554,6 +554,7 @@ export function BookingModal({
         payment_status: values.payment_status as PaymentStatus,
         booking_status: values.booking_status as BookingStatus,
         booking_source: values.booking_source as BookingSource,
+        mode_of_payment: values.mode_of_payment || null,
         email: values.email || null,
         phone: values.phone || null,
         notes: values.notes || null,
