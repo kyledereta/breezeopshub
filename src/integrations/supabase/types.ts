@@ -58,6 +58,7 @@ export type Database = {
           check_out: string
           created_at: string
           deposit_deducted_amount: number
+          deposit_deducted_reason: string | null
           deposit_paid: number
           deposit_status: Database["public"]["Enums"]["deposit_status"]
           discount_given: number
@@ -72,6 +73,8 @@ export type Database = {
           karaoke: boolean
           karaoke_fee: number
           key_deposit: boolean
+          kitchen_use: boolean
+          kitchen_use_fee: number
           notes: string | null
           pax: number
           payment_status: Database["public"]["Enums"]["payment_status"]
@@ -95,6 +98,7 @@ export type Database = {
           check_out: string
           created_at?: string
           deposit_deducted_amount?: number
+          deposit_deducted_reason?: string | null
           deposit_paid?: number
           deposit_status?: Database["public"]["Enums"]["deposit_status"]
           discount_given?: number
@@ -109,6 +113,8 @@ export type Database = {
           karaoke?: boolean
           karaoke_fee?: number
           key_deposit?: boolean
+          kitchen_use?: boolean
+          kitchen_use_fee?: number
           notes?: string | null
           pax?: number
           payment_status?: Database["public"]["Enums"]["payment_status"]
@@ -132,6 +138,7 @@ export type Database = {
           check_out?: string
           created_at?: string
           deposit_deducted_amount?: number
+          deposit_deducted_reason?: string | null
           deposit_paid?: number
           deposit_status?: Database["public"]["Enums"]["deposit_status"]
           discount_given?: number
@@ -146,6 +153,8 @@ export type Database = {
           karaoke?: boolean
           karaoke_fee?: number
           key_deposit?: boolean
+          kitchen_use?: boolean
+          kitchen_use_fee?: number
           notes?: string | null
           pax?: number
           payment_status?: Database["public"]["Enums"]["payment_status"]
