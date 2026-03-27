@@ -15,7 +15,7 @@ import { useBookings, type Booking } from "@/hooks/useBookings";
 import { useBookingAuditLog } from "@/hooks/useBookingAuditLog";
 import { useSoftDeleteBooking } from "@/hooks/useBookingMutations";
 import { cn } from "@/lib/utils";
-import { PawPrint, UtensilsCrossed, AlertTriangle, Edit, Users, CalendarDays, StickyNote, Banknote, Trash2, Link2 } from "lucide-react";
+import { PawPrint, UtensilsCrossed, AlertTriangle, Edit, Users, CalendarDays, StickyNote, Banknote, Trash2, Link2, Car } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -394,6 +394,21 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
                     </Badge>
                   )}
                 </div>
+                {/* Car Details */}
+                {(booking as any).has_car && (booking as any).car_details && Array.isArray((booking as any).car_details) && (booking as any).car_details.length > 0 && (
+                  <div className="mt-2 space-y-1.5">
+                    <h4 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                      <Car className="h-3 w-3" /> Vehicles
+                    </h4>
+                    {((booking as any).car_details as { type: string; color: string; plate: string }[]).map((car, i) => (
+                      <div key={i} className="text-xs text-muted-foreground bg-muted/30 rounded px-2 py-1.5">
+                        {car.type && <span className="font-medium text-foreground">{car.type}</span>}
+                        {car.color && <span> · {car.color}</span>}
+                        {car.plate && <span> · <span className="font-mono text-foreground">{car.plate}</span></span>}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Deletion info */}
