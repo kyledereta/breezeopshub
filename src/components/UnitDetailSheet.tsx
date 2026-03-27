@@ -17,9 +17,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Unit } from "@/hooks/useUnits";
+import { useUnitStatusLog, logUnitStatusChange } from "@/hooks/useUnitStatusLog";
 import {
   Home, Tent, TreePalm, Crown, Fan, Snowflake,
-  CheckCircle, Construction, AlertTriangle, XCircle,
+  CheckCircle, Construction, AlertTriangle, XCircle, Clock, ArrowRight,
 } from "lucide-react";
 
 interface UnitDetailSheetProps {
