@@ -14,7 +14,7 @@ import {
   isWeekend,
   getDay,
 } from "date-fns";
-import { Home, Tent, TreePalm, Crown, Fan, PawPrint, Users, Facebook, Instagram, Globe, MapPin, Share2, UtensilsCrossed, TrendingUp, Link2, Ban } from "lucide-react";
+import { Home, Tent, TreePalm, Crown, Fan, PawPrint, Users, Facebook, Instagram, Globe, MapPin, Share2, UtensilsCrossed, TrendingUp, Link2, Ban, ChevronDown, ChevronUp } from "lucide-react";
 import { getPHHolidaysForMonth } from "@/lib/phHolidays";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -139,6 +139,17 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [blockPopover, setBlockPopover] = useState<{ unitId: string; date: Date } | null>(null);
   const [blockReason, setBlockReason] = useState("");
+  const [legendOpen, setLegendOpen] = useState(true);
+
+  // Drag-to-select state for blocking
+  const [dragState, setDragState] = useState<{
+    unitId: string;
+    startDate: string;
+    endDate: string;
+    active: boolean;
+  } | null>(null);
+  const [showBlockRangePopover, setShowBlockRangePopover] = useState(false);
+  const [blockRangeReason, setBlockRangeReason] = useState("");
 
   const scrollToToday = useCallback(() => {
     setTimeout(() => {
@@ -213,6 +224,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
     return result;
   }, [groupedUnits]);
 
+  // Check if this unit's booking connects to the NEXT unit row (same group_id)
   const hasGroupConnectorBelow = useCallback((unitId: string, dateStr: string) => {
     const booking = bookingMap.get(`${unitId}-${dateStr}`);
     if (!booking) return false;
@@ -224,6 +236,20 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
     const nextBooking = bookingMap.get(`${nextUnitId}-${dateStr}`);
     if (!nextBooking) return false;
     return (nextBooking as any).booking_group_id === gid;
+  }, [bookingMap, flatUnitOrder]);
+
+  // Check if this unit's booking connects to the PREVIOUS unit row (same group_id)
+  const hasGroupConnectorAbove = useCallback((unitId: string, dateStr: string) => {
+    const booking = bookingMap.get(`${unitId}-${dateStr}`);
+    if (!booking) return false;
+    const gid = (booking as any).booking_group_id;
+    if (!gid) return false;
+    const unitIndex = flatUnitOrder.indexOf(unitId);
+    if (unitIndex <= 0) return false;
+    const prevUnitId = flatUnitOrder[unitIndex - 1];
+    const prevBooking = bookingMap.get(`${prevUnitId}-${dateStr}`);
+    if (!prevBooking) return false;
+    return (prevBooking as any).booking_group_id === gid;
   }, [bookingMap, flatUnitOrder]);
 
   // Compute daily occupancy
@@ -251,6 +277,59 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
     const checkOut = parseISO(booking.check_out);
     const end = checkOut > monthEnd ? monthEnd : checkOut;
     return differenceInDays(end, day);
+  };
+
+  // Drag-to-select helpers
+  const isInDragRange = (unitId: string, dateStr: string) => {
+    if (!dragState || dragState.unitId !== unitId) return false;
+    const start = dragState.startDate <= dragState.endDate ? dragState.startDate : dragState.endDate;
+    const end = dragState.startDate <= dragState.endDate ? dragState.endDate : dragState.startDate;
+    return dateStr >= start && dateStr <= end;
+  };
+
+  const handleDragStart = (unitId: string, dateStr: string) => {
+    setDragState({ unitId, startDate: dateStr, endDate: dateStr, active: true });
+  };
+
+  const handleDragEnter = (unitId: string, dateStr: string) => {
+    if (dragState?.active && dragState.unitId === unitId) {
+      setDragState((prev) => prev ? { ...prev, endDate: dateStr } : null);
+    }
+  };
+
+  const handleDragEnd = () => {
+    if (dragState?.active) {
+      setDragState((prev) => prev ? { ...prev, active: false } : null);
+      setShowBlockRangePopover(true);
+      setBlockRangeReason("");
+    }
+  };
+
+  const confirmBlockRange = () => {
+    if (!dragState) return;
+    const start = dragState.startDate <= dragState.endDate ? dragState.startDate : dragState.endDate;
+    const end = dragState.startDate <= dragState.endDate ? dragState.endDate : dragState.startDate;
+    const dates = eachDayOfInterval({ start: parseISO(start), end: parseISO(end) });
+    let completed = 0;
+    for (const d of dates) {
+      const ds = format(d, "yyyy-MM-dd");
+      blockDate.mutate(
+        { unit_id: dragState.unitId, blocked_date: ds, reason: blockRangeReason || undefined },
+        {
+          onSuccess: () => {
+            completed++;
+            if (completed === dates.length) toast.success(`${dates.length} day(s) blocked`);
+          },
+        }
+      );
+    }
+    setShowBlockRangePopover(false);
+    setDragState(null);
+  };
+
+  const cancelBlockRange = () => {
+    setShowBlockRangePopover(false);
+    setDragState(null);
   };
 
   if (isLoading) {
@@ -307,8 +386,12 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
       </div>
 
       {/* Grid */}
-      <div className="flex-1 overflow-auto">
-        <table className="w-full border-collapse text-xs font-sans">
+      <div
+        className="flex-1 overflow-auto"
+        onMouseUp={handleDragEnd}
+        onMouseLeave={() => { if (dragState?.active) handleDragEnd(); }}
+      >
+        <table className="w-full border-collapse text-xs font-sans select-none">
           <thead className="sticky top-0 z-20">
             {/* Holidays row */}
             <tr className="bg-background">
@@ -513,6 +596,8 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                       const dateStr = format(day, "yyyy-MM-dd");
                       const key = `${unit.id}-${dateStr}`;
                       const booking = bookingMap.get(key);
+                      const connectorBelow = booking ? hasGroupConnectorBelow(unit.id, dateStr) : false;
+                      const connectorAbove = booking ? hasGroupConnectorAbove(unit.id, dateStr) : false;
 
                       if (booking) {
                         const isStart = isBookingStart(booking, day);
@@ -539,11 +624,14 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                                   className="cursor-pointer relative py-[4px] border-b border-r border-border"
                                   onClick={() => onBookingClick?.(booking)}
                                 >
+                                  {connectorAbove && (
+                                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0.5 h-[4px] bg-primary rounded-full" />
+                                  )}
                                   <div className={cn("rounded-full overflow-hidden", getBookingColor(booking))}>
                                     <BookingCell booking={booking} />
                                   </div>
-                                  {hasGroupConnectorBelow(unit.id, dateStr) && (
-                                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-px h-[4px] bg-primary" />
+                                  {connectorBelow && (
+                                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0.5 h-[4px] bg-primary rounded-full" />
                                   )}
                                 </td>
                               </TooltipTrigger>
@@ -562,11 +650,14 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                                 className="cursor-pointer relative py-[4px] border-b border-r border-border"
                                 onClick={() => onBookingClick?.(booking)}
                               >
+                                {connectorAbove && (
+                                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0.5 h-[4px] bg-primary rounded-full" />
+                                )}
                                 <div className={cn("rounded-full overflow-hidden", getBookingColor(booking))}>
                                   <BookingCell booking={booking} />
                                 </div>
-                                {hasGroupConnectorBelow(unit.id, dateStr) && (
-                                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-px h-[4px] bg-primary" />
+                                {connectorBelow && (
+                                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0.5 h-[4px] bg-primary rounded-full" />
                                 )}
                               </td>
                             </TooltipTrigger>
@@ -592,8 +683,13 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                                   });
                                 }}
                               >
-                                <div className="flex items-center justify-center h-full">
+                                <div className="flex flex-col items-center justify-center h-full">
                                   <Ban className="h-3 w-3 text-destructive/60" />
+                                  {blockedReason && blockedReason !== "Blocked" && (
+                                    <span className="text-[6px] text-destructive/50 leading-none mt-0.5 truncate max-w-[32px]">
+                                      {blockedReason}
+                                    </span>
+                                  )}
                                 </div>
                               </td>
                             </TooltipTrigger>
@@ -606,62 +702,127 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                         );
                       }
 
-                      // Empty / available cell
+                      // Empty / available cell — supports drag-to-select
+                      const inDrag = isInDragRange(unit.id, dateStr);
                       const isBlockPopoverOpen = blockPopover?.unitId === unit.id && isSameDay(blockPopover.date, day);
+                      
+                      // If we have a completed drag selection and this is the last cell in range, show popover
+                      const isDragEnd = dragState && !dragState.active && showBlockRangePopover && dragState.unitId === unit.id;
+                      const dragEndDate = dragState ? (dragState.startDate <= dragState.endDate ? dragState.endDate : dragState.startDate) : "";
+                      const showDragPopover = isDragEnd && dateStr === dragEndDate;
+
                       return (
                         <Popover
                           key={key}
-                          open={isBlockPopoverOpen}
+                          open={isBlockPopoverOpen || !!showDragPopover}
                           onOpenChange={(open) => {
-                            if (!open) setBlockPopover(null);
+                            if (!open) {
+                              setBlockPopover(null);
+                              if (showDragPopover) cancelBlockRange();
+                            }
                           }}
                         >
                           <PopoverTrigger asChild>
                             <td
                               className={cn(
-                                "border-b border-r border-border cursor-pointer hover:bg-primary/10 transition-colors",
+                                "border-b border-r border-border cursor-pointer transition-colors",
                                 isToday(day) && "bg-primary/5",
-                                isWeekend(day) && "bg-muted/15"
+                                isWeekend(day) && "bg-muted/15",
+                                inDrag ? "bg-destructive/20" : "hover:bg-primary/10"
                               )}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                handleDragStart(unit.id, dateStr);
+                              }}
+                              onMouseEnter={() => handleDragEnter(unit.id, dateStr)}
                               onClick={() => {
-                                setBlockPopover({ unitId: unit.id, date: day });
-                                setBlockReason("");
+                                if (!dragState || (dragState.startDate === dragState.endDate && !dragState.active)) {
+                                  setBlockPopover({ unitId: unit.id, date: day });
+                                  setBlockReason("");
+                                  setDragState(null);
+                                  setShowBlockRangePopover(false);
+                                }
                               }}
                             />
                           </PopoverTrigger>
                           <PopoverContent className="w-48 p-2 space-y-2" side="bottom" align="start">
-                            <Button
-                              size="sm"
-                              className="w-full text-xs"
-                              onClick={() => {
-                                setBlockPopover(null);
-                                onCellClick?.(unit.id, day);
-                              }}
-                            >
-                              New Booking
-                            </Button>
-                            <div className="space-y-1.5">
-                              <Input
-                                placeholder="Reason (optional)"
-                                value={blockReason}
-                                onChange={(e) => setBlockReason(e.target.value)}
-                                className="h-7 text-xs"
-                              />
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                className="w-full text-xs"
-                                onClick={() => {
-                                  blockDate.mutate(
-                                    { unit_id: unit.id, blocked_date: dateStr, reason: blockReason || undefined },
-                                    { onSuccess: () => toast.success("Day blocked") }
-                                  );
-                                  setBlockPopover(null);
-                                }}
-                              >
-                                <Ban className="h-3 w-3 mr-1" /> Block Day
-                              </Button>
-                            </div>
+                            {showDragPopover ? (
+                              // Range block popover
+                              <div className="space-y-2">
+                                <p className="text-xs font-medium text-foreground">
+                                  Block {(() => {
+                                    const s = dragState!.startDate <= dragState!.endDate ? dragState!.startDate : dragState!.endDate;
+                                    const e = dragState!.startDate <= dragState!.endDate ? dragState!.endDate : dragState!.startDate;
+                                    const count = differenceInDays(parseISO(e), parseISO(s)) + 1;
+                                    return `${count} day(s)`;
+                                  })()}
+                                </p>
+                                <p className="text-[10px] text-muted-foreground">
+                                  {format(parseISO(dragState!.startDate <= dragState!.endDate ? dragState!.startDate : dragState!.endDate), "MMM d")} → {format(parseISO(dragState!.startDate <= dragState!.endDate ? dragState!.endDate : dragState!.startDate), "MMM d")}
+                                </p>
+                                <Input
+                                  placeholder="Reason (optional)"
+                                  value={blockRangeReason}
+                                  onChange={(e) => setBlockRangeReason(e.target.value)}
+                                  className="h-7 text-xs"
+                                  autoFocus
+                                />
+                                <div className="flex gap-1.5">
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    className="flex-1 text-xs"
+                                    onClick={confirmBlockRange}
+                                  >
+                                    <Ban className="h-3 w-3 mr-1" /> Block
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-xs"
+                                    onClick={cancelBlockRange}
+                                  >
+                                    Cancel
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              // Single cell popover
+                              <>
+                                <Button
+                                  size="sm"
+                                  className="w-full text-xs"
+                                  onClick={() => {
+                                    setBlockPopover(null);
+                                    onCellClick?.(unit.id, day);
+                                  }}
+                                >
+                                  New Booking
+                                </Button>
+                                <div className="space-y-1.5">
+                                  <Input
+                                    placeholder="Reason (optional)"
+                                    value={blockReason}
+                                    onChange={(e) => setBlockReason(e.target.value)}
+                                    className="h-7 text-xs"
+                                  />
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    className="w-full text-xs"
+                                    onClick={() => {
+                                      blockDate.mutate(
+                                        { unit_id: unit.id, blocked_date: dateStr, reason: blockReason || undefined },
+                                        { onSuccess: () => toast.success("Day blocked") }
+                                      );
+                                      setBlockPopover(null);
+                                    }}
+                                  >
+                                    <Ban className="h-3 w-3 mr-1" /> Block Day
+                                  </Button>
+                                </div>
+                              </>
+                            )}
                           </PopoverContent>
                         </Popover>
                       );
@@ -675,38 +836,49 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
         </table>
       </div>
 
-      {/* Legend */}
-      <div className="flex flex-wrap items-center gap-3 sm:gap-4 px-4 sm:px-6 py-2 sm:py-3 border-t border-border text-[10px] font-sans text-muted-foreground shrink-0">
-        <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-[hsl(142,71%,45%)]" /> Fully Paid
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-airbnb-pink" /> Airbnb Paid
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-[hsl(48,96%,53%)]" /> Partial DP
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-[hsl(0,100%,50%)]" /> Unpaid
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-muted-foreground" /> Refunded
-        </span>
-        <span className="flex items-center gap-1.5 border-l border-border pl-3">
-          <TrendingUp className="h-3 w-3 text-primary/70" /> Peak / Markup
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="text-[10px]">🇵🇭</span> Holiday
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-sm bg-muted/30" /> Weekend
-        </span>
-        <span className="flex items-center gap-1.5">
-          <Ban className="h-3 w-3 text-destructive/60" /> Blocked
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="bg-ocean text-[8px] text-white font-bold rounded px-1 leading-tight">DT</span> Day Tour
-        </span>
+      {/* Legend - Collapsible */}
+      <div className="border-t border-border shrink-0">
+        <button
+          onClick={() => setLegendOpen((prev) => !prev)}
+          className="flex items-center justify-between w-full px-4 sm:px-6 py-1.5 text-[10px] text-muted-foreground hover:bg-muted/20 transition-colors"
+        >
+          <span className="font-medium uppercase tracking-wider">Legend</span>
+          {legendOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+        </button>
+        {legendOpen && (
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 px-4 sm:px-6 pb-2 sm:pb-3 text-[10px] font-sans text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-[hsl(142,71%,45%)]" /> Fully Paid
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-airbnb-pink" /> Airbnb Paid
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-[hsl(48,96%,53%)]" /> Partial DP
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-[hsl(0,100%,50%)]" /> Unpaid
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-muted-foreground" /> Refunded
+            </span>
+            <span className="flex items-center gap-1.5 border-l border-border pl-3">
+              <TrendingUp className="h-3 w-3 text-primary/70" /> Peak / Markup
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="text-[10px]">🇵🇭</span> Holiday
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-sm bg-muted/30" /> Weekend
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Ban className="h-3 w-3 text-destructive/60" /> Blocked
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="bg-ocean text-[8px] text-white font-bold rounded px-1 leading-tight">DT</span> Day Tour
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
