@@ -2086,26 +2086,34 @@ export function BookingModal({
                     ))}
                     {watchUtensilRental && (
                       <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Utensil Rental</span>
-                        <span className="text-foreground">₱{(Number(watchUtensilFee) || 0).toLocaleString()}</span>
+                        <span className={extrasPaidStatus.utensil_rental ? "text-primary" : "text-muted-foreground"}>
+                          Utensil Rental {extrasPaidStatus.utensil_rental && "✓"}
+                        </span>
+                        <span className={extrasPaidStatus.utensil_rental ? "text-primary" : "text-foreground"}>₱{(Number(watchUtensilFee) || 0).toLocaleString()}</span>
                       </div>
                     )}
                     {watchKaraoke && (
                       <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Karaoke</span>
-                        <span className="text-foreground">₱{(Number(watchKaraokeFee) || 0).toLocaleString()}</span>
+                        <span className={extrasPaidStatus.karaoke ? "text-primary" : "text-muted-foreground"}>
+                          Karaoke {extrasPaidStatus.karaoke && "✓"}
+                        </span>
+                        <span className={extrasPaidStatus.karaoke ? "text-primary" : "text-foreground"}>₱{(Number(watchKaraokeFee) || 0).toLocaleString()}</span>
                       </div>
                     )}
                     {watchKitchenUse && (
                       <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Kitchen Use</span>
-                        <span className="text-foreground">₱{(Number(watchKitchenFee) || 0).toLocaleString()}</span>
+                        <span className={extrasPaidStatus.kitchen_use ? "text-primary" : "text-muted-foreground"}>
+                          Kitchen Use {extrasPaidStatus.kitchen_use && "✓"}
+                        </span>
+                        <span className={extrasPaidStatus.kitchen_use ? "text-primary" : "text-foreground"}>₱{(Number(watchKitchenFee) || 0).toLocaleString()}</span>
                       </div>
                     )}
                     {watchPets && Number(watchPetFee) > 0 && (
                       <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Additional Pet</span>
-                        <span className="text-foreground">₱{(Number(watchPetFee) || 0).toLocaleString()}</span>
+                        <span className={extrasPaidStatus.pet_fee ? "text-primary" : "text-muted-foreground"}>
+                          Additional Pet {extrasPaidStatus.pet_fee && "✓"}
+                        </span>
+                        <span className={extrasPaidStatus.pet_fee ? "text-primary" : "text-foreground"}>₱{(Number(watchPetFee) || 0).toLocaleString()}</span>
                       </div>
                     )}
                     {Number(watchExtraPaxFee) > 0 && (
@@ -2116,32 +2124,42 @@ export function BookingModal({
                     )}
                     {watchWaterJug && Number(watchWaterJugFee) > 0 && (
                       <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Water Jug (×{Number(form.watch("water_jug_qty")) || 0})</span>
-                        <span className="text-foreground">₱{(Number(watchWaterJugFee) || 0).toLocaleString()}</span>
+                        <span className={extrasPaidStatus.water_jug ? "text-primary" : "text-muted-foreground"}>
+                          Water Jug (×{Number(form.watch("water_jug_qty")) || 0}) {extrasPaidStatus.water_jug && "✓"}
+                        </span>
+                        <span className={extrasPaidStatus.water_jug ? "text-primary" : "text-foreground"}>₱{(Number(watchWaterJugFee) || 0).toLocaleString()}</span>
                       </div>
                     )}
                     {watchTowelRent && Number(watchTowelRentFee) > 0 && (
                       <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Towel Rent (×{Number(form.watch("towel_rent_qty")) || 0})</span>
-                        <span className="text-foreground">₱{(Number(watchTowelRentFee) || 0).toLocaleString()}</span>
+                        <span className={extrasPaidStatus.towel_rent ? "text-primary" : "text-muted-foreground"}>
+                          Towel Rent (×{Number(form.watch("towel_rent_qty")) || 0}) {extrasPaidStatus.towel_rent && "✓"}
+                        </span>
+                        <span className={extrasPaidStatus.towel_rent ? "text-primary" : "text-foreground"}>₱{(Number(watchTowelRentFee) || 0).toLocaleString()}</span>
                       </div>
                     )}
                     {watchBonfire && Number(watchBonfireFee) > 0 && (
                       <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Bonfire Setup</span>
-                        <span className="text-foreground">₱{(Number(watchBonfireFee) || 0).toLocaleString()}</span>
+                        <span className={extrasPaidStatus.bonfire ? "text-primary" : "text-muted-foreground"}>
+                          Bonfire Setup {extrasPaidStatus.bonfire && "✓"}
+                        </span>
+                        <span className={extrasPaidStatus.bonfire ? "text-primary" : "text-foreground"}>₱{(Number(watchBonfireFee) || 0).toLocaleString()}</span>
                       </div>
                     )}
                     {Number(watchDaytourFee) > 0 && (
                       <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Daytour Fee</span>
-                        <span className="text-foreground">₱{(Number(watchDaytourFee) || 0).toLocaleString()}</span>
+                        <span className={extrasPaidStatus.daytour ? "text-primary" : "text-muted-foreground"}>
+                          Daytour Fee {extrasPaidStatus.daytour && "✓"}
+                        </span>
+                        <span className={extrasPaidStatus.daytour ? "text-primary" : "text-foreground"}>₱{(Number(watchDaytourFee) || 0).toLocaleString()}</span>
                       </div>
                     )}
                     {Number(watchOtherExtrasFee) > 0 && (
                       <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Other Extras{form.watch("other_extras_note") ? ` (${form.watch("other_extras_note")})` : ""}</span>
-                        <span className="text-foreground">₱{(Number(watchOtherExtrasFee) || 0).toLocaleString()}</span>
+                        <span className={extrasPaidStatus.other_extras ? "text-primary" : "text-muted-foreground"}>
+                          Other Extras{form.watch("other_extras_note") ? ` (${form.watch("other_extras_note")})` : ""} {extrasPaidStatus.other_extras && "✓"}
+                        </span>
+                        <span className={extrasPaidStatus.other_extras ? "text-primary" : "text-foreground"}>₱{(Number(watchOtherExtrasFee) || 0).toLocaleString()}</span>
                       </div>
                     )}
                     {discountAmount > 0 && (
