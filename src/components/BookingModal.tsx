@@ -1799,7 +1799,9 @@ export function BookingModal({
                   (Number(watchExtraPaxFee) || 0) +
                   (watchWaterJug ? Number(watchWaterJugFee) || 0 : 0) +
                   (watchTowelRent ? Number(watchTowelRentFee) || 0 : 0) +
-                  (watchBonfire ? Number(watchBonfireFee) || 0 : 0);
+                  (watchBonfire ? Number(watchBonfireFee) || 0 : 0) +
+                  (Number(watchDaytourFee) || 0) +
+                  (Number(watchOtherExtrasFee) || 0);
                 const discountAmount =
                   watchDiscountType === "percentage"
                     ? Math.round(((base + extras) * Number(watchDiscountGiven)) / 100)
@@ -1861,6 +1863,18 @@ export function BookingModal({
                       <div className="flex justify-between text-xs">
                         <span className="text-muted-foreground">Bonfire Setup</span>
                         <span className="text-foreground">₱{(Number(watchBonfireFee) || 0).toLocaleString()}</span>
+                      </div>
+                    )}
+                    {Number(watchDaytourFee) > 0 && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Daytour Fee</span>
+                        <span className="text-foreground">₱{(Number(watchDaytourFee) || 0).toLocaleString()}</span>
+                      </div>
+                    )}
+                    {Number(watchOtherExtrasFee) > 0 && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Other Extras{form.watch("other_extras_note") ? ` (${form.watch("other_extras_note")})` : ""}</span>
+                        <span className="text-foreground">₱{(Number(watchOtherExtrasFee) || 0).toLocaleString()}</span>
                       </div>
                     )}
                     {discountAmount > 0 && (
