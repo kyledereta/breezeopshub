@@ -1828,6 +1828,88 @@ export function BookingModal({
               </label>
             </div>
 
+            {/* Car Details */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 rounded-lg border border-border p-3">
+                <Checkbox checked={hasCar} onCheckedChange={(v) => {
+                  setHasCar(!!v);
+                  if (v && carDetails.length === 0) {
+                    setCarDetails([{ type: "", color: "", plate: "" }]);
+                  }
+                  if (!v) setCarDetails([]);
+                }} />
+                <div>
+                  <span className="text-xs font-medium text-foreground flex items-center gap-1.5">
+                    <Car className="h-3.5 w-3.5" /> With Car/s
+                  </span>
+                  <p className="text-[10px] text-muted-foreground">Guest arrived with vehicle</p>
+                </div>
+              </div>
+              {hasCar && (
+                <div className="space-y-2">
+                  {carDetails.map((car, idx) => (
+                    <div key={idx} className="rounded-md border border-border p-2.5 space-y-2 bg-muted/20">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Car {idx + 1}</span>
+                        {carDetails.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-5 w-5 text-muted-foreground hover:text-destructive"
+                            onClick={() => setCarDetails((prev) => prev.filter((_, i) => i !== idx))}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <Input
+                          placeholder="Type (e.g. SUV)"
+                          value={car.type}
+                          onChange={(e) => {
+                            const updated = [...carDetails];
+                            updated[idx] = { ...updated[idx], type: e.target.value };
+                            setCarDetails(updated);
+                          }}
+                          className="h-8 text-xs bg-background border-border"
+                        />
+                        <Input
+                          placeholder="Color"
+                          value={car.color}
+                          onChange={(e) => {
+                            const updated = [...carDetails];
+                            updated[idx] = { ...updated[idx], color: e.target.value };
+                            setCarDetails(updated);
+                          }}
+                          className="h-8 text-xs bg-background border-border"
+                        />
+                        <Input
+                          placeholder="Plate No."
+                          value={car.plate}
+                          onChange={(e) => {
+                            const updated = [...carDetails];
+                            updated[idx] = { ...updated[idx], plate: e.target.value };
+                            setCarDetails(updated);
+                          }}
+                          className="h-8 text-xs bg-background border-border"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="text-xs w-full"
+                    onClick={() => setCarDetails((prev) => [...prev, { type: "", color: "", plate: "" }])}
+                  >
+                    <Plus className="h-3 w-3 mr-1" /> Add Another Car
+                  </Button>
+                </div>
+              )}
+            </div>
+
             <Separator className="bg-border" />
 
             {/* Notes */}
