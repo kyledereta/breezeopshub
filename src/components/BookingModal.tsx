@@ -640,6 +640,8 @@ export function BookingModal({
         daytour_fee: values.daytour ? values.daytour_fee : 0,
         other_extras_fee: values.other_extras_fee || 0,
         other_extras_note: values.other_extras_note || null,
+        has_car: hasCar,
+        car_details: hasCar && carDetails.length > 0 ? carDetails : [],
       };
 
       // Upload ID files if any
