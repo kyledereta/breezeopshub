@@ -624,7 +624,9 @@ export function BookingModal({
         towel_rent_fee: values.towel_rent ? values.towel_rent_fee : 0,
         bonfire: values.bonfire,
         bonfire_fee: values.bonfire ? values.bonfire_fee : 0,
-        daytour_fee: values.daytour_fee || 0,
+        daytour: values.daytour,
+        is_daytour_booking: values.is_daytour_booking,
+        daytour_fee: values.daytour ? values.daytour_fee : 0,
         other_extras_fee: values.other_extras_fee || 0,
         other_extras_note: values.other_extras_note || null,
       };
