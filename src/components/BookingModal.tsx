@@ -108,6 +108,8 @@ export function BookingModal({
   const [idFiles, setIdFiles] = useState<File[]>([]);
   const [existingIds, setExistingIds] = useState<string[]>([]);
   const [conflictWarning, setConflictWarning] = useState<string | null>(null);
+  const [unitSearch, setUnitSearch] = useState("");
+  const [unitPopoverOpen, setUnitPopoverOpen] = useState(false);
   const [guestSuggestions, setGuestSuggestions] = useState<{ id: string; guest_name: string; phone: string | null; email: string | null; pets: boolean }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const originalValuesRef = useRef<Record<string, any> | null>(null);
@@ -507,33 +509,84 @@ export function BookingModal({
               <FormField
                 control={form.control}
                 name="unit_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs text-muted-foreground">Unit</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="bg-background border-border">
-                          <SelectValue placeholder="Select a unit" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-popover border-border">
-                        {groupedUnits.map(({ area, units: areaUnits }) => (
-                          <div key={area}>
-                            <div className="px-2 py-1.5 text-[10px] uppercase tracking-wider text-primary font-semibold">
-                              {area}
-                            </div>
-                            {areaUnits.map((unit) => (
-                              <SelectItem key={unit.id} value={unit.id}>
-                                {unit.name} · {unit.max_pax} PAX · ₱{unit.nightly_rate.toLocaleString()}
-                              </SelectItem>
+                render={({ field }) => {
+                  const selectedUnitName = units.find((u) => u.id === field.value);
+                  const filteredGroups = groupedUnits
+                    .map(({ area, units: areaUnits }) => ({
+                      area,
+                      units: areaUnits.filter((u) =>
+                        u.name.toLowerCase().includes(unitSearch.toLowerCase())
+                      ),
+                    }))
+                    .filter((g) => g.units.length > 0);
+
+                  return (
+                    <FormItem>
+                      <FormLabel className="text-xs text-muted-foreground">Unit</FormLabel>
+                      <Popover open={unitPopoverOpen} onOpenChange={setUnitPopoverOpen}>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className={cn(
+                                "w-full justify-between bg-background border-border font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {selectedUnitName
+                                ? `${selectedUnitName.name} · ${selectedUnitName.max_pax} PAX · ₱${selectedUnitName.nightly_rate.toLocaleString()}`
+                                : "Select a unit"}
+                              <CalendarIcon className="ml-auto h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                          <div className="p-2 border-b border-border">
+                            <Input
+                              placeholder="Search units..."
+                              value={unitSearch}
+                              onChange={(e) => setUnitSearch(e.target.value)}
+                              className="h-8 bg-background border-border text-sm"
+                              autoFocus
+                            />
+                          </div>
+                          <div className="max-h-60 overflow-auto p-1">
+                            {filteredGroups.length === 0 && (
+                              <p className="text-xs text-muted-foreground p-3 text-center">No units found</p>
+                            )}
+                            {filteredGroups.map(({ area, units: areaUnits }) => (
+                              <div key={area}>
+                                <div className="px-2 py-1.5 text-[10px] uppercase tracking-wider text-primary font-semibold">
+                                  {area}
+                                </div>
+                                {areaUnits.map((unit) => (
+                                  <button
+                                    key={unit.id}
+                                    type="button"
+                                    className={cn(
+                                      "w-full text-left px-3 py-2 text-sm rounded-sm hover:bg-muted/50 flex items-center justify-between",
+                                      field.value === unit.id && "bg-primary/10 text-primary"
+                                    )}
+                                    onClick={() => {
+                                      field.onChange(unit.id);
+                                      setUnitPopoverOpen(false);
+                                      setUnitSearch("");
+                                    }}
+                                  >
+                                    <span>{unit.name}</span>
+                                    <span className="text-xs text-muted-foreground">{unit.max_pax} PAX · ₱{unit.nightly_rate.toLocaleString()}</span>
+                                  </button>
+                                ))}
+                              </div>
                             ))}
                           </div>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
               {conflictWarning && (
                 <div className="flex items-center gap-2 rounded-lg border border-warning-orange/50 bg-warning-orange/10 px-3 py-2">
