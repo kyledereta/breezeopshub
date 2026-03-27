@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { format, parseISO, startOfMonth, endOfMonth } from "date-fns";
 import { AppLayout } from "@/components/AppLayout";
-import { useBookings, type Booking } from "@/hooks/useBookings";
+import { useBookings, useDeletedBookings, type Booking } from "@/hooks/useBookings";
 import { useUnits } from "@/hooks/useUnits";
 import { BookingModal } from "@/components/BookingModal";
 import { BookingDetailSheet } from "@/components/BookingDetailSheet";
@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Download } from "lucide-react";
+import { Search, Download, ChevronDown, ChevronRight, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { downloadCsv } from "@/lib/csvExport";
@@ -52,6 +52,7 @@ export default function BookingsPage() {
   }, [filterMonth, filterYear]);
 
   const { data: allBookings = [], isLoading: bookingsLoading } = useBookings(rangeStart, rangeEnd);
+  const { data: deletedBookings = [] } = useDeletedBookings();
   const { data: units = [], isLoading: unitsLoading } = useUnits();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -59,6 +60,7 @@ export default function BookingsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [showDeleted, setShowDeleted] = useState(false);
 
   const unitMap = useMemo(() => {
     const m = new Map<string, string>();
@@ -198,57 +200,120 @@ export default function BookingsPage() {
               <span className="text-muted-foreground text-sm">Loading...</span>
             </div>
           ) : (
-            <Table>
-              <TableHeader className="sticky top-0 z-10">
-                <TableRow className="bg-card border-b border-border hover:bg-card">
-                  <TableHead className="text-xs text-muted-foreground font-medium">Ref</TableHead>
-                  <TableHead className="text-xs text-muted-foreground font-medium">Guest</TableHead>
-                  <TableHead className="text-xs text-muted-foreground font-medium">Unit</TableHead>
-                  <TableHead className="text-xs text-muted-foreground font-medium">Check-in</TableHead>
-                  <TableHead className="text-xs text-muted-foreground font-medium">Check-out</TableHead>
-                  <TableHead className="text-xs text-muted-foreground font-medium text-center">PAX</TableHead>
-                  <TableHead className="text-xs text-muted-foreground font-medium">Status</TableHead>
-                  <TableHead className="text-xs text-muted-foreground font-medium">Payment</TableHead>
-                  <TableHead className="text-xs text-muted-foreground font-medium text-right">Total</TableHead>
-                  <TableHead className="text-xs text-muted-foreground font-medium">Source</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredBookings.map((booking) => (
-                  <TableRow
-                    key={booking.id}
-                    className="cursor-pointer hover:bg-muted/20 border-b border-border"
-                    onClick={() => openView(booking)}
+            <>
+              <Table>
+                <TableHeader className="sticky top-0 z-10">
+                  <TableRow className="bg-card border-b border-border hover:bg-card">
+                    <TableHead className="text-xs text-muted-foreground font-medium">Ref</TableHead>
+                    <TableHead className="text-xs text-muted-foreground font-medium">Guest</TableHead>
+                    <TableHead className="text-xs text-muted-foreground font-medium">Unit</TableHead>
+                    <TableHead className="text-xs text-muted-foreground font-medium">Check-in</TableHead>
+                    <TableHead className="text-xs text-muted-foreground font-medium">Check-out</TableHead>
+                    <TableHead className="text-xs text-muted-foreground font-medium text-center">PAX</TableHead>
+                    <TableHead className="text-xs text-muted-foreground font-medium">Status</TableHead>
+                    <TableHead className="text-xs text-muted-foreground font-medium">Payment</TableHead>
+                    <TableHead className="text-xs text-muted-foreground font-medium text-right">Total</TableHead>
+                    <TableHead className="text-xs text-muted-foreground font-medium">Source</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredBookings.map((booking) => (
+                    <TableRow
+                      key={booking.id}
+                      className="cursor-pointer hover:bg-muted/20 border-b border-border"
+                      onClick={() => openView(booking)}
+                    >
+                      <TableCell className="text-xs text-muted-foreground font-mono">{booking.booking_ref}</TableCell>
+                      <TableCell className="text-sm font-medium text-foreground">{booking.guest_name}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{unitMap.get(booking.unit_id ?? "") ?? "—"}</TableCell>
+                      <TableCell className="text-xs text-foreground">{format(parseISO(booking.check_in), "MMM d, yyyy")}</TableCell>
+                      <TableCell className="text-xs text-foreground">{format(parseISO(booking.check_out), "MMM d, yyyy")}</TableCell>
+                      <TableCell className="text-xs text-foreground text-center">{booking.pax}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", getStatusBadgeClass(booking.booking_status))}>
+                          {booking.booking_status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", getPaymentBadgeClass(booking.payment_status))}>
+                          {booking.payment_status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs text-foreground text-right font-medium">₱{booking.total_amount.toLocaleString()}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{booking.booking_source}</TableCell>
+                    </TableRow>
+                  ))}
+                  {filteredBookings.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={10} className="text-center py-12 text-sm text-muted-foreground">
+                        No bookings found
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+
+              {/* Deleted / Cancelled Section */}
+              {deletedBookings.length > 0 && (
+                <div className="border-t border-border">
+                  <button
+                    onClick={() => setShowDeleted(!showDeleted)}
+                    className="w-full flex items-center gap-2 px-4 sm:px-6 py-3 text-left hover:bg-muted/20 transition-colors"
                   >
-                    <TableCell className="text-xs text-muted-foreground font-mono">{booking.booking_ref}</TableCell>
-                    <TableCell className="text-sm font-medium text-foreground">{booking.guest_name}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{unitMap.get(booking.unit_id ?? "") ?? "—"}</TableCell>
-                    <TableCell className="text-xs text-foreground">{format(parseISO(booking.check_in), "MMM d, yyyy")}</TableCell>
-                    <TableCell className="text-xs text-foreground">{format(parseISO(booking.check_out), "MMM d, yyyy")}</TableCell>
-                    <TableCell className="text-xs text-foreground text-center">{booking.pax}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", getStatusBadgeClass(booking.booking_status))}>
-                        {booking.booking_status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", getPaymentBadgeClass(booking.payment_status))}>
-                        {booking.payment_status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs text-foreground text-right font-medium">₱{booking.total_amount.toLocaleString()}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{booking.booking_source}</TableCell>
-                  </TableRow>
-                ))}
-                {filteredBookings.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={10} className="text-center py-12 text-sm text-muted-foreground">
-                      No bookings found
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                    {showDeleted ? (
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    )}
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                    <span className="text-sm font-medium text-destructive">
+                      Deleted / Cancelled Bookings
+                    </span>
+                    <Badge variant="outline" className="text-[10px] border-destructive/30 text-destructive ml-1">
+                      {deletedBookings.length}
+                    </Badge>
+                  </button>
+                  {showDeleted && (
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-destructive/5 border-b border-border hover:bg-destructive/5">
+                          <TableHead className="text-xs text-muted-foreground font-medium">Ref</TableHead>
+                          <TableHead className="text-xs text-muted-foreground font-medium">Guest</TableHead>
+                          <TableHead className="text-xs text-muted-foreground font-medium">Unit</TableHead>
+                          <TableHead className="text-xs text-muted-foreground font-medium">Dates</TableHead>
+                          <TableHead className="text-xs text-muted-foreground font-medium text-right">Total</TableHead>
+                          <TableHead className="text-xs text-muted-foreground font-medium">Reason</TableHead>
+                          <TableHead className="text-xs text-muted-foreground font-medium">Deleted</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {deletedBookings.map((booking) => (
+                          <TableRow
+                            key={booking.id}
+                            className="cursor-pointer hover:bg-destructive/5 border-b border-border opacity-70"
+                            onClick={() => openView(booking)}
+                          >
+                            <TableCell className="text-xs text-muted-foreground font-mono">{booking.booking_ref}</TableCell>
+                            <TableCell className="text-sm text-muted-foreground">{booking.guest_name}</TableCell>
+                            <TableCell className="text-xs text-muted-foreground">{unitMap.get(booking.unit_id ?? "") ?? "—"}</TableCell>
+                            <TableCell className="text-xs text-muted-foreground">
+                              {format(parseISO(booking.check_in), "MMM d")} → {format(parseISO(booking.check_out), "MMM d, yyyy")}
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground text-right">₱{booking.total_amount.toLocaleString()}</TableCell>
+                            <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">
+                              {booking.deletion_reason || "—"}
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground">
+                              {booking.deleted_at ? format(parseISO(booking.deleted_at), "MMM d, yyyy") : "—"}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

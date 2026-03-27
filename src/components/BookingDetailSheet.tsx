@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { format, parseISO, differenceInDays } from "date-fns";
 import {
   Sheet,
@@ -13,8 +13,21 @@ import { Badge } from "@/components/ui/badge";
 import { useUnits } from "@/hooks/useUnits";
 import { useBookings, type Booking } from "@/hooks/useBookings";
 import { useBookingAuditLog } from "@/hooks/useBookingAuditLog";
+import { useSoftDeleteBooking } from "@/hooks/useBookingMutations";
 import { cn } from "@/lib/utils";
-import { PawPrint, UtensilsCrossed, AlertTriangle, Edit, Users, CalendarDays, StickyNote, Banknote } from "lucide-react";
+import { PawPrint, UtensilsCrossed, AlertTriangle, Edit, Users, CalendarDays, StickyNote, Banknote, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 interface BookingDetailSheetProps {
   open: boolean;
@@ -52,6 +65,10 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
     booking?.check_out
   );
   const { data: auditLog = [] } = useBookingAuditLog(booking?.id);
+  const softDelete = useSoftDeleteBooking();
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteReason, setDeleteReason] = useState("");
 
   const unitName = useMemo(() => {
     if (!booking?.unit_id) return "Unassigned";
@@ -85,6 +102,22 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
 
   if (!booking) return null;
 
+  const handleDelete = async () => {
+    if (!deleteReason.trim()) {
+      toast.error("Please provide a reason for deletion");
+      return;
+    }
+    try {
+      await softDelete.mutateAsync({ id: booking.id, reason: deleteReason.trim() });
+      toast.success("Booking deleted successfully");
+      setDeleteDialogOpen(false);
+      setDeleteReason("");
+      onOpenChange(false);
+    } catch {
+      toast.error("Failed to delete booking");
+    }
+  };
+
   const fieldLabel = (f: string) => {
     const map: Record<string, string> = {
       guest_name: "Guest Name", unit_id: "Unit", check_in: "Check-in", check_out: "Check-out",
@@ -99,222 +132,301 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-[420px] sm:w-[480px] bg-card border-border p-0 flex flex-col">
-        <SheetHeader className="px-6 pt-6 pb-4 border-b border-border shrink-0">
-          <div className="flex items-center justify-between">
-            <SheetTitle className="text-lg font-display text-foreground">
-              Booking Details
-            </SheetTitle>
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-1.5"
-              onClick={() => onEdit(booking)}
-            >
-              <Edit className="h-3.5 w-3.5" />
-              Edit
-            </Button>
-          </div>
-        </SheetHeader>
-
-        <ScrollArea className="flex-1">
-          <div className="px-6 py-5 space-y-5">
-            {/* Guest & Unit Header */}
-            <div className="space-y-1">
-              <h2 className="text-xl font-semibold text-foreground">
-                {booking.guest_name}'s Group of {booking.pax}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                in <span className="font-medium text-foreground">{unitName}</span>
-              </p>
-              <div className="flex items-center gap-2 mt-2">
-                <Badge variant="outline" className={cn("text-xs", getStatusBadgeStyle(booking.booking_status))}>
-                  {booking.booking_status}
-                </Badge>
-                <Badge variant="outline" className={cn("text-xs", getPaymentBadgeStyle(booking.payment_status))}>
-                  {booking.payment_status}
-                </Badge>
+    <>
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent className="w-[420px] sm:w-[480px] bg-card border-border p-0 flex flex-col">
+          <SheetHeader className="px-6 pt-6 pb-4 border-b border-border shrink-0">
+            <div className="flex items-center justify-between">
+              <SheetTitle className="text-lg font-display text-foreground">
+                Booking Details
+              </SheetTitle>
+              <div className="flex items-center gap-1.5">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10"
+                  onClick={() => setDeleteDialogOpen(true)}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Delete
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5"
+                  onClick={() => onEdit(booking)}
+                >
+                  <Edit className="h-3.5 w-3.5" />
+                  Edit
+                </Button>
               </div>
             </div>
+          </SheetHeader>
 
-            <Separator className="bg-border" />
-
-            {/* Check-in Dates */}
-            <div className="space-y-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-primary flex items-center gap-1.5">
-                <CalendarDays className="h-3.5 w-3.5" /> Stay Details
-              </h3>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-lg border border-border p-3">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Check-in</p>
-                  <p className="text-sm font-medium text-foreground">{format(parseISO(booking.check_in), "MMM d, yyyy")}</p>
-                  <p className="text-[10px] text-muted-foreground">1:00 PM</p>
-                </div>
-                <div className="rounded-lg border border-border p-3">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Check-out</p>
-                  <p className="text-sm font-medium text-foreground">{format(parseISO(booking.check_out), "MMM d, yyyy")}</p>
-                  <p className="text-[10px] text-muted-foreground">11:00 AM</p>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground">{nights} night{nights !== 1 ? "s" : ""} · via {booking.booking_source}</p>
-            </div>
-
-            {/* Overlap Notice */}
-            {overlaps.length > 0 && (
-              <div className="flex items-start gap-2 rounded-lg border border-warning-orange/50 bg-warning-orange/10 px-3 py-2">
-                <AlertTriangle className="h-4 w-4 text-warning-orange shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs font-medium text-warning-orange">Overlap Detected</p>
-                  {overlaps.map((o) => (
-                    <p key={o.id} className="text-[11px] text-warning-orange/80">
-                      {o.guest_name}: {format(parseISO(o.check_in), "MMM d")} → {format(parseISO(o.check_out), "MMM d")}
-                    </p>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <Separator className="bg-border" />
-
-            {/* Fees */}
-            <div className="space-y-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-primary flex items-center gap-1.5">
-                <Banknote className="h-3.5 w-3.5" /> Financials
-              </h3>
-              <div className="space-y-1.5 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Total Amount</span>
-                  <span className="font-medium text-foreground">₱{booking.total_amount.toLocaleString()}</span>
-                </div>
-                {booking.deposit_paid > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Downpayment</span>
-                    <span className="text-foreground">₱{booking.deposit_paid.toLocaleString()}</span>
-                  </div>
-                )}
-                {extraPax > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground flex items-center gap-1">
-                      <Users className="h-3 w-3" /> Extra PAX Fee (+{extraPax} guest{extraPax > 1 ? "s" : ""})
-                    </span>
-                    <span className="text-foreground">₱{booking.extra_pax_fee.toLocaleString()}</span>
-                  </div>
-                )}
-                {booking.extra_pax_fee > 0 && extraPax === 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Extra PAX Fee</span>
-                    <span className="text-foreground">₱{booking.extra_pax_fee.toLocaleString()}</span>
-                  </div>
-                )}
-                {booking.utensil_rental && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground flex items-center gap-1">
-                      <UtensilsCrossed className="h-3 w-3" /> Utensil Rental
-                    </span>
-                    <span className="text-foreground">₱{booking.utensil_rental_fee.toLocaleString()}</span>
-                  </div>
-                )}
-                {booking.discount_given > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Discount ({booking.discount_type})</span>
-                    <span className="text-foreground">
-                      -{booking.discount_type === "percentage" ? `${booking.discount_given}%` : `₱${booking.discount_given.toLocaleString()}`}
-                      {booking.discount_reason && <span className="text-[10px] text-muted-foreground ml-1">({booking.discount_reason})</span>}
-                    </span>
-                  </div>
-                )}
-              </div>
-              {/* Extras */}
-              <div className="flex items-center gap-2 flex-wrap mt-2">
-                {booking.pets && (
-                  <Badge variant="outline" className="text-[10px] gap-1 border-warning-orange/30 text-warning-orange">
-                    <PawPrint className="h-3 w-3" /> With Pets
+          <ScrollArea className="flex-1">
+            <div className="px-6 py-5 space-y-5">
+              {/* Guest & Unit Header */}
+              <div className="space-y-1">
+                <h2 className="text-xl font-semibold text-foreground">
+                  {booking.guest_name}'s Group of {booking.pax}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  in <span className="font-medium text-foreground">{unitName}</span>
+                </p>
+                <div className="flex items-center gap-2 mt-2">
+                  <Badge variant="outline" className={cn("text-xs", getStatusBadgeStyle(booking.booking_status))}>
+                    {booking.booking_status}
                   </Badge>
-                )}
-                {booking.deposit_status !== "Pending" && (
-                  <Badge variant="outline" className={cn("text-[10px]",
-                    booking.deposit_status === "Returned" ? "border-ocean/30 text-ocean" : "border-destructive/30 text-destructive"
-                  )}>
-                    Deposit {booking.deposit_status}
-                    {booking.deposit_status === "Deducted" && booking.deposit_deducted_amount > 0 && ` (₱${booking.deposit_deducted_amount.toLocaleString()})`}
+                  <Badge variant="outline" className={cn("text-xs", getPaymentBadgeStyle(booking.payment_status))}>
+                    {booking.payment_status}
                   </Badge>
-                )}
+                </div>
               </div>
-            </div>
 
-            {/* Notes */}
-            {booking.notes && (
-              <>
-                <Separator className="bg-border" />
-                <div className="space-y-2">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-primary flex items-center gap-1.5">
-                    <StickyNote className="h-3.5 w-3.5" /> Notes
-                  </h3>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{booking.notes}</p>
+              <Separator className="bg-border" />
+
+              {/* Check-in Dates */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-primary flex items-center gap-1.5">
+                  <CalendarDays className="h-3.5 w-3.5" /> Stay Details
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-lg border border-border p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Check-in</p>
+                    <p className="text-sm font-medium text-foreground">{format(parseISO(booking.check_in), "MMM d, yyyy")}</p>
+                    <p className="text-[10px] text-muted-foreground">1:00 PM</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Check-out</p>
+                    <p className="text-sm font-medium text-foreground">{format(parseISO(booking.check_out), "MMM d, yyyy")}</p>
+                    <p className="text-[10px] text-muted-foreground">11:00 AM</p>
+                  </div>
                 </div>
-              </>
-            )}
+                <p className="text-xs text-muted-foreground">{nights} night{nights !== 1 ? "s" : ""} · via {booking.booking_source}</p>
+              </div>
 
-            {/* Contact */}
-            {(booking.email || booking.phone) && (
-              <>
-                <Separator className="bg-border" />
-                <div className="space-y-1 text-sm">
-                  {booking.phone && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Phone</span>
-                      <span className="text-foreground">{booking.phone}</span>
-                    </div>
-                  )}
-                  {booking.email && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Email</span>
-                      <span className="text-foreground">{booking.email}</span>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-
-            {/* Audit Log / History */}
-            <Separator className="bg-border" />
-            <div className="space-y-3">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">
-                Edit History
-              </h3>
-              {auditLog.length === 0 ? (
-                <p className="text-xs text-muted-foreground italic">No changes recorded yet.</p>
-              ) : (
-                <div className="space-y-2">
-                  {auditLog.map((entry) => (
-                    <div key={entry.id} className="rounded-md border border-border bg-background px-3 py-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-foreground">{fieldLabel(entry.field_name)}</span>
-                        <span className="text-[10px] text-muted-foreground">
-                          {format(parseISO(entry.changed_at), "MMM d, yyyy h:mm a")}
-                        </span>
-                      </div>
-                      <div className="text-[11px] text-muted-foreground mt-0.5">
-                        <span className="line-through">{entry.old_value || "—"}</span>
-                        <span className="mx-1.5">→</span>
-                        <span className="text-foreground font-medium">{entry.new_value || "—"}</span>
-                      </div>
-                    </div>
-                  ))}
+              {/* Overlap Notice */}
+              {overlaps.length > 0 && (
+                <div className="flex items-start gap-2 rounded-lg border border-warning-orange/50 bg-warning-orange/10 px-3 py-2">
+                  <AlertTriangle className="h-4 w-4 text-warning-orange shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-medium text-warning-orange">Overlap Detected</p>
+                    {overlaps.map((o) => (
+                      <p key={o.id} className="text-[11px] text-warning-orange/80">
+                        {o.guest_name}: {format(parseISO(o.check_in), "MMM d")} → {format(parseISO(o.check_out), "MMM d")}
+                      </p>
+                    ))}
+                  </div>
                 </div>
               )}
-            </div>
 
-            {/* Booking ref & timestamps */}
-            <div className="text-[10px] text-muted-foreground space-y-0.5 pt-2">
-              <p>Ref: {booking.booking_ref}</p>
-              <p>Created: {format(parseISO(booking.created_at), "MMM d, yyyy h:mm a")}</p>
-              <p>Updated: {format(parseISO(booking.updated_at), "MMM d, yyyy h:mm a")}</p>
+              <Separator className="bg-border" />
+
+              {/* Fees */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-primary flex items-center gap-1.5">
+                  <Banknote className="h-3.5 w-3.5" /> Financials
+                </h3>
+                <div className="space-y-1.5 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Total Amount</span>
+                    <span className="font-medium text-foreground">₱{booking.total_amount.toLocaleString()}</span>
+                  </div>
+                  {booking.deposit_paid > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Downpayment</span>
+                      <span className="text-foreground">₱{booking.deposit_paid.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {extraPax > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <Users className="h-3 w-3" /> Extra PAX Fee (+{extraPax} guest{extraPax > 1 ? "s" : ""})
+                      </span>
+                      <span className="text-foreground">₱{booking.extra_pax_fee.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {booking.extra_pax_fee > 0 && extraPax === 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Extra PAX Fee</span>
+                      <span className="text-foreground">₱{booking.extra_pax_fee.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {booking.utensil_rental && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <UtensilsCrossed className="h-3 w-3" /> Utensil Rental
+                      </span>
+                      <span className="text-foreground">₱{booking.utensil_rental_fee.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {booking.karaoke && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Karaoke</span>
+                      <span className="text-foreground">₱{booking.karaoke_fee.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {booking.kitchen_use && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Kitchen Use</span>
+                      <span className="text-foreground">₱{booking.kitchen_use_fee.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {booking.pet_fee > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Pet Fee</span>
+                      <span className="text-foreground">₱{booking.pet_fee.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {booking.discount_given > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Discount ({booking.discount_type})</span>
+                      <span className="text-foreground">
+                        -{booking.discount_type === "percentage" ? `${booking.discount_given}%` : `₱${booking.discount_given.toLocaleString()}`}
+                        {booking.discount_reason && <span className="text-[10px] text-muted-foreground ml-1">({booking.discount_reason})</span>}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                {/* Extras */}
+                <div className="flex items-center gap-2 flex-wrap mt-2">
+                  {booking.pets && (
+                    <Badge variant="outline" className="text-[10px] gap-1 border-warning-orange/30 text-warning-orange">
+                      <PawPrint className="h-3 w-3" /> With Pets
+                    </Badge>
+                  )}
+                  {booking.deposit_status !== "Pending" && (
+                    <Badge variant="outline" className={cn("text-[10px]",
+                      booking.deposit_status === "Returned" ? "border-ocean/30 text-ocean" : "border-destructive/30 text-destructive"
+                    )}>
+                      Deposit {booking.deposit_status}
+                      {booking.deposit_status === "Deducted" && booking.deposit_deducted_amount > 0 && ` (₱${booking.deposit_deducted_amount.toLocaleString()})`}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              {/* Deletion info */}
+              {booking.deleted_at && (
+                <>
+                  <Separator className="bg-border" />
+                  <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 space-y-1">
+                    <p className="text-xs font-semibold text-destructive">Deleted</p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(parseISO(booking.deleted_at), "MMM d, yyyy h:mm a")}
+                    </p>
+                    {booking.deletion_reason && (
+                      <p className="text-xs text-muted-foreground">Reason: {booking.deletion_reason}</p>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* Notes */}
+              {booking.notes && (
+                <>
+                  <Separator className="bg-border" />
+                  <div className="space-y-2">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-primary flex items-center gap-1.5">
+                      <StickyNote className="h-3.5 w-3.5" /> Notes
+                    </h3>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{booking.notes}</p>
+                  </div>
+                </>
+              )}
+
+              {/* Contact */}
+              {(booking.email || booking.phone) && (
+                <>
+                  <Separator className="bg-border" />
+                  <div className="space-y-1 text-sm">
+                    {booking.phone && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Phone</span>
+                        <span className="text-foreground">{booking.phone}</span>
+                      </div>
+                    )}
+                    {booking.email && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Email</span>
+                        <span className="text-foreground">{booking.email}</span>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* Audit Log / History */}
+              <Separator className="bg-border" />
+              <div className="space-y-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">
+                  Edit History
+                </h3>
+                {auditLog.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic">No changes recorded yet.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {auditLog.map((entry) => (
+                      <div key={entry.id} className="rounded-md border border-border bg-background px-3 py-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium text-foreground">{fieldLabel(entry.field_name)}</span>
+                          <span className="text-[10px] text-muted-foreground">
+                            {format(parseISO(entry.changed_at), "MMM d, yyyy h:mm a")}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-muted-foreground mt-0.5">
+                          <span className="line-through">{entry.old_value || "—"}</span>
+                          <span className="mx-1.5">→</span>
+                          <span className="text-foreground font-medium">{entry.new_value || "—"}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Booking ref & timestamps */}
+              <div className="text-[10px] text-muted-foreground space-y-0.5 pt-2">
+                <p>Ref: {booking.booking_ref}</p>
+                <p>Created: {format(parseISO(booking.created_at), "MMM d, yyyy h:mm a")}</p>
+                <p>Updated: {format(parseISO(booking.updated_at), "MMM d, yyyy h:mm a")}</p>
+              </div>
             </div>
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent className="bg-card border-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-foreground">Delete this booking?</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              This will cancel <span className="font-medium text-foreground">{booking.guest_name}</span>'s booking
+              ({booking.booking_ref}). The booking will be moved to the deleted/cancelled section.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">Reason for deletion *</label>
+            <Textarea
+              value={deleteReason}
+              onChange={(e) => setDeleteReason(e.target.value)}
+              placeholder="e.g. Guest requested cancellation, duplicate booking..."
+              className="bg-background border-border resize-none h-20"
+            />
           </div>
-        </ScrollArea>
-      </SheetContent>
-    </Sheet>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-border text-muted-foreground">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={!deleteReason.trim() || softDelete.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {softDelete.isPending ? "Deleting..." : "Delete Booking"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
