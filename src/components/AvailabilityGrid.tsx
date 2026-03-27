@@ -184,21 +184,32 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border shrink-0 gap-2">
-        <h1 className="text-xl sm:text-3xl text-foreground tracking-wide">Availability</h1>
+        <select
+          value={currentMonth.getMonth().toString()}
+          onChange={(e) => {
+            setCurrentMonth(new Date(currentMonth.getFullYear(), parseInt(e.target.value), 1));
+          }}
+          className="bg-transparent text-xl sm:text-3xl font-bold text-foreground focus:outline-none cursor-pointer appearance-none pr-2"
+        >
+          {Array.from({ length: 12 }, (_, i) => (
+            <option key={i} value={i}>
+              {format(new Date(2024, i, 1), "MMMM")}
+            </option>
+          ))}
+        </select>
         <div className="flex items-center gap-2 sm:gap-3">
           <select
-            value={format(currentMonth, "yyyy-MM")}
+            value={currentMonth.getFullYear().toString()}
             onChange={(e) => {
-              const [y, m] = e.target.value.split("-").map(Number);
-              setCurrentMonth(new Date(y, m - 1, 1));
+              setCurrentMonth(new Date(parseInt(e.target.value), currentMonth.getMonth(), 1));
             }}
             className="bg-card border border-border rounded-md px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           >
-            {Array.from({ length: 24 }, (_, i) => {
-              const d = addMonths(new Date(new Date().getFullYear(), 0, 1), i - 6);
+            {Array.from({ length: 5 }, (_, i) => {
+              const year = new Date().getFullYear() - 1 + i;
               return (
-                <option key={i} value={format(d, "yyyy-MM")}>
-                  {format(d, "MMMM yyyy")}
+                <option key={year} value={year}>
+                  {year}
                 </option>
               );
             })}
@@ -256,7 +267,6 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
             {/* Day numbers row */}
             <tr className="bg-background">
               <th className="sticky left-0 z-30 bg-background border-b border-r border-border px-3 py-2 text-left text-muted-foreground font-medium min-w-[160px] w-[160px]">
-                Unit
               </th>
               {days.map((day) => {
                 const weekend = isWeekend(day);
@@ -355,7 +365,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
                 {/* Unit rows */}
                 {areaUnits.map((unit) => (
                   <tr key={unit.id} className="hover:bg-muted/20 transition-colors">
-                    <td className="sticky left-0 z-10 bg-background border-b border-r border-border px-3 py-2">
+                    <td className="sticky left-0 z-10 bg-card/80 backdrop-blur border-b border-r border-border px-3 py-2 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)]">
                       <div className="flex items-center gap-1.5">
                         {(() => {
                           const IconComp = getUnitIcon(unit.name);
