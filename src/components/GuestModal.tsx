@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { generateGuestRef } from "@/lib/guestRef";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -112,7 +113,7 @@ export function GuestModal({ open, onOpenChange, guest }: GuestModalProps) {
         await updateGuest.mutateAsync({ id: guest.id, ...payload });
         toast.success("Guest updated");
       } else {
-        await createGuest.mutateAsync(payload);
+        await createGuest.mutateAsync({ ...payload, guest_ref: generateGuestRef() });
         toast.success("Guest added");
       }
       onOpenChange(false);
