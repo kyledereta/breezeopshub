@@ -90,6 +90,9 @@ export type Database = {
           updated_at: string
           utensil_rental: boolean
           utensil_rental_fee: number
+          water_jug: boolean
+          water_jug_fee: number
+          water_jug_qty: number
           wristband_deposit: boolean
         }
         Insert: {
@@ -132,6 +135,9 @@ export type Database = {
           updated_at?: string
           utensil_rental?: boolean
           utensil_rental_fee?: number
+          water_jug?: boolean
+          water_jug_fee?: number
+          water_jug_qty?: number
           wristband_deposit?: boolean
         }
         Update: {
@@ -174,6 +180,9 @@ export type Database = {
           updated_at?: string
           utensil_rental?: boolean
           utensil_rental_fee?: number
+          water_jug?: boolean
+          water_jug_fee?: number
+          water_jug_qty?: number
           wristband_deposit?: boolean
         }
         Relationships: [
