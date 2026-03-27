@@ -100,6 +100,7 @@ export function BookingModal({
   const [conflictWarning, setConflictWarning] = useState<string | null>(null);
   const [guestSuggestions, setGuestSuggestions] = useState<{ id: string; guest_name: string; phone: string | null; email: string | null; pets: boolean }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const originalValuesRef = useRef<Record<string, any> | null>(null);
 
   // Load existing ID files when editing
   useEffect(() => {
@@ -197,7 +198,7 @@ export function BookingModal({
     if (!open) return;
 
     if (booking) {
-      form.reset({
+      const vals = {
         guest_name: booking.guest_name,
         unit_id: booking.unit_id ?? "",
         check_in: booking.check_in,
@@ -220,8 +221,11 @@ export function BookingModal({
         utensil_rental: (booking as any).utensil_rental ?? false,
         pets: (booking as any).pets ?? false,
         deposit_status: (booking as any).deposit_status ?? "Pending",
-      });
+      };
+      form.reset(vals);
+      originalValuesRef.current = { ...vals };
     } else {
+      originalValuesRef.current = null;
       form.reset({
         guest_name: "",
         unit_id: defaultUnitId ?? "",
