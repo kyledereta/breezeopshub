@@ -60,6 +60,7 @@ export type Database = {
           check_in: string
           check_out: string
           created_at: string
+          daytour_fee: number
           deleted_at: string | null
           deletion_reason: string | null
           deposit_deducted_amount: number
@@ -83,6 +84,8 @@ export type Database = {
           kitchen_use_fee: number
           mode_of_payment: string | null
           notes: string | null
+          other_extras_fee: number
+          other_extras_note: string | null
           pax: number
           payment_status: Database["public"]["Enums"]["payment_status"]
           pet_fee: number
@@ -113,6 +116,7 @@ export type Database = {
           check_in: string
           check_out: string
           created_at?: string
+          daytour_fee?: number
           deleted_at?: string | null
           deletion_reason?: string | null
           deposit_deducted_amount?: number
@@ -136,6 +140,8 @@ export type Database = {
           kitchen_use_fee?: number
           mode_of_payment?: string | null
           notes?: string | null
+          other_extras_fee?: number
+          other_extras_note?: string | null
           pax?: number
           payment_status?: Database["public"]["Enums"]["payment_status"]
           pet_fee?: number
@@ -166,6 +172,7 @@ export type Database = {
           check_in?: string
           check_out?: string
           created_at?: string
+          daytour_fee?: number
           deleted_at?: string | null
           deletion_reason?: string | null
           deposit_deducted_amount?: number
@@ -189,6 +196,8 @@ export type Database = {
           kitchen_use_fee?: number
           mode_of_payment?: string | null
           notes?: string | null
+          other_extras_fee?: number
+          other_extras_note?: string | null
           pax?: number
           payment_status?: Database["public"]["Enums"]["payment_status"]
           pet_fee?: number
