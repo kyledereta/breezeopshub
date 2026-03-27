@@ -3,7 +3,9 @@ import { AppLayout } from "@/components/AppLayout";
 import { AvailabilityGrid } from "@/components/AvailabilityGrid";
 import { BookingModal } from "@/components/BookingModal";
 import { BookingDetailSheet } from "@/components/BookingDetailSheet";
+import { UnitDetailSheet } from "@/components/UnitDetailSheet";
 import type { Booking } from "@/hooks/useBookings";
+import type { Unit } from "@/hooks/useUnits";
 
 const Index = () => {
   const [modalOpen, setModalOpen] = useState(false);
@@ -11,6 +13,8 @@ const Index = () => {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [defaultUnitId, setDefaultUnitId] = useState<string>();
   const [defaultDate, setDefaultDate] = useState<Date>();
+  const [unitSheetOpen, setUnitSheetOpen] = useState(false);
+  const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
 
   const openNewBooking = (unitId?: string, date?: Date) => {
     setSelectedBooking(null);
@@ -20,6 +24,7 @@ const Index = () => {
   };
 
   const openViewBooking = (booking: Booking) => {
+    setUnitSheetOpen(false);
     setSelectedBooking(booking);
     setSheetOpen(true);
   };
@@ -32,12 +37,19 @@ const Index = () => {
     setModalOpen(true);
   };
 
+  const openViewUnit = (unit: Unit) => {
+    setSheetOpen(false);
+    setSelectedUnit(unit);
+    setUnitSheetOpen(true);
+  };
+
   return (
     <AppLayout onNewBooking={() => openNewBooking()}>
       <div className="h-[calc(100vh-3rem)]">
         <AvailabilityGrid
           onCellClick={(unitId, date) => openNewBooking(unitId, date)}
           onBookingClick={(booking) => openViewBooking(booking)}
+          onUnitClick={(unit) => openViewUnit(unit)}
         />
       </div>
 
@@ -46,6 +58,12 @@ const Index = () => {
         onOpenChange={setSheetOpen}
         booking={selectedBooking}
         onEdit={openEditBooking}
+      />
+
+      <UnitDetailSheet
+        open={unitSheetOpen}
+        onOpenChange={setUnitSheetOpen}
+        unit={selectedUnit}
       />
 
       <BookingModal

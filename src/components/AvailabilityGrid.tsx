@@ -113,9 +113,10 @@ function getSourceColor(source: string) {
 interface AvailabilityGridProps {
   onCellClick?: (unitId: string, date: Date) => void;
   onBookingClick?: (booking: Booking) => void;
+  onUnitClick?: (unit: import("@/hooks/useUnits").Unit) => void;
 }
 
-export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGridProps) {
+export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: AvailabilityGridProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -386,9 +387,15 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
                 </tr>
 
                 {/* Unit rows */}
-                {areaUnits.map((unit) => (
-                  <tr key={unit.id} className="hover:bg-muted/20 transition-colors h-[30px]">
-                    <td className="sticky left-0 z-10 bg-card/80 backdrop-blur border-b border-r border-border px-3 py-1 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)]">
+                {areaUnits.map((unit) => {
+                  const unitStatus = unit.unit_status || "Available";
+                  const isUnavailable = unitStatus !== "Available";
+                  return (
+                  <tr key={unit.id} className={cn("hover:bg-muted/20 transition-colors h-[30px]", isUnavailable && "opacity-50")}>
+                    <td
+                      className="sticky left-0 z-10 bg-card/80 backdrop-blur border-b border-r border-border px-3 py-1 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)] cursor-pointer hover:bg-muted/30 transition-colors"
+                      onClick={() => onUnitClick?.(unit)}
+                    >
                       <div className="flex items-center gap-1.5">
                         {(() => {
                           const IconComp = getUnitIcon(unit.name);
@@ -405,6 +412,11 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
                         {!unit.has_ac && (
                           <span className="text-[8px] bg-muted text-muted-foreground px-1 py-0.5 rounded font-medium">
                             Fan
+                          </span>
+                        )}
+                        {isUnavailable && (
+                          <span className="text-[8px] bg-destructive/20 text-destructive px-1 py-0.5 rounded font-medium">
+                            {unitStatus}
                           </span>
                         )}
                       </div>
@@ -488,7 +500,8 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
                       );
                     })}
                   </tr>
-                ))}
+                  );
+                })}
               </>
             ))}
           </tbody>
