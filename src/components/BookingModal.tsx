@@ -1470,6 +1470,41 @@ export function BookingModal({
                   </FormItem>
                 )}
               />
+
+              {/* Daytour toggle */}
+              <FormField
+                control={form.control}
+                name="daytour"
+                render={({ field }) => (
+                  <FormItem className="space-y-0 rounded-lg border border-border p-3">
+                    <div className="flex items-center gap-3">
+                      <FormControl>
+                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                      <div>
+                        <FormLabel className="text-xs text-foreground">Day Tour</FormLabel>
+                        <p className="text-[10px] text-muted-foreground">
+                          ₱150/head daytour fee
+                        </p>
+                      </div>
+                    </div>
+                    {watchDaytour && (
+                      <div className="mt-2 pt-2 border-t border-border space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            checked={watchIsDaytourBooking}
+                            onCheckedChange={(v) => form.setValue("is_daytour_booking", !!v)}
+                          />
+                          <span className="text-xs text-muted-foreground">Day Tour Only (no nightly rate, fees only)</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">
+                          Fee: ₱{(Number(watchDaytourFee) || 0).toLocaleString()}
+                        </p>
+                      </div>
+                    )}
+                  </FormItem>
+                )}
+              />
             </div>
 
             <Separator className="bg-border" />
