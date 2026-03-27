@@ -97,6 +97,10 @@ export default function RevenuePage() {
   const currentMonthData = monthlyData.find((m) => m.month === currentMonth);
   const activeBookings = allBookings.filter((b) => b.booking_status !== "Cancelled");
   const totalRevenue = activeBookings.reduce((s, b) => s + b.total_amount, 0);
+
+  // Today's revenue
+  const todayArrivals = activeBookings.filter((b) => b.check_in === todayStr);
+  const todayRevenue = todayArrivals.reduce((s, b) => s + b.total_amount, 0);
   const totalDepositDeducted = activeBookings.reduce((s, b) => s + ((b as any).deposit_deducted_amount ?? 0), 0);
   const totalUtensilRevenue = activeBookings.reduce((s, b) => s + ((b as any).utensil_rental_fee ?? 0), 0);
   const currentOccupancy = currentMonthData && currentMonthData.totalNights > 0
