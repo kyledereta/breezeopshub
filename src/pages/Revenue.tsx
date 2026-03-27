@@ -111,6 +111,7 @@ export default function RevenuePage() {
 
     for (const b of allBookings) {
       if (b.booking_status === "Cancelled") continue;
+      if ((b as any).is_primary === false) continue;
       const utensil = b.utensil_rental_fee ?? 0;
       const karaoke = b.karaoke_fee ? 500 : 0;
       const pet = b.pet_fee ?? 0;
