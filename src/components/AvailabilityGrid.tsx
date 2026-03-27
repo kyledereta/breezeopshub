@@ -329,7 +329,25 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
 
             {/* Day numbers row */}
             <tr className="bg-background">
-              <th className="sticky left-0 z-30 bg-background border-b border-r border-border px-3 py-2 text-left text-muted-foreground font-medium min-w-[160px] w-[160px]">
+              <th className="sticky left-0 z-30 bg-background border-b border-r border-border px-2 py-1 text-left text-muted-foreground font-medium min-w-[160px] w-[160px]">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="text-[8px] leading-tight text-muted-foreground/70 cursor-help">
+                      <span className="font-semibold text-foreground/60">{resortSummary.totalUnits} units</span>
+                      <span className="mx-0.5">·</span>
+                      <span className="font-semibold text-foreground/60">{resortSummary.totalPax} max pax</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" align="start" className="text-xs p-3 w-52">
+                    <p className="font-semibold text-[11px] mb-1.5">Resort Capacity</p>
+                    {resortSummary.areas.map((a) => (
+                      <div key={a.area} className="flex justify-between py-0.5">
+                        <span className="text-muted-foreground">{a.area}</span>
+                        <span className="font-medium">{a.count}u · {a.pax}p</span>
+                      </div>
+                    ))}
+                  </TooltipContent>
+                </Tooltip>
               </th>
               {days.map((day) => {
                 const weekend = isWeekend(day);
