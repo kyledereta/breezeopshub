@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { getUnpaidExtras, hasUnpaidExtras } from "@/lib/unpaidExtras";
 import { format, parseISO } from "date-fns";
 import { AppLayout } from "@/components/AppLayout";
 import { useBookings, type Booking } from "@/hooks/useBookings";
@@ -35,7 +36,8 @@ export default function BalancesPage() {
     return allBookings
       .filter((b) => {
         if ((b as any).is_primary === false) return false;
-        return b.booking_status !== "Cancelled" && (b.payment_status === "Unpaid" || b.payment_status === "Partial DP");
+        if (b.booking_status === "Cancelled") return false;
+        return b.payment_status === "Unpaid" || b.payment_status === "Partial DP" || hasUnpaidExtras(b);
       })
       .sort((a, b) => a.check_in.localeCompare(b.check_in));
   }, [allBookings]);
