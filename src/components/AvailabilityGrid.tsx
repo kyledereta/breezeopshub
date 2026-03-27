@@ -430,14 +430,12 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
                               <TooltipTrigger asChild>
                                 <td
                                   colSpan={Math.min(span, days.length - days.indexOf(day))}
-                                  className={cn(
-                                    "cursor-pointer relative overflow-hidden rounded-full",
-                                    getBookingColor(booking),
-                                    getBookingRing(booking)
-                                  )}
+                                  className="cursor-pointer relative py-[4px]"
                                   onClick={() => onBookingClick?.(booking)}
                                 >
-                                  <BookingCell booking={booking} />
+                                  <div className={cn("rounded-full overflow-hidden", getBookingColor(booking), getBookingRing(booking))}>
+                                    <BookingCell booking={booking} />
+                                  </div>
                                 </td>
                               </TooltipTrigger>
                               <BookingTooltip booking={booking} />
@@ -452,14 +450,12 @@ export function AvailabilityGrid({ onCellClick, onBookingClick }: AvailabilityGr
                             <TooltipTrigger asChild>
                               <td
                                 colSpan={Math.min(span, days.length - days.indexOf(day))}
-                                className={cn(
-                                  "cursor-pointer relative overflow-hidden rounded-full",
-                                  getBookingColor(booking),
-                                  getBookingRing(booking)
-                                )}
+                                className="cursor-pointer relative py-[4px]"
                                 onClick={() => onBookingClick?.(booking)}
                               >
-                                <BookingCell booking={booking} />
+                                <div className={cn("rounded-full overflow-hidden", getBookingColor(booking), getBookingRing(booking))}>
+                                  <BookingCell booking={booking} />
+                                </div>
                               </td>
                             </TooltipTrigger>
                             <BookingTooltip booking={booking} />
