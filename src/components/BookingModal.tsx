@@ -97,6 +97,8 @@ const bookingSchema = z.object({
   towel_rent_fee: z.coerce.number().min(0),
   bonfire: z.boolean(),
   bonfire_fee: z.coerce.number().min(0),
+  daytour: z.boolean(),
+  is_daytour_booking: z.boolean(),
   daytour_fee: z.coerce.number().min(0),
   other_extras_fee: z.coerce.number().min(0),
   other_extras_note: z.string().max(300).optional().or(z.literal("")),
