@@ -293,16 +293,23 @@ export type Database = {
       }
       form_submissions: {
         Row: {
+          birthday_month: number | null
           booking_id: string | null
           check_in: string
           check_out: string
           created_at: string
           email: string | null
+          facebook_name: string | null
+          gov_id_url: string | null
           guest_name: string
+          has_pet: boolean
           id: string
+          marketing_consent: boolean
           pax: number
+          payment_method: string | null
           payment_screenshot_url: string | null
           phone: string | null
+          promo_code: string | null
           raw_payload: Json | null
           rejection_reason: string | null
           status: string
@@ -310,16 +317,23 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          birthday_month?: number | null
           booking_id?: string | null
           check_in: string
           check_out: string
           created_at?: string
           email?: string | null
+          facebook_name?: string | null
+          gov_id_url?: string | null
           guest_name: string
+          has_pet?: boolean
           id?: string
+          marketing_consent?: boolean
           pax?: number
+          payment_method?: string | null
           payment_screenshot_url?: string | null
           phone?: string | null
+          promo_code?: string | null
           raw_payload?: Json | null
           rejection_reason?: string | null
           status?: string
@@ -327,16 +341,23 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          birthday_month?: number | null
           booking_id?: string | null
           check_in?: string
           check_out?: string
           created_at?: string
           email?: string | null
+          facebook_name?: string | null
+          gov_id_url?: string | null
           guest_name?: string
+          has_pet?: boolean
           id?: string
+          marketing_consent?: boolean
           pax?: number
+          payment_method?: string | null
           payment_screenshot_url?: string | null
           phone?: string | null
+          promo_code?: string | null
           raw_payload?: Json | null
           rejection_reason?: string | null
           status?: string

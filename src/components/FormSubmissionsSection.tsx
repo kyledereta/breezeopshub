@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { format, parseISO } from "date-fns";
-import { FileText, Check, X, Eye, Users, BedDouble, Calendar, ImageIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { FileText, Check, X, Users, BedDouble, Calendar, ImageIcon, CreditCard, PawPrint, IdCard } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,7 +27,7 @@ export function FormSubmissionsSection({ unitMap }: FormSubmissionsSectionProps)
   const { data: submissions = [], isLoading } = useFormSubmissions("Pending");
   const approve = useApproveSubmission();
   const reject = useRejectSubmission();
-  const [viewScreenshot, setViewScreenshot] = useState<string | null>(null);
+  const [viewImage, setViewImage] = useState<{ url: string; title: string } | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
 
@@ -79,6 +78,9 @@ export function FormSubmissionsSection({ unitMap }: FormSubmissionsSectionProps)
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-medium text-sm text-foreground">{s.guest_name}</span>
+                  {s.facebook_name && (
+                    <span className="text-[10px] text-muted-foreground">({s.facebook_name})</span>
+                  )}
                   <Badge
                     variant="outline"
                     className="text-[10px] px-1.5 py-0 bg-warning-orange/20 text-warning-orange border-warning-orange/30"
@@ -101,21 +103,50 @@ export function FormSubmissionsSection({ unitMap }: FormSubmissionsSectionProps)
                     <Users className="h-3 w-3" />
                     {s.pax} PAX
                   </span>
-                  {s.phone && <span>{s.phone}</span>}
+                  {s.payment_method && (
+                    <span className="flex items-center gap-1">
+                      <CreditCard className="h-3 w-3" />
+                      {s.payment_method}
+                    </span>
+                  )}
+                  {s.has_pet && (
+                    <span className="flex items-center gap-1">
+                      <PawPrint className="h-3 w-3" />
+                      Pet
+                    </span>
+                  )}
+                  {s.promo_code && (
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                      {s.promo_code}
+                    </Badge>
+                  )}
                 </div>
-                <div className="text-[10px] text-muted-foreground mt-0.5">
-                  Submitted {format(parseISO(s.created_at), "MMM d, h:mm a")}
+                <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
+                  <span>Submitted {format(parseISO(s.created_at), "MMM d, h:mm a")}</span>
+                  {s.phone && <span>• {s.phone}</span>}
+                  {s.email && <span>• {s.email}</span>}
                 </div>
               </div>
 
               <div className="flex items-center gap-1.5 shrink-0">
+                {s.gov_id_url && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => setViewImage({ url: s.gov_id_url!, title: "Government ID" })}
+                    title="View government ID"
+                  >
+                    <IdCard className="h-3.5 w-3.5 text-muted-foreground" />
+                  </Button>
+                )}
                 {s.payment_screenshot_url && (
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7"
-                    onClick={() => setViewScreenshot(s.payment_screenshot_url)}
-                    title="View payment screenshot"
+                    onClick={() => setViewImage({ url: s.payment_screenshot_url!, title: "Payment Receipt" })}
+                    title="View payment receipt"
                   >
                     <ImageIcon className="h-3.5 w-3.5 text-muted-foreground" />
                   </Button>
@@ -146,16 +177,16 @@ export function FormSubmissionsSection({ unitMap }: FormSubmissionsSectionProps)
         </div>
       </div>
 
-      {/* Screenshot viewer */}
-      <Dialog open={!!viewScreenshot} onOpenChange={() => setViewScreenshot(null)}>
+      {/* Image viewer */}
+      <Dialog open={!!viewImage} onOpenChange={() => setViewImage(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Payment Screenshot</DialogTitle>
+            <DialogTitle>{viewImage?.title}</DialogTitle>
           </DialogHeader>
-          {viewScreenshot && (
+          {viewImage && (
             <img
-              src={viewScreenshot}
-              alt="Payment screenshot"
+              src={viewImage.url}
+              alt={viewImage.title}
               className="w-full rounded-md border border-border"
             />
           )}
