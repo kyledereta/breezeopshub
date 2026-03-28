@@ -28,13 +28,11 @@ Deno.serve(async (req) => {
           f.label?.toLowerCase().trim() === label.toLowerCase().trim()
       );
       if (!field) return "";
-      // Handle different field types
       if (field.value !== undefined && field.value !== null) {
         if (typeof field.value === "object" && field.value.url) {
           return field.value.url;
         }
         if (Array.isArray(field.value)) {
-          // File uploads come as arrays
           if (field.value.length > 0 && field.value[0]?.url) {
             return field.value[0].url;
           }
@@ -45,16 +43,73 @@ Deno.serve(async (req) => {
       return "";
     }
 
-    const guestName = getField("guest name") || getField("name") || getField("full name") || "Unknown Guest";
-    const phone = getField("phone") || getField("phone number") || getField("contact number") || null;
-    const email = getField("email") || getField("email address") || null;
-    const checkIn = getField("check in") || getField("check-in") || getField("check in date") || getField("arrival");
-    const checkOut = getField("check out") || getField("check-out") || getField("check out date") || getField("departure");
+    // Helper to get option/checkbox field values
+    function getOptionField(label: string): string[] {
+      const field = fields.find(
+        (f: any) =>
+          f.label?.toLowerCase().trim() === label.toLowerCase().trim()
+      );
+      if (!field) return [];
+      if (Array.isArray(field.value)) return field.value.map((v: any) => String(v));
+      if (field.options && Array.isArray(field.options)) {
+        // For checkboxes/multiple choice, Tally sends selected option IDs in value
+        const selectedIds = Array.isArray(field.value) ? field.value : [field.value];
+        return field.options
+          .filter((o: any) => selectedIds.includes(o.id))
+          .map((o: any) => o.text || o.name || String(o.id));
+      }
+      if (field.value) return [String(field.value)];
+      return [];
+    }
+
+    // Guest details
+    const guestName = getField("full name") || getField("guest name") || getField("name") || "Unknown Guest";
+    const facebookName = getField("facebook name") || null;
+    const phone = getField("contact number") || getField("phone") || getField("phone number") || null;
+    const email = getField("email address") || getField("email") || null;
+    const birthdayMonthStr = getField("birthday month") || "";
+
+    // Stay details
+    const checkIn = getField("check-in date") || getField("check in") || getField("check-in") || getField("check in date") || getField("arrival");
+    const checkOut = getField("check-out date") || getField("check out") || getField("check-out") || getField("check out date") || getField("departure");
+    const paxStr = getField("number of guests (pax)") || getField("pax") || getField("guests") || getField("number of guests") || "1";
+    const promoCode = getField("promo code") || null;
+
+    // Pet
+    const petOptions = getOptionField("are you traveling with a pet?");
+    const hasPet = petOptions.some(v => v.toLowerCase() === "yes");
+
+    // Government ID upload
+    const govIdUrl = getField("upload a valid government id") || getField("government id") || getField("valid id") || null;
+
+    // Payment method
+    const paymentMethod = getField("payment") || getField("payment method") || null;
+
+    // Payment receipts
+    const bankReceipt = getField("bank transfer payment receipt") || null;
+    const gcashReceipt = getField("gcash payment receipt") || null;
+    const paymentScreenshot = bankReceipt || gcashReceipt || getField("payment screenshot") || getField("proof of payment") || getField("payment proof") || getField("screenshot") || null;
+
+    // Marketing consent
+    const marketingOptions = getOptionField("would you like to receive promotions, updates, and news from breeze resort zambales");
+    const marketingConsent = marketingOptions.some(v => v.toLowerCase() === "yes");
+
+    // Unit (if present in form)
     const unitName = getField("unit") || getField("room") || getField("accommodation") || "";
-    const paxStr = getField("pax") || getField("guests") || getField("number of guests") || "1";
-    const paymentScreenshot = getField("payment screenshot") || getField("proof of payment") || getField("payment proof") || getField("screenshot") || null;
 
     const pax = parseInt(paxStr, 10) || 1;
+
+    // Parse birthday month
+    let birthdayMonth: number | null = null;
+    if (birthdayMonthStr) {
+      const monthNames = ["january","february","march","april","may","june","july","august","september","october","november","december"];
+      const idx = monthNames.indexOf(birthdayMonthStr.toLowerCase().trim());
+      if (idx !== -1) birthdayMonth = idx + 1;
+      else {
+        const parsed = parseInt(birthdayMonthStr, 10);
+        if (!isNaN(parsed) && parsed >= 1 && parsed <= 12) birthdayMonth = parsed;
+      }
+    }
 
     // Try to match unit by name
     let unitId: string | null = null;
@@ -68,45 +123,37 @@ Deno.serve(async (req) => {
       if (unitData) unitId = unitData.id;
     }
 
-    // Handle payment screenshot - if it's a URL, download and store it
-    let screenshotUrl = paymentScreenshot;
-    if (paymentScreenshot && paymentScreenshot.startsWith("http")) {
+    // Handle file uploads - download and store in Supabase storage
+    async function storeFile(url: string, bucket: string): Promise<string | null> {
+      if (!url || !url.startsWith("http")) return url;
       try {
-        const imgResponse = await fetch(paymentScreenshot);
+        const imgResponse = await fetch(url);
         const imgBlob = await imgResponse.blob();
-        const ext = paymentScreenshot.includes(".png") ? "png" : "jpg";
+        const ext = url.includes(".png") ? "png" : "jpg";
         const fileName = `${crypto.randomUUID()}.${ext}`;
-
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("payment-screenshots")
-          .upload(fileName, imgBlob, {
-            contentType: imgBlob.type || `image/${ext}`,
-          });
-
+          .from(bucket)
+          .upload(fileName, imgBlob, { contentType: imgBlob.type || `image/${ext}` });
         if (!uploadError && uploadData) {
-          const { data: urlData } = supabase.storage
-            .from("payment-screenshots")
-            .getPublicUrl(uploadData.path);
-          screenshotUrl = urlData.publicUrl;
+          const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(uploadData.path);
+          return urlData.publicUrl;
         }
-      } catch (imgErr) {
-        console.error("Failed to download payment screenshot:", imgErr);
-        // Keep original URL as fallback
+      } catch (err) {
+        console.error(`Failed to store file from ${url}:`, err);
       }
+      return url;
     }
 
-    // Parse dates - try common formats
+    const screenshotUrl = paymentScreenshot ? await storeFile(paymentScreenshot, "payment-screenshots") : null;
+    const storedGovIdUrl = govIdUrl ? await storeFile(govIdUrl, "guest-ids") : null;
+
+    // Parse dates
     function parseDate(dateStr: string): string | null {
       if (!dateStr) return null;
-      // Try ISO format first
       const isoMatch = dateStr.match(/(\d{4})-(\d{2})-(\d{2})/);
       if (isoMatch) return dateStr.substring(0, 10);
-      // Try MM/DD/YYYY
       const usMatch = dateStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
       if (usMatch) return `${usMatch[3]}-${usMatch[1].padStart(2, "0")}-${usMatch[2].padStart(2, "0")}`;
-      // Try DD/MM/YYYY
-      const euMatch = dateStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-      if (euMatch) return `${euMatch[3]}-${euMatch[2].padStart(2, "0")}-${euMatch[1].padStart(2, "0")}`;
       return dateStr;
     }
 
@@ -120,6 +167,15 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Map payment method to our format
+    let mappedPaymentMethod: string | null = null;
+    if (paymentMethod) {
+      const pm = paymentMethod.toLowerCase();
+      if (pm.includes("gcash")) mappedPaymentMethod = "GCash";
+      else if (pm.includes("bank") || pm.includes("eastwest")) mappedPaymentMethod = "Bank Transfer";
+      else mappedPaymentMethod = paymentMethod;
+    }
+
     const { data, error } = await supabase.from("form_submissions").insert({
       guest_name: guestName,
       phone,
@@ -131,6 +187,13 @@ Deno.serve(async (req) => {
       payment_screenshot_url: screenshotUrl,
       status: "Pending",
       raw_payload: payload,
+      facebook_name: facebookName,
+      birthday_month: birthdayMonth,
+      has_pet: hasPet,
+      gov_id_url: storedGovIdUrl,
+      promo_code: promoCode,
+      payment_method: mappedPaymentMethod,
+      marketing_consent: marketingConsent,
     }).select().single();
 
     if (error) {
