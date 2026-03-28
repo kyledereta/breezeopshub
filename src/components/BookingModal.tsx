@@ -601,13 +601,17 @@ export function BookingModal({
       setRemainingModeOfPayment((booking as any).remaining_mode_of_payment ?? "");
       setRemainingPaid((booking as any).remaining_paid ?? false);
     } else {
+      const pf = prefillSubmission;
+      const guestName = pf
+        ? (pf.facebook_name ? `${pf.guest_name} (${pf.facebook_name})` : pf.guest_name)
+        : "";
       originalValuesRef.current = null;
       form.reset({
-        guest_name: "",
-        unit_id: defaultUnitId ?? "",
-        check_in: defaultDate ? format(defaultDate, "yyyy-MM-dd") : "",
-        check_out: "",
-        pax: 1,
+        guest_name: guestName,
+        unit_id: pf?.unit_id ?? defaultUnitId ?? "",
+        check_in: pf?.check_in ?? (defaultDate ? format(defaultDate, "yyyy-MM-dd") : ""),
+        check_out: pf?.check_out ?? "",
+        pax: pf?.pax ?? 1,
         total_amount: 0,
         deposit_paid: 0,
         deposit_deducted_amount: 0,
@@ -617,15 +621,15 @@ export function BookingModal({
         discount_given: 0,
         discount_type: "fixed",
         discount_reason: "",
-        payment_status: "Unpaid",
+        payment_status: pf ? "Partial DP" : "Unpaid",
         booking_status: "Confirmed",
-        booking_source: "Facebook Direct",
+        booking_source: pf ? "Facebook Direct" : "Other",
         mode_of_payment: "",
-        email: "",
-        phone: "",
+        email: pf?.email ?? "",
+        phone: pf?.phone ?? "",
         notes: "",
         utensil_rental: false,
-        pets: false,
+        pets: pf?.has_pet ?? false,
         deposit_status: "Pending",
         deposit_deducted_reason: "",
         karaoke: false,
@@ -649,12 +653,12 @@ export function BookingModal({
       });
       setAdditionalUnitIds([]);
       setAdditionalPet(false);
-      setBirthMonthFilter(0);
-      setDpModeOfPayment("");
+      setBirthMonthFilter(pf?.birthday_month ?? 0);
+      setDpModeOfPayment(pf?.payment_method ?? "");
       setRemainingModeOfPayment("");
       setRemainingPaid(false);
     }
-  }, [open, booking, defaultUnitId, defaultDate, form]);
+  }, [open, booking, defaultUnitId, defaultDate, prefillSubmission, form]);
 
   function handleFormSubmit(values: BookingFormValues) {
     // Check for overlap/unavailable units - show confirmation if needed
