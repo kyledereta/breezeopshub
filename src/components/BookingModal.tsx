@@ -110,12 +110,30 @@ const bookingSchema = z.object({
 
 type BookingFormValues = z.infer<typeof bookingSchema>;
 
+export interface SubmissionPrefill {
+  guest_name: string;
+  facebook_name?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  check_in: string;
+  check_out: string;
+  unit_id?: string | null;
+  pax: number;
+  has_pet?: boolean;
+  payment_method?: string | null;
+  promo_code?: string | null;
+  birthday_month?: number | null;
+  submissionId: string;
+}
+
 interface BookingModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   booking?: Booking | null;
   defaultUnitId?: string;
   defaultDate?: Date;
+  prefillSubmission?: SubmissionPrefill | null;
+  onCreated?: (booking: { id: string; booking_ref: string }) => void;
 }
 
 export function BookingModal({
@@ -124,6 +142,8 @@ export function BookingModal({
   booking,
   defaultUnitId,
   defaultDate,
+  prefillSubmission,
+  onCreated,
 }: BookingModalProps) {
   const { data: units = [] } = useUnits();
   const groupedUnits = useMemo(() => groupUnitsByArea(units), [units]);
