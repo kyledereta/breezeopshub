@@ -14,11 +14,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
   useFormSubmissions,
-  useApproveSubmission,
   useRejectSubmission,
   type FormSubmission,
 } from "@/hooks/useFormSubmissions";
 import { generateBookingConfirmationPdf } from "@/lib/bookingConfirmationPdf";
+import { BookingModal, type SubmissionPrefill } from "@/components/BookingModal";
 
 interface FormSubmissionsSectionProps {
   unitMap: Map<string, string>;
@@ -31,23 +31,42 @@ interface ApprovedBooking {
 
 export function FormSubmissionsSection({ unitMap }: FormSubmissionsSectionProps) {
   const { data: submissions = [], isLoading } = useFormSubmissions("Pending");
-  const approve = useApproveSubmission();
   const reject = useRejectSubmission();
   const [viewImage, setViewImage] = useState<{ url: string; title: string } | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [approvedBooking, setApprovedBooking] = useState<ApprovedBooking | null>(null);
+  // New: open booking modal pre-filled from submission
+  const [prefillSubmission, setPrefillSubmission] = useState<SubmissionPrefill | null>(null);
+  const [activeSubmission, setActiveSubmission] = useState<FormSubmission | null>(null);
 
   if (isLoading || (submissions.length === 0 && !approvedBooking)) return null;
 
   const handleApprove = (submission: FormSubmission) => {
-    approve.mutate(submission, {
-      onSuccess: (booking) => {
-        setApprovedBooking({ bookingRef: booking.booking_ref, submission });
-        toast.success(`Approved! Booking ${booking.booking_ref} created`);
-      },
-      onError: (err) => toast.error(`Failed to approve: ${err.message}`),
+    setActiveSubmission(submission);
+    setPrefillSubmission({
+      guest_name: submission.guest_name,
+      facebook_name: submission.facebook_name,
+      phone: submission.phone,
+      email: submission.email,
+      check_in: submission.check_in,
+      check_out: submission.check_out,
+      unit_id: submission.unit_id,
+      pax: submission.pax,
+      has_pet: submission.has_pet,
+      payment_method: submission.payment_method,
+      promo_code: submission.promo_code,
+      birthday_month: submission.birthday_month,
+      submissionId: submission.id,
     });
+  };
+
+  const handleBookingCreated = (booking: { id: string; booking_ref: string }) => {
+    if (activeSubmission) {
+      setApprovedBooking({ bookingRef: booking.booking_ref, submission: activeSubmission });
+    }
+    setPrefillSubmission(null);
+    setActiveSubmission(null);
   };
 
   const handleReject = () => {
@@ -182,7 +201,6 @@ export function FormSubmissionsSection({ unitMap }: FormSubmissionsSectionProps)
                     size="icon"
                     className="h-7 w-7 text-primary hover:bg-primary/10 hover:text-primary"
                     onClick={() => handleApprove(s)}
-                    disabled={approve.isPending}
                     title="Approve & create booking"
                   >
                     <Check className="h-4 w-4" />
@@ -203,6 +221,19 @@ export function FormSubmissionsSection({ unitMap }: FormSubmissionsSectionProps)
           </div>
         </div>
       )}
+
+      {/* Booking Modal pre-filled from submission */}
+      <BookingModal
+        open={!!prefillSubmission}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPrefillSubmission(null);
+            setActiveSubmission(null);
+          }
+        }}
+        prefillSubmission={prefillSubmission}
+        onCreated={handleBookingCreated}
+      />
 
       {/* Approved confirmation dialog */}
       <Dialog open={!!approvedBooking} onOpenChange={() => setApprovedBooking(null)}>
