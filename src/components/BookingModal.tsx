@@ -110,12 +110,30 @@ const bookingSchema = z.object({
 
 type BookingFormValues = z.infer<typeof bookingSchema>;
 
+export interface SubmissionPrefill {
+  guest_name: string;
+  facebook_name?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  check_in: string;
+  check_out: string;
+  unit_id?: string | null;
+  pax: number;
+  has_pet?: boolean;
+  payment_method?: string | null;
+  promo_code?: string | null;
+  birthday_month?: number | null;
+  submissionId: string;
+}
+
 interface BookingModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   booking?: Booking | null;
   defaultUnitId?: string;
   defaultDate?: Date;
+  prefillSubmission?: SubmissionPrefill | null;
+  onCreated?: (booking: { id: string; booking_ref: string }) => void;
 }
 
 export function BookingModal({
@@ -124,6 +142,8 @@ export function BookingModal({
   booking,
   defaultUnitId,
   defaultDate,
+  prefillSubmission,
+  onCreated,
 }: BookingModalProps) {
   const { data: units = [] } = useUnits();
   const groupedUnits = useMemo(() => groupUnitsByArea(units), [units]);
@@ -581,13 +601,17 @@ export function BookingModal({
       setRemainingModeOfPayment((booking as any).remaining_mode_of_payment ?? "");
       setRemainingPaid((booking as any).remaining_paid ?? false);
     } else {
+      const pf = prefillSubmission;
+      const guestName = pf
+        ? (pf.facebook_name ? `${pf.guest_name} (${pf.facebook_name})` : pf.guest_name)
+        : "";
       originalValuesRef.current = null;
       form.reset({
-        guest_name: "",
-        unit_id: defaultUnitId ?? "",
-        check_in: defaultDate ? format(defaultDate, "yyyy-MM-dd") : "",
-        check_out: "",
-        pax: 1,
+        guest_name: guestName,
+        unit_id: pf?.unit_id ?? defaultUnitId ?? "",
+        check_in: pf?.check_in ?? (defaultDate ? format(defaultDate, "yyyy-MM-dd") : ""),
+        check_out: pf?.check_out ?? "",
+        pax: pf?.pax ?? 1,
         total_amount: 0,
         deposit_paid: 0,
         deposit_deducted_amount: 0,
@@ -597,15 +621,15 @@ export function BookingModal({
         discount_given: 0,
         discount_type: "fixed",
         discount_reason: "",
-        payment_status: "Unpaid",
+        payment_status: pf ? "Partial DP" : "Unpaid",
         booking_status: "Confirmed",
-        booking_source: "Facebook Direct",
+        booking_source: pf ? "Facebook Direct" : "Other",
         mode_of_payment: "",
-        email: "",
-        phone: "",
+        email: pf?.email ?? "",
+        phone: pf?.phone ?? "",
         notes: "",
         utensil_rental: false,
-        pets: false,
+        pets: pf?.has_pet ?? false,
         deposit_status: "Pending",
         deposit_deducted_reason: "",
         karaoke: false,
@@ -629,12 +653,12 @@ export function BookingModal({
       });
       setAdditionalUnitIds([]);
       setAdditionalPet(false);
-      setBirthMonthFilter(0);
-      setDpModeOfPayment("");
+      setBirthMonthFilter(pf?.birthday_month ?? 0);
+      setDpModeOfPayment(pf?.payment_method ?? "");
       setRemainingModeOfPayment("");
       setRemainingPaid(false);
     }
-  }, [open, booking, defaultUnitId, defaultDate, form]);
+  }, [open, booking, defaultUnitId, defaultDate, prefillSubmission, form]);
 
   function handleFormSubmit(values: BookingFormValues) {
     // Check for overlap/unavailable units - show confirmation if needed
@@ -801,10 +825,11 @@ export function BookingModal({
       } else {
         // Create one booking per selected unit (multi-unit support)
         const allUnitIds = [values.unit_id, ...additionalUnitIds];
+        let createdBooking: any = null;
         if (allUnitIds.length > 1) {
           const groupId = crypto.randomUUID();
           // Primary booking (first unit) holds all payment/total info
-          await createBooking.mutateAsync({
+          createdBooking = await createBooking.mutateAsync({
             ...fullPayload,
             unit_id: allUnitIds[0],
             booking_group_id: groupId,
@@ -835,9 +860,19 @@ export function BookingModal({
             } as any);
           }
         } else {
-          await createBooking.mutateAsync(fullPayload);
+          createdBooking = await createBooking.mutateAsync(fullPayload);
         }
         toast.success(allUnitIds.length > 1 ? `${allUnitIds.length} units booked as one group` : "Booking created");
+
+        // If created from a form submission, mark it as approved
+        if (prefillSubmission && createdBooking) {
+          await supabase
+            .from("form_submissions")
+            .update({ status: "Approved", booking_id: createdBooking.id } as any)
+            .eq("id", prefillSubmission.submissionId);
+          queryClient.invalidateQueries({ queryKey: ["form_submissions"] });
+          onCreated?.({ id: createdBooking.id, booking_ref: createdBooking.booking_ref });
+        }
       }
 
       // Update guest total_stays and tier after checkout
