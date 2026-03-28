@@ -825,10 +825,11 @@ export function BookingModal({
       } else {
         // Create one booking per selected unit (multi-unit support)
         const allUnitIds = [values.unit_id, ...additionalUnitIds];
+        let createdBooking: any = null;
         if (allUnitIds.length > 1) {
           const groupId = crypto.randomUUID();
           // Primary booking (first unit) holds all payment/total info
-          await createBooking.mutateAsync({
+          createdBooking = await createBooking.mutateAsync({
             ...fullPayload,
             unit_id: allUnitIds[0],
             booking_group_id: groupId,
@@ -859,9 +860,19 @@ export function BookingModal({
             } as any);
           }
         } else {
-          await createBooking.mutateAsync(fullPayload);
+          createdBooking = await createBooking.mutateAsync(fullPayload);
         }
         toast.success(allUnitIds.length > 1 ? `${allUnitIds.length} units booked as one group` : "Booking created");
+
+        // If created from a form submission, mark it as approved
+        if (prefillSubmission && createdBooking) {
+          await supabase
+            .from("form_submissions")
+            .update({ status: "Approved", booking_id: createdBooking.id } as any)
+            .eq("id", prefillSubmission.submissionId);
+          queryClient.invalidateQueries({ queryKey: ["form_submissions"] });
+          onCreated?.({ id: createdBooking.id, booking_ref: createdBooking.booking_ref });
+        }
       }
 
       // Update guest total_stays and tier after checkout
