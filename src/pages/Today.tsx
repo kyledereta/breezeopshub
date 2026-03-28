@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { BookingModal } from "@/components/BookingModal";
+import { FormSubmissionsSection } from "@/components/FormSubmissionsSection";
 
 function getPaymentBadgeClass(status: string) {
   switch (status) {
@@ -358,6 +359,9 @@ export default function TodayPage() {
               />
               <StatCard icon={Users} label="Guests" value={String(checkIns.length + inHouse.length + visibleDepartures.length)} sub="Today's bookings" onClick={() => navigate("/guests")} />
             </div>
+
+            {/* Form Submissions */}
+            <FormSubmissionsSection unitMap={unitMap} />
 
             {/* Overbooking Warnings */}
             {overbookings.length > 0 && (

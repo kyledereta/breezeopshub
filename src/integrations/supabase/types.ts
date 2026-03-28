@@ -291,6 +291,75 @@ export type Database = {
           },
         ]
       }
+      form_submissions: {
+        Row: {
+          booking_id: string | null
+          check_in: string
+          check_out: string
+          created_at: string
+          email: string | null
+          guest_name: string
+          id: string
+          pax: number
+          payment_screenshot_url: string | null
+          phone: string | null
+          raw_payload: Json | null
+          rejection_reason: string | null
+          status: string
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          booking_id?: string | null
+          check_in: string
+          check_out: string
+          created_at?: string
+          email?: string | null
+          guest_name: string
+          id?: string
+          pax?: number
+          payment_screenshot_url?: string | null
+          phone?: string | null
+          raw_payload?: Json | null
+          rejection_reason?: string | null
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string | null
+          check_in?: string
+          check_out?: string
+          created_at?: string
+          email?: string | null
+          guest_name?: string
+          id?: string
+          pax?: number
+          payment_screenshot_url?: string | null
+          phone?: string | null
+          raw_payload?: Json | null
+          rejection_reason?: string | null
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_submissions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_submissions_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       guests: {
         Row: {
           birthday_month: number | null
