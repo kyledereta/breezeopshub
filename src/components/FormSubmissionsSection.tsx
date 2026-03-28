@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { format, parseISO } from "date-fns";
-import { FileText, Check, X, Users, BedDouble, Calendar, ImageIcon, CreditCard, PawPrint, IdCard } from "lucide-react";
+import { FileText, Check, X, Users, BedDouble, Calendar, ImageIcon, CreditCard, PawPrint, IdCard, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,9 +18,15 @@ import {
   useRejectSubmission,
   type FormSubmission,
 } from "@/hooks/useFormSubmissions";
+import { generateBookingConfirmationPdf } from "@/lib/bookingConfirmationPdf";
 
 interface FormSubmissionsSectionProps {
   unitMap: Map<string, string>;
+}
+
+interface ApprovedBooking {
+  bookingRef: string;
+  submission: FormSubmission;
 }
 
 export function FormSubmissionsSection({ unitMap }: FormSubmissionsSectionProps) {
@@ -30,13 +36,16 @@ export function FormSubmissionsSection({ unitMap }: FormSubmissionsSectionProps)
   const [viewImage, setViewImage] = useState<{ url: string; title: string } | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [approvedBooking, setApprovedBooking] = useState<ApprovedBooking | null>(null);
 
-  if (isLoading || submissions.length === 0) return null;
+  if (isLoading || (submissions.length === 0 && !approvedBooking)) return null;
 
   const handleApprove = (submission: FormSubmission) => {
     approve.mutate(submission, {
-      onSuccess: (booking) =>
-        toast.success(`Approved! Booking ${booking.booking_ref} created for ${submission.guest_name}`),
+      onSuccess: (booking) => {
+        setApprovedBooking({ bookingRef: booking.booking_ref, submission });
+        toast.success(`Approved! Booking ${booking.booking_ref} created`);
+      },
       onError: (err) => toast.error(`Failed to approve: ${err.message}`),
     });
   };
@@ -56,126 +65,180 @@ export function FormSubmissionsSection({ unitMap }: FormSubmissionsSectionProps)
     );
   };
 
+  const handleDownloadConfirmation = () => {
+    if (!approvedBooking) return;
+    const s = approvedBooking.submission;
+    generateBookingConfirmationPdf({
+      bookingRef: approvedBooking.bookingRef,
+      guestName: s.facebook_name ? `${s.guest_name} (${s.facebook_name})` : s.guest_name,
+      checkIn: format(parseISO(s.check_in), "MMMM d, yyyy"),
+      checkOut: format(parseISO(s.check_out), "MMMM d, yyyy"),
+      unitName: s.unit_id ? (unitMap.get(s.unit_id) ?? "TBA") : "TBA",
+      pax: s.pax,
+      paymentMethod: s.payment_method,
+      phone: s.phone,
+      email: s.email,
+    });
+  };
+
   return (
     <>
-      <div className="rounded-lg border border-primary/30 bg-primary/5 overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-2.5 border-b border-primary/20">
-          <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-foreground">Form Submissions</span>
-            <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-medium">
-              {submissions.length} pending
-            </span>
+      {submissions.length > 0 && (
+        <div className="rounded-lg border border-primary/30 bg-primary/5 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-primary/20">
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium text-foreground">Form Submissions</span>
+              <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-medium">
+                {submissions.length} pending
+              </span>
+            </div>
+          </div>
+
+          <div className="p-2 space-y-1.5 max-h-[400px] overflow-y-auto">
+            {submissions.map((s) => (
+              <div
+                key={s.id}
+                className="flex items-start gap-3 rounded-lg bg-background border border-border p-3 transition-colors hover:border-primary/30"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-medium text-sm text-foreground">{s.guest_name}</span>
+                    {s.facebook_name && (
+                      <span className="text-[10px] text-muted-foreground">({s.facebook_name})</span>
+                    )}
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] px-1.5 py-0 bg-warning-orange/20 text-warning-orange border-warning-orange/30"
+                    >
+                      Pending Review
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground flex-wrap">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      {format(parseISO(s.check_in), "MMM d")} → {format(parseISO(s.check_out), "MMM d")}
+                    </span>
+                    {s.unit_id && (
+                      <span className="flex items-center gap-1">
+                        <BedDouble className="h-3 w-3" />
+                        {unitMap.get(s.unit_id) ?? "Unknown"}
+                      </span>
+                    )}
+                    <span className="flex items-center gap-1">
+                      <Users className="h-3 w-3" />
+                      {s.pax} PAX
+                    </span>
+                    {s.payment_method && (
+                      <span className="flex items-center gap-1">
+                        <CreditCard className="h-3 w-3" />
+                        {s.payment_method}
+                      </span>
+                    )}
+                    {s.has_pet && (
+                      <span className="flex items-center gap-1">
+                        <PawPrint className="h-3 w-3" />
+                        Pet
+                      </span>
+                    )}
+                    {s.promo_code && (
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                        {s.promo_code}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
+                    <span>Submitted {format(parseISO(s.created_at), "MMM d, h:mm a")}</span>
+                    {s.phone && <span>• {s.phone}</span>}
+                    {s.email && <span>• {s.email}</span>}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {s.gov_id_url && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => setViewImage({ url: s.gov_id_url!, title: "Government ID" })}
+                      title="View government ID"
+                    >
+                      <IdCard className="h-3.5 w-3.5 text-muted-foreground" />
+                    </Button>
+                  )}
+                  {s.payment_screenshot_url && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => setViewImage({ url: s.payment_screenshot_url!, title: "Payment Receipt" })}
+                      title="View payment receipt"
+                    >
+                      <ImageIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-primary hover:bg-primary/10 hover:text-primary"
+                    onClick={() => handleApprove(s)}
+                    disabled={approve.isPending}
+                    title="Approve & create booking"
+                  >
+                    <Check className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => setRejectingId(s.id)}
+                    disabled={reject.isPending}
+                    title="Reject submission"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
+      )}
 
-        <div className="p-2 space-y-1.5 max-h-[400px] overflow-y-auto">
-          {submissions.map((s) => (
-            <div
-              key={s.id}
-              className="flex items-start gap-3 rounded-lg bg-background border border-border p-3 transition-colors hover:border-primary/30"
-            >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-medium text-sm text-foreground">{s.guest_name}</span>
-                  {s.facebook_name && (
-                    <span className="text-[10px] text-muted-foreground">({s.facebook_name})</span>
-                  )}
-                  <Badge
-                    variant="outline"
-                    className="text-[10px] px-1.5 py-0 bg-warning-orange/20 text-warning-orange border-warning-orange/30"
-                  >
-                    Pending Review
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground flex-wrap">
-                  <span className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
-                    {format(parseISO(s.check_in), "MMM d")} → {format(parseISO(s.check_out), "MMM d")}
-                  </span>
-                  {s.unit_id && (
-                    <span className="flex items-center gap-1">
-                      <BedDouble className="h-3 w-3" />
-                      {unitMap.get(s.unit_id) ?? "Unknown"}
-                    </span>
-                  )}
-                  <span className="flex items-center gap-1">
-                    <Users className="h-3 w-3" />
-                    {s.pax} PAX
-                  </span>
-                  {s.payment_method && (
-                    <span className="flex items-center gap-1">
-                      <CreditCard className="h-3 w-3" />
-                      {s.payment_method}
-                    </span>
-                  )}
-                  {s.has_pet && (
-                    <span className="flex items-center gap-1">
-                      <PawPrint className="h-3 w-3" />
-                      Pet
-                    </span>
-                  )}
-                  {s.promo_code && (
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                      {s.promo_code}
-                    </Badge>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
-                  <span>Submitted {format(parseISO(s.created_at), "MMM d, h:mm a")}</span>
-                  {s.phone && <span>• {s.phone}</span>}
-                  {s.email && <span>• {s.email}</span>}
-                </div>
+      {/* Approved confirmation dialog */}
+      <Dialog open={!!approvedBooking} onOpenChange={() => setApprovedBooking(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Check className="h-5 w-5 text-primary" />
+              Booking Created
+            </DialogTitle>
+          </DialogHeader>
+          {approvedBooking && (
+            <div className="space-y-3">
+              <div className="rounded-lg bg-primary/5 border border-primary/20 p-4 text-center">
+                <p className="text-xs text-muted-foreground mb-1">Booking Reference</p>
+                <p className="text-lg font-bold text-primary tracking-wider">{approvedBooking.bookingRef}</p>
               </div>
-
-              <div className="flex items-center gap-1.5 shrink-0">
-                {s.gov_id_url && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                    onClick={() => setViewImage({ url: s.gov_id_url!, title: "Government ID" })}
-                    title="View government ID"
-                  >
-                    <IdCard className="h-3.5 w-3.5 text-muted-foreground" />
-                  </Button>
+              <div className="text-sm text-muted-foreground space-y-1">
+                <p><span className="font-medium text-foreground">{approvedBooking.submission.guest_name}</span></p>
+                <p>{format(parseISO(approvedBooking.submission.check_in), "MMM d")} → {format(parseISO(approvedBooking.submission.check_out), "MMM d, yyyy")}</p>
+                {approvedBooking.submission.unit_id && (
+                  <p>{unitMap.get(approvedBooking.submission.unit_id) ?? "Unknown Unit"} • {approvedBooking.submission.pax} PAX</p>
                 )}
-                {s.payment_screenshot_url && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                    onClick={() => setViewImage({ url: s.payment_screenshot_url!, title: "Payment Receipt" })}
-                    title="View payment receipt"
-                  >
-                    <ImageIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                  </Button>
-                )}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-primary hover:bg-primary/10 hover:text-primary"
-                  onClick={() => handleApprove(s)}
-                  disabled={approve.isPending}
-                  title="Approve & create booking"
-                >
-                  <Check className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                  onClick={() => setRejectingId(s.id)}
-                  disabled={reject.isPending}
-                  title="Reject submission"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
+          )}
+          <DialogFooter className="flex gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => setApprovedBooking(null)}>
+              Close
+            </Button>
+            <Button onClick={handleDownloadConfirmation} className="gap-1.5">
+              <Download className="h-4 w-4" />
+              Download Confirmation
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Image viewer */}
       <Dialog open={!!viewImage} onOpenChange={() => setViewImage(null)}>
