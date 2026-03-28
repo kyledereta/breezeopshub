@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { FlipClock } from "@/components/FlipClock";
 
 interface AppLayoutProps {
   children: ReactNode;
