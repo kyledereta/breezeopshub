@@ -394,7 +394,7 @@ export default function TodayPage() {
               Drag guests between columns to update status
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <Section
                 icon={LogIn} title="Arrivals" count={checkIns.length} color="text-primary"
                 isDropTarget={dragOver === "arrivals"}
