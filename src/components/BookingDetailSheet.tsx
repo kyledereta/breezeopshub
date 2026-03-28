@@ -162,6 +162,21 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
     return value;
   };
 
+  const handleDownloadConfirmation = () => {
+    if (!booking) return;
+    generateBookingConfirmationPdf({
+      bookingRef: booking.booking_ref,
+      guestName: booking.guest_name,
+      checkIn: format(parseISO(booking.check_in), "MMMM d, yyyy"),
+      checkOut: format(parseISO(booking.check_out), "MMMM d, yyyy"),
+      unitName,
+      pax: booking.pax,
+      paymentMethod: (booking as any).dp_mode_of_payment || (booking as any).mode_of_payment || null,
+      phone: booking.phone,
+      email: booking.email,
+    });
+  };
+
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
@@ -172,6 +187,15 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
                 Booking Details
               </SheetTitle>
               <div className="flex items-center gap-1.5">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5"
+                  onClick={handleDownloadConfirmation}
+                  title="Download booking confirmation PDF"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                </Button>
                 <Button
                   size="sm"
                   variant="outline"
@@ -191,6 +215,11 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
                   Edit
                 </Button>
               </div>
+            </div>
+            {/* Booking Reference */}
+            <div className="mt-2 rounded-md bg-primary/5 border border-primary/20 px-3 py-1.5 text-center">
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Booking Ref</span>
+              <p className="text-sm font-bold text-primary tracking-wider">{booking.booking_ref}</p>
             </div>
           </SheetHeader>
 
