@@ -36,6 +36,15 @@ Deno.serve(async (req) => {
           if (field.value.length > 0 && field.value[0]?.url) {
             return field.value[0].url;
           }
+          // Resolve dropdown/select option IDs to their text labels
+          if (field.options && Array.isArray(field.options)) {
+            const resolved = field.value
+              .map((v: any) => {
+                const opt = field.options.find((o: any) => o.id === v);
+                return opt ? (opt.text || opt.name || String(v)) : String(v);
+              });
+            return resolved.join(", ");
+          }
           return field.value.join(", ");
         }
         return String(field.value);
