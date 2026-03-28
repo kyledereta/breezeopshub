@@ -113,12 +113,24 @@ export function useApproveSubmission() {
         }
       }
 
+      // Store gov ID on guest record if available
+      if (guestId && submission.gov_id_url) {
+        await supabase.from("guests").update({ 
+          notes: submission.gov_id_url 
+        }).eq("id", guestId);
+      }
+
+      // Build facebook name display for guest_name field
+      const displayName = submission.facebook_name 
+        ? `${submission.guest_name} (${submission.facebook_name})`
+        : submission.guest_name;
+
       // Create booking from submission
       const { data: booking, error: bookingError } = await supabase
         .from("bookings")
         .insert({
           booking_ref: generateBookingRef(),
-          guest_name: submission.guest_name,
+          guest_name: displayName,
           phone: submission.phone,
           email: submission.email,
           check_in: submission.check_in,
@@ -126,12 +138,12 @@ export function useApproveSubmission() {
           unit_id: submission.unit_id,
           pax: submission.pax,
           booking_status: "Confirmed" as const,
-          booking_source: "Other" as const,
+          booking_source: "Facebook Direct" as const,
+          payment_status: "Partial DP" as const,
           guest_id: guestId,
           pets: submission.has_pet,
           referral_code: submission.promo_code,
           dp_mode_of_payment: submission.payment_method,
-          notes: submission.facebook_name ? `FB: ${submission.facebook_name}` : null,
         })
         .select()
         .single();
