@@ -2636,8 +2636,11 @@ export function BookingModal({
             {matchingGroupBooking ? ` (${matchingGroupBooking.check_in} → ${matchingGroupBooking.check_out})` : ""}.
           </p>
           {(() => {
-            const unitName = matchingGroupBooking?.unit_id ? units.find(u => u.id === matchingGroupBooking.unit_id)?.name : null;
-            return unitName ? <p>Unit: <span className="font-medium text-foreground">{unitName}</span></p> : null;
+            const groupUnitNames: string[] = (matchingGroupBooking as any)?._groupUnitNames ?? [];
+            if (groupUnitNames.length > 0) {
+              return <p>Units in booking: <span className="font-medium text-foreground">{groupUnitNames.join(" + ")}</span></p>;
+            }
+            return null;
           })()}
           <p className="text-foreground font-medium">Would you like to add this as a combined/grouped booking?</p>
         </div>
