@@ -49,9 +49,10 @@ interface GuestCardProps {
   noLateCheckout?: boolean;
   groupBookingId?: string | null;
   groupUnitNames?: string[];
+  isContinuedStay?: boolean;
 }
 
-function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, groupBookingId, groupUnitNames }: GuestCardProps) {
+function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, groupBookingId, groupUnitNames, isContinuedStay }: GuestCardProps) {
   const [wasDragged, setWasDragged] = useState(false);
   const isGrouped = !!groupBookingId;
   return (
