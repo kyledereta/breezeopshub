@@ -15,7 +15,8 @@ import { useBookings, type Booking } from "@/hooks/useBookings";
 import { useBookingAuditLog } from "@/hooks/useBookingAuditLog";
 import { useSoftDeleteBooking } from "@/hooks/useBookingMutations";
 import { cn } from "@/lib/utils";
-import { PawPrint, UtensilsCrossed, AlertTriangle, Edit, Users, CalendarDays, StickyNote, Banknote, Trash2, Link2, Car, Download } from "lucide-react";
+import { PawPrint, UtensilsCrossed, AlertTriangle, Edit, Users, CalendarDays, StickyNote, Banknote, Trash2, Link2, Car, Download, RefreshCw } from "lucide-react";
+import { useContinuedStaySet } from "@/hooks/useContinuedStay";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -66,6 +67,8 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
     booking?.check_in,
     booking?.check_out
   );
+  const { data: allBookingsGlobal = [] } = useBookings();
+  const continuedStayIds = useContinuedStaySet(allBookingsGlobal);
   const { data: auditLog = [] } = useBookingAuditLog(booking?.id);
   const softDelete = useSoftDeleteBooking();
 
@@ -237,6 +240,12 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
                   <div className="flex items-center gap-1.5 mt-1">
                     <Link2 className="h-3.5 w-3.5 text-primary" />
                     <span className="text-[10px] text-primary font-medium">Combined Booking (Multi-Unit)</span>
+                  </div>
+                )}
+                {continuedStayIds.has(booking.id) && (
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <RefreshCw className="h-3.5 w-3.5 text-ocean" />
+                    <span className="text-[10px] text-ocean font-medium">Continued Stay — same guest, consecutive booking</span>
                   </div>
                 )}
                 <div className="flex items-center gap-2 mt-2">

@@ -15,7 +15,8 @@ import {
   isWeekend,
   getDay,
 } from "date-fns";
-import { Home, Tent, TreePalm, Crown, Fan, PawPrint, Users, Facebook, Instagram, Globe, MapPin, Share2, UtensilsCrossed, TrendingUp, Link2, Ban, ChevronDown, ChevronUp } from "lucide-react";
+import { Home, Tent, TreePalm, Crown, Fan, PawPrint, Users, Facebook, Instagram, Globe, MapPin, Share2, UtensilsCrossed, TrendingUp, Link2, Ban, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
+import { useContinuedStaySet } from "@/hooks/useContinuedStay";
 import { getPHHolidaysForMonth } from "@/lib/phHolidays";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -133,6 +134,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
 
   const { data: units = [], isLoading: unitsLoading } = useUnits();
   const { data: bookings = [], isLoading: bookingsLoading } = useBookings(startStr, endStr);
+  const continuedStayIds = useContinuedStaySet(bookings);
   const { data: blockedDates = [] } = useBlockedDates(startStr, endStr);
   const blockDate = useBlockDate();
   const unblockDate = useUnblockDate();
@@ -631,14 +633,14 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0.5 h-[4px] bg-primary rounded-full" />
                                   )}
                                   <div className={cn("rounded-full overflow-hidden", getBookingColor(booking))}>
-                                    <BookingCell booking={booking} />
+                                    <BookingCell booking={booking} isContinuedStay={continuedStayIds.has(booking.id)} />
                                   </div>
                                   {connectorBelow && (
                                     <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0.5 h-[4px] bg-primary rounded-full" />
                                   )}
                                 </td>
                               </TooltipTrigger>
-                              <BookingTooltip booking={booking} />
+                              <BookingTooltip booking={booking} isContinuedStay={continuedStayIds.has(booking.id)} />
                             </Tooltip>
                           );
                         }
@@ -657,14 +659,14 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                                   <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0.5 h-[4px] bg-primary rounded-full" />
                                 )}
                                 <div className={cn("rounded-full overflow-hidden", getBookingColor(booking))}>
-                                  <BookingCell booking={booking} />
+                                  <BookingCell booking={booking} isContinuedStay={continuedStayIds.has(booking.id)} />
                                 </div>
                                 {connectorBelow && (
                                   <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0.5 h-[4px] bg-primary rounded-full" />
                                 )}
                               </td>
                             </TooltipTrigger>
-                            <BookingTooltip booking={booking} />
+                            <BookingTooltip booking={booking} isContinuedStay={continuedStayIds.has(booking.id)} />
                           </Tooltip>
                         );
                       }
@@ -906,7 +908,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                                       </div>
                                     </div>
                                   </TooltipTrigger>
-                                  <BookingTooltip booking={booking} />
+                                  <BookingTooltip booking={booking} isContinuedStay={continuedStayIds.has(booking.id)} />
                                 </Tooltip>
                               )}
                             </td>
@@ -981,13 +983,14 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
   );
 }
 
-function BookingCell({ booking }: { booking: Booking }) {
+function BookingCell({ booking, isContinuedStay }: { booking: Booking; isContinuedStay?: boolean }) {
   const isGrouped = !!(booking as any).booking_group_id;
   const hasDaytour = (booking as any).daytour_fee > 0 || (booking as any).daytour || (booking as any).is_daytour_booking;
   return (
     <div className="relative px-2 flex items-center gap-1 truncate h-[22px]">
       <span className={cn("h-2 w-2 rounded-full shrink-0", getPaymentDotColor(booking.payment_status))} />
       {isGrouped && <Link2 className="h-2 w-2 text-background/70 shrink-0" />}
+      {isContinuedStay && <RefreshCw className="h-2 w-2 text-background/70 shrink-0" />}
       <span className="text-[9px] text-background font-medium truncate leading-none">{booking.guest_name}</span>
       <span className="text-[9px] text-background/60 shrink-0 leading-none">{booking.pax}</span>
       {booking.pets && <PawPrint className="h-2 w-2 text-background/60 shrink-0" />}
@@ -1001,7 +1004,7 @@ function BookingCell({ booking }: { booking: Booking }) {
   );
 }
 
-function BookingTooltip({ booking }: { booking: Booking }) {
+function BookingTooltip({ booking, isContinuedStay }: { booking: Booking; isContinuedStay?: boolean }) {
   return (
     <TooltipContent
       side="bottom"
@@ -1038,6 +1041,11 @@ function BookingTooltip({ booking }: { booking: Booking }) {
         <div className="text-xs text-foreground font-medium">
           ₱{booking.total_amount.toLocaleString()}
         </div>
+        {isContinuedStay && (
+          <div className="flex items-center gap-1 text-[9px] text-ocean font-medium">
+            <RefreshCw className="h-2.5 w-2.5" /> Continued Stay
+          </div>
+        )}
         {(booking as any).booking_group_id && (
           <div className="flex items-center gap-1 text-[9px] text-primary font-medium">
             <Link2 className="h-2.5 w-2.5" /> Combined Booking
