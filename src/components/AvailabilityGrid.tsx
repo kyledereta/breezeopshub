@@ -134,6 +134,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
 
   const { data: units = [], isLoading: unitsLoading } = useUnits();
   const { data: bookings = [], isLoading: bookingsLoading } = useBookings(startStr, endStr);
+  const continuedStayIds = useContinuedStaySet(bookings);
   const { data: blockedDates = [] } = useBlockedDates(startStr, endStr);
   const blockDate = useBlockDate();
   const unblockDate = useUnblockDate();
@@ -982,13 +983,14 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
   );
 }
 
-function BookingCell({ booking }: { booking: Booking }) {
+function BookingCell({ booking, isContinuedStay }: { booking: Booking; isContinuedStay?: boolean }) {
   const isGrouped = !!(booking as any).booking_group_id;
   const hasDaytour = (booking as any).daytour_fee > 0 || (booking as any).daytour || (booking as any).is_daytour_booking;
   return (
     <div className="relative px-2 flex items-center gap-1 truncate h-[22px]">
       <span className={cn("h-2 w-2 rounded-full shrink-0", getPaymentDotColor(booking.payment_status))} />
       {isGrouped && <Link2 className="h-2 w-2 text-background/70 shrink-0" />}
+      {isContinuedStay && <RefreshCw className="h-2 w-2 text-background/70 shrink-0" />}
       <span className="text-[9px] text-background font-medium truncate leading-none">{booking.guest_name}</span>
       <span className="text-[9px] text-background/60 shrink-0 leading-none">{booking.pax}</span>
       {booking.pets && <PawPrint className="h-2 w-2 text-background/60 shrink-0" />}
