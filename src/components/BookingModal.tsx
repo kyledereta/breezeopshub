@@ -2666,8 +2666,9 @@ export function BookingModal({
             onClick={() => {
               setShowGroupPrompt(false);
               if (matchingGroupBooking && pendingSubmitValues) {
-                setJoinGroupTarget({ id: matchingGroupBooking.id, booking_group_id: matchingGroupBooking.booking_group_id });
-                onSubmit(pendingSubmitValues);
+                const target = { id: matchingGroupBooking.id, booking_group_id: matchingGroupBooking.booking_group_id };
+                setJoinGroupTarget(target);
+                onSubmit(pendingSubmitValues, target);
                 setPendingSubmitValues(null);
               }
               setMatchingGroupBooking(null);
