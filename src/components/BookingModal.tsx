@@ -560,6 +560,8 @@ export function BookingModal({
 
    // Don't override Airbnb Paid or Refunded
     if (watchPaymentStatus === "Airbnb Paid" || watchPaymentStatus === "Refunded") return;
+  // Track if user chose to join an existing group
+  const [joinGroupTarget, setJoinGroupTarget] = useState<{ id: string; booking_group_id: string | null } | null>(null);
 
 
 
