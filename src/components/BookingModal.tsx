@@ -2603,6 +2603,61 @@ export function BookingModal({
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Group Booking Detection Prompt */}
+    <Dialog open={showGroupPrompt} onOpenChange={(o) => { if (!o) { setShowGroupPrompt(false); setMatchingGroupBooking(null); setPendingSubmitValues(null); } }}>
+      <DialogContent className="bg-card border-border max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="text-foreground flex items-center gap-2">
+            <Link2 className="h-5 w-5 text-primary" />
+            Existing Booking Detected
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2 text-sm text-muted-foreground">
+          <p>
+            <span className="font-medium text-foreground">{pendingSubmitValues?.guest_name}</span> already has a booking
+            {matchingGroupBooking ? ` (${matchingGroupBooking.booking_ref})` : ""} on overlapping dates
+            {matchingGroupBooking ? ` (${matchingGroupBooking.check_in} → ${matchingGroupBooking.check_out})` : ""}.
+          </p>
+          {(() => {
+            const unitName = matchingGroupBooking?.unit_id ? units.find(u => u.id === matchingGroupBooking.unit_id)?.name : null;
+            return unitName ? <p>Unit: <span className="font-medium text-foreground">{unitName}</span></p> : null;
+          })()}
+          <p className="text-foreground font-medium">Would you like to add this as a combined/grouped booking?</p>
+        </div>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button
+            variant="ghost"
+            className="text-muted-foreground"
+            onClick={() => {
+              setShowGroupPrompt(false);
+              setMatchingGroupBooking(null);
+              setJoinGroupTarget(null);
+              if (pendingSubmitValues) {
+                onSubmit(pendingSubmitValues);
+                setPendingSubmitValues(null);
+              }
+            }}
+          >
+            No, Create Separate
+          </Button>
+          <Button
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+            onClick={() => {
+              setShowGroupPrompt(false);
+              if (matchingGroupBooking && pendingSubmitValues) {
+                setJoinGroupTarget({ id: matchingGroupBooking.id, booking_group_id: matchingGroupBooking.booking_group_id });
+                onSubmit(pendingSubmitValues);
+                setPendingSubmitValues(null);
+              }
+              setMatchingGroupBooking(null);
+            }}
+          >
+            Yes, Add to Group
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
     </>
   );
 }
