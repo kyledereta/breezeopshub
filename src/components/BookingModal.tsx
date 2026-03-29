@@ -773,7 +773,8 @@ export function BookingModal({
     onSubmit(values);
   }
 
-  async function onSubmit(values: BookingFormValues) {
+  async function onSubmit(values: BookingFormValues, overrideJoinTarget?: { id: string; booking_group_id: string | null } | null) {
+    const effectiveJoinTarget = overrideJoinTarget !== undefined ? overrideJoinTarget : joinGroupTarget;
     try {
       const payload = {
         guest_name: values.guest_name,
