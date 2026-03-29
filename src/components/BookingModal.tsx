@@ -2705,6 +2705,44 @@ export function BookingModal({
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Nested BookingModal for adding a unit to an existing group */}
+    {isEditing && booking && (booking as any).booking_group_id && (
+      <BookingModal
+        open={showAddUnitToGroupModal}
+        onOpenChange={(o) => {
+          setShowAddUnitToGroupModal(o);
+          if (!o) {
+            // Refresh group siblings after closing
+            supabase
+              .from("bookings")
+              .select("id, unit_id, is_primary")
+              .eq("booking_group_id", (booking as any).booking_group_id)
+              .is("deleted_at", null)
+              .then(({ data }) => {
+                if (data) {
+                  setGroupSiblings(data.filter((b) => b.id !== booking.id).map((b) => ({
+                    id: b.id,
+                    unit_id: b.unit_id || "",
+                    is_primary: b.is_primary,
+                  })));
+                }
+              });
+            queryClient.invalidateQueries({ queryKey: ["bookings"] });
+          }
+        }}
+        groupContext={{
+          booking_group_id: (booking as any).booking_group_id,
+          parentBookingId: booking.id,
+          guest_name: form.getValues("guest_name"),
+          check_in: form.getValues("check_in"),
+          check_out: form.getValues("check_out"),
+          email: form.getValues("email") || undefined,
+          phone: form.getValues("phone") || undefined,
+          booking_source: form.getValues("booking_source") || undefined,
+        }}
+      />
+    )}
     </>
   );
 }
