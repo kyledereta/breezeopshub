@@ -562,6 +562,14 @@ export function BookingModal({
     watchOtherExtrasFee, watchPaymentStatus, form,
   ]);
 
+  // Auto-set source to Airbnb and remaining paid when "Airbnb Paid" is selected
+  useEffect(() => {
+    if (watchPaymentStatus === "Airbnb Paid") {
+      form.setValue("booking_source", "Airbnb");
+      setRemainingPaid(true);
+    }
+  }, [watchPaymentStatus, form]);
+
   useEffect(() => {
     if (!open) return;
 
