@@ -796,26 +796,14 @@ export function BookingModal({
 
       if (isEditing) {
         await updateBooking.mutateAsync({ id: booking.id, ...fullPayload });
-        // Sync secondary bookings in the same group
-        if ((booking as any).booking_group_id && (booking as any).is_primary) {
-          const sharedFields = {
-            guest_name: fullPayload.guest_name,
-            guest_id: fullPayload.guest_id,
-            check_in: fullPayload.check_in,
-            check_out: fullPayload.check_out,
-            pax: fullPayload.pax,
-            booking_status: fullPayload.booking_status,
-            booking_source: fullPayload.booking_source,
-            email: fullPayload.email,
-            phone: fullPayload.phone,
-            notes: fullPayload.notes,
-            payment_status: fullPayload.payment_status,
-          };
+        // Sync ALL bookings in the same group (regardless of which one is edited)
+        if ((booking as any).booking_group_id) {
+          const { unit_id, ...syncPayload } = fullPayload;
           await supabase
             .from("bookings")
-            .update(sharedFields)
+            .update(syncPayload)
             .eq("booking_group_id", (booking as any).booking_group_id)
-            .eq("is_primary", false);
+            .neq("id", booking.id);
         }
         // Log audit trail
         if (originalValuesRef.current) {
