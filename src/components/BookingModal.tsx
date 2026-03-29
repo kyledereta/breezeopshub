@@ -64,7 +64,7 @@ const bookingSchema = z.object({
   unit_id: z.string().optional().or(z.literal("")),
   check_in: z.string().min(1, "Check-in date is required"),
   check_out: z.string().min(1, "Check-out date is required"),
-  pax: z.coerce.number().min(1).max(50),
+  pax: z.coerce.number().min(0).max(50),
   total_amount: z.coerce.number().min(0),
   deposit_paid: z.coerce.number().min(0),
   deposit_deducted_amount: z.coerce.number().min(0),
@@ -735,16 +735,34 @@ export function BookingModal({
       if (guestName && values.check_in && values.check_out) {
         const { data: matchingBookings } = await supabase
           .from("bookings")
-          .select("id, booking_group_id, unit_id, check_in, check_out, booking_ref")
+          .select("id, booking_group_id, unit_id, check_in, check_out, booking_ref, guest_name")
           .ilike("guest_name", guestName)
           .not("booking_status", "eq", "Cancelled")
           .is("deleted_at", null)
           .lt("check_in", values.check_out)
-          .gt("check_out", values.check_in)
-          .limit(1);
+          .gt("check_out", values.check_in);
 
         if (matchingBookings && matchingBookings.length > 0) {
-          setMatchingGroupBooking(matchingBookings[0]);
+          const match = matchingBookings[0];
+          // If match is part of a group, fetch ALL units in that group
+          let allGroupUnits: string[] = [];
+          if (match.booking_group_id) {
+            const { data: groupBookings } = await supabase
+              .from("bookings")
+              .select("unit_id")
+              .eq("booking_group_id", match.booking_group_id)
+              .is("deleted_at", null);
+            if (groupBookings) {
+              allGroupUnits = groupBookings
+                .map((gb) => gb.unit_id)
+                .filter(Boolean)
+                .map((uid) => units.find((u) => u.id === uid)?.name ?? "Unknown");
+            }
+          } else {
+            const unitName = match.unit_id ? units.find((u) => u.id === match.unit_id)?.name : null;
+            if (unitName) allGroupUnits = [unitName];
+          }
+          setMatchingGroupBooking({ ...match, _groupUnitNames: allGroupUnits } as any);
           setPendingSubmitValues(values);
           setShowGroupPrompt(true);
           return;
