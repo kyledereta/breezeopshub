@@ -716,7 +716,7 @@ export function BookingModal({
     }
   }, [open, booking, defaultUnitId, defaultDate, prefillSubmission, form]);
 
-  function handleFormSubmit(values: BookingFormValues) {
+  async function handleFormSubmit(values: BookingFormValues) {
     // Check for overlap/unavailable units - show confirmation if needed
     const allUnitIds = [values.unit_id, ...additionalUnitIds].filter(Boolean);
     const unavailableUnits = units.filter((u) => allUnitIds.includes(u.id) && u.unit_status !== "Available");
@@ -726,6 +726,30 @@ export function BookingModal({
       setShowOverlapConfirm(true);
       return;
     }
+
+    // When creating (not editing), check if same guest name has an existing booking on overlapping dates
+    if (!isEditing) {
+      const guestName = values.guest_name.trim();
+      if (guestName && values.check_in && values.check_out) {
+        const { data: matchingBookings } = await supabase
+          .from("bookings")
+          .select("id, booking_group_id, unit_id, check_in, check_out, booking_ref")
+          .ilike("guest_name", guestName)
+          .not("booking_status", "eq", "Cancelled")
+          .is("deleted_at", null)
+          .lt("check_in", values.check_out)
+          .gt("check_out", values.check_in)
+          .limit(1);
+
+        if (matchingBookings && matchingBookings.length > 0) {
+          setMatchingGroupBooking(matchingBookings[0]);
+          setPendingSubmitValues(values);
+          setShowGroupPrompt(true);
+          return;
+        }
+      }
+    }
+
     onSubmit(values);
   }
 
