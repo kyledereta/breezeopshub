@@ -640,7 +640,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                                   )}
                                 </td>
                               </TooltipTrigger>
-                              <BookingTooltip booking={booking} />
+                              <BookingTooltip booking={booking} isContinuedStay={continuedStayIds.has(booking.id)} />
                             </Tooltip>
                           );
                         }
@@ -666,7 +666,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                                 )}
                               </td>
                             </TooltipTrigger>
-                            <BookingTooltip booking={booking} />
+                            <BookingTooltip booking={booking} isContinuedStay={continuedStayIds.has(booking.id)} />
                           </Tooltip>
                         );
                       }
@@ -908,7 +908,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                                       </div>
                                     </div>
                                   </TooltipTrigger>
-                                  <BookingTooltip booking={booking} />
+                                  <BookingTooltip booking={booking} isContinuedStay={continuedStayIds.has(booking.id)} />
                                 </Tooltip>
                               )}
                             </td>
