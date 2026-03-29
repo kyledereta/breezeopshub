@@ -110,8 +110,8 @@ function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, group
             <BedDouble className="h-3 w-3 shrink-0" />
             <span className="truncate">{groupUnitNames && groupUnitNames.length > 1 ? groupUnitNames.join(" + ") : unitName}</span>
           </span>
-          <span className="shrink-0">{booking.pax} PAX</span>
-          <span className="shrink-0">₱{booking.total_amount.toLocaleString()}</span>
+          <span className="shrink-0">{groupTotalPax !== undefined ? groupTotalPax : booking.pax} PAX</span>
+          <span className="shrink-0">₱{(groupTotalAmount !== undefined ? groupTotalAmount : booking.total_amount).toLocaleString()}</span>
           <span className="shrink-0">
             {format(parseISO(booking.check_in), "MMM d")} → {format(parseISO(booking.check_out), "MMM d")}
           </span>
