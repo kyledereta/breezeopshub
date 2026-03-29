@@ -152,6 +152,7 @@ function GroupedGuestCard({ primaryBooking, siblingBookings, unitMap, groupUnitN
             noLateCheckout={!!primaryBooking.unit_id && !!noLateCheckoutUnitIds?.has(primaryBooking.unit_id)}
             groupBookingId={primaryBooking.booking_group_id}
             groupUnitNames={groupUnitNames}
+            isContinuedStay={continuedStayIds?.has(primaryBooking.id)}
           />
         </div>
         {siblingBookings.length > 0 && (
