@@ -262,6 +262,7 @@ export default function TodayPage() {
       e.preventDefault();
       setDragOver(null);
       const bookingId = e.dataTransfer.getData("bookingId");
+      const groupId = e.dataTransfer.getData("groupId");
       if (!bookingId) return;
 
       let newStatus: string | null = null;
@@ -271,23 +272,46 @@ export default function TodayPage() {
 
       if (!newStatus) return;
 
-      const booking = allBookings.find((b) => b.id === bookingId);
-      if (!booking || booking.booking_status === newStatus) return;
-
-      if (zone === "departures") {
-        setManualDepartureIds((prev) => (prev.includes(bookingId) ? prev : [...prev, bookingId]));
-        setClearedDepartureIds((prev) => prev.filter((id) => id !== bookingId));
+      // Collect all booking IDs to update (group or single)
+      const idsToUpdate: string[] = [];
+      if (groupId) {
+        const groupBookings = allBookings.filter((b) => (b as any).booking_group_id === groupId);
+        for (const gb of groupBookings) {
+          if (gb.booking_status !== newStatus) idsToUpdate.push(gb.id);
+        }
       } else {
-        setManualDepartureIds((prev) => prev.filter((id) => id !== bookingId));
+        const booking = allBookings.find((b) => b.id === bookingId);
+        if (!booking || booking.booking_status === newStatus) return;
+        idsToUpdate.push(bookingId);
       }
 
-      updateBooking.mutate(
-        { id: bookingId, booking_status: newStatus as any },
-        {
-          onSuccess: () => toast.success(`${booking.guest_name} → ${newStatus}`),
-          onError: (err) => toast.error(`Failed to update: ${err.message}`),
+      if (idsToUpdate.length === 0) return;
+
+      const booking = allBookings.find((b) => b.id === bookingId)!;
+
+      if (zone === "departures") {
+        for (const id of idsToUpdate) {
+          setManualDepartureIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+          setClearedDepartureIds((prev) => prev.filter((cid) => cid !== id));
         }
-      );
+      } else {
+        setManualDepartureIds((prev) => prev.filter((id) => !idsToUpdate.includes(id)));
+      }
+
+      // Update all bookings in the group
+      for (const id of idsToUpdate) {
+        updateBooking.mutate(
+          { id, booking_status: newStatus as any },
+          {
+            onSuccess: id === bookingId
+              ? () => toast.success(`${booking.guest_name}${idsToUpdate.length > 1 ? ` (${idsToUpdate.length} units)` : ""} → ${newStatus}`)
+              : undefined,
+            onError: id === bookingId
+              ? (err) => toast.error(`Failed to update: ${err.message}`)
+              : undefined,
+          }
+        );
+      }
     },
     [allBookings, updateBooking]
   );
