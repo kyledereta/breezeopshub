@@ -543,10 +543,10 @@ export default function TodayPage() {
                 onDragOver={(e) => handleDragOver("inhouse", e)}
                 onDragLeave={handleDragLeave}
               >
-                {inHouse.length === 0 ? (
+                {inHouseDisplay.length === 0 ? (
                   <EmptyState text="No guests in-house" />
                 ) : (
-                  inHouse.map((b) => b.booking_group_id ? (
+                  inHouseDisplay.map((b) => b.booking_group_id ? (
                     <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} draggable onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} />
                   ) : (
                     <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable onEdit={() => setEditingBooking(b)} noLateCheckout={!!b.unit_id && noLateCheckoutUnitIds.has(b.unit_id)} />
