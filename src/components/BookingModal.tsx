@@ -135,6 +135,17 @@ export interface SubmissionPrefill {
   submissionId: string;
 }
 
+export interface GroupContext {
+  booking_group_id: string;
+  parentBookingId: string;
+  guest_name: string;
+  check_in: string;
+  check_out: string;
+  email?: string;
+  phone?: string;
+  booking_source?: string;
+}
+
 interface BookingModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -143,6 +154,7 @@ interface BookingModalProps {
   defaultDate?: Date;
   prefillSubmission?: SubmissionPrefill | null;
   onCreated?: (booking: { id: string; booking_ref: string }) => void;
+  groupContext?: GroupContext | null;
 }
 
 export function BookingModal({
@@ -153,6 +165,7 @@ export function BookingModal({
   defaultDate,
   prefillSubmission,
   onCreated,
+  groupContext,
 }: BookingModalProps) {
   const { data: units = [] } = useUnits();
   const groupedUnits = useMemo(() => groupUnitsByArea(units), [units]);
@@ -194,6 +207,8 @@ export function BookingModal({
   const [remainingPaid, setRemainingPaid] = useState(false);
   // Track if user chose to join an existing group
   const [joinGroupTarget, setJoinGroupTarget] = useState<{ id: string; booking_group_id: string | null } | null>(null);
+  // Nested modal for adding a unit to an existing group
+  const [showAddUnitToGroupModal, setShowAddUnitToGroupModal] = useState(false);
 
   const toggleExtraPaid = (key: string) => {
     setExtrasPaidStatus((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -305,9 +320,9 @@ export function BookingModal({
   const selectedUnit = useMemo(() => units.find((u) => u.id === watchUnitId), [units, watchUnitId]);
   const extraPax = combinedMaxPax > 0 ? Math.max(0, watchPax - combinedMaxPax) : 0;
 
-  // Auto-set pax to unit's max_pax when unit is selected (new bookings only)
+  // Auto-set pax to unit's max_pax when unit is selected (new bookings only, not when adding to group)
   useEffect(() => {
-    if (isEditing) return;
+    if (isEditing || groupContext) return;
     if (combinedMaxPax > 0) {
       form.setValue("pax", combinedMaxPax);
     }
@@ -660,16 +675,19 @@ export function BookingModal({
       setRemainingPaid((booking as any).remaining_paid ?? false);
     } else {
       const pf = prefillSubmission;
-      const guestName = pf
+      const gc = groupContext;
+      const guestName = gc
+        ? gc.guest_name
+        : pf
         ? (pf.facebook_name ? `${pf.guest_name} (${pf.facebook_name})` : pf.guest_name)
         : "";
       originalValuesRef.current = null;
       form.reset({
         guest_name: guestName,
         unit_id: pf?.unit_id ?? defaultUnitId ?? "",
-        check_in: pf?.check_in ?? (defaultDate ? format(defaultDate, "yyyy-MM-dd") : ""),
-        check_out: pf?.check_out ?? "",
-        pax: pf?.pax ?? 1,
+        check_in: gc?.check_in ?? pf?.check_in ?? (defaultDate ? format(defaultDate, "yyyy-MM-dd") : ""),
+        check_out: gc?.check_out ?? pf?.check_out ?? "",
+        pax: gc ? 0 : (pf?.pax ?? 1),
         total_amount: 0,
         deposit_paid: 0,
         deposit_deducted_amount: 0,
@@ -681,10 +699,10 @@ export function BookingModal({
         discount_reason: "",
         payment_status: pf ? "Partial DP" : "Unpaid",
         booking_status: "Confirmed",
-        booking_source: pf ? "Facebook Direct" : "Other",
+        booking_source: gc?.booking_source ?? (pf ? "Facebook Direct" : "Other"),
         mode_of_payment: "",
-        email: pf?.email ?? "",
-        phone: pf?.phone ?? "",
+        email: gc?.email ?? pf?.email ?? "",
+        phone: gc?.phone ?? pf?.phone ?? "",
         notes: "",
         utensil_rental: false,
         pets: pf?.has_pet ?? false,
@@ -711,12 +729,12 @@ export function BookingModal({
       });
       setAdditionalUnitIds([]);
       setAdditionalPet(false);
-      setBirthMonthFilter(pf?.birthday_month ?? 0);
+      setBirthMonthFilter(gc ? 0 : (pf?.birthday_month ?? 0));
       setDpModeOfPayment(pf?.payment_method ?? "");
       setRemainingModeOfPayment("");
       setRemainingPaid(false);
     }
-  }, [open, booking, defaultUnitId, defaultDate, prefillSubmission, form]);
+  }, [open, booking, defaultUnitId, defaultDate, prefillSubmission, groupContext, form]);
 
   async function handleFormSubmit(values: BookingFormValues) {
     // Check for overlap/unavailable units - show confirmation if needed
@@ -726,6 +744,13 @@ export function BookingModal({
     if (conflictWarning || unavailableUnits.length > 0) {
       setPendingSubmitValues(values);
       setShowOverlapConfirm(true);
+      return;
+    }
+
+    // If groupContext is set, skip duplicate detection and auto-join the group
+    if (groupContext) {
+      const target = { id: groupContext.parentBookingId, booking_group_id: groupContext.booking_group_id };
+      onSubmit(values, target);
       return;
     }
 
@@ -960,27 +985,15 @@ export function BookingModal({
               .update({ booking_group_id: groupId, is_primary: true } as any)
               .eq("id", effectiveJoinTarget.id);
           }
-          // Create new booking as secondary in the group
+          // Create new booking as secondary in the group — keeps its own total_amount
           const createdBooking = await createBooking.mutateAsync({
             ...fullPayload,
             unit_id: values.unit_id || null,
             booking_group_id: groupId,
             is_primary: false,
-            total_amount: 0,
             deposit_paid: 0,
             security_deposit: 0,
             discount_given: 0,
-            extra_pax_fee: 0,
-            utensil_rental_fee: 0,
-            karaoke_fee: 0,
-            pet_fee: 0,
-            kitchen_use_fee: 0,
-            water_jug_fee: 0,
-            towel_rent_fee: 0,
-            bonfire_fee: 0,
-            extension_fee: 0,
-            daytour_fee: 0,
-            other_extras_fee: 0,
           } as any);
           toast.success("Booking added to existing group");
           setJoinGroupTarget(null);
@@ -1378,7 +1391,20 @@ export function BookingModal({
                     })}
                   </div>
                 )}
-                {availableUnitsForAdd.length > 0 && (
+                {/* In edit mode with a group, open nested booking form; in create mode, use inline popover */}
+                {isEditing && (booking as any)?.booking_group_id && availableUnitsForAdd.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="text-xs border-dashed border-border text-muted-foreground hover:text-primary"
+                    onClick={() => setShowAddUnitToGroupModal(true)}
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Add another unit
+                  </Button>
+                )}
+                {(!isEditing || !(booking as any)?.booking_group_id) && availableUnitsForAdd.length > 0 && (
                   <Popover open={addUnitPopoverOpen} onOpenChange={setAddUnitPopoverOpen}>
                     <PopoverTrigger asChild>
                       <Button
@@ -2679,6 +2705,44 @@ export function BookingModal({
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Nested BookingModal for adding a unit to an existing group */}
+    {isEditing && booking && (booking as any).booking_group_id && (
+      <BookingModal
+        open={showAddUnitToGroupModal}
+        onOpenChange={(o) => {
+          setShowAddUnitToGroupModal(o);
+          if (!o) {
+            // Refresh group siblings after closing
+            supabase
+              .from("bookings")
+              .select("id, unit_id, is_primary")
+              .eq("booking_group_id", (booking as any).booking_group_id)
+              .is("deleted_at", null)
+              .then(({ data }) => {
+                if (data) {
+                  setGroupSiblings(data.filter((b) => b.id !== booking.id).map((b) => ({
+                    id: b.id,
+                    unit_id: b.unit_id || "",
+                    is_primary: b.is_primary,
+                  })));
+                }
+              });
+            queryClient.invalidateQueries({ queryKey: ["bookings"] });
+          }
+        }}
+        groupContext={{
+          booking_group_id: (booking as any).booking_group_id,
+          parentBookingId: booking.id,
+          guest_name: form.getValues("guest_name"),
+          check_in: form.getValues("check_in"),
+          check_out: form.getValues("check_out"),
+          email: form.getValues("email") || undefined,
+          phone: form.getValues("phone") || undefined,
+          booking_source: form.getValues("booking_source") || undefined,
+        }}
+      />
+    )}
     </>
   );
 }
