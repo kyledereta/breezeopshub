@@ -234,10 +234,17 @@ export default function TodayPage() {
 
     for (const b of allBookings) {
       if (b.booking_status === "Cancelled") continue;
-      // For grouped bookings, only show the primary in dashboard sections
-      if (b.booking_group_id && b.is_primary === false) continue;
       const ci = b.check_in;
       const co = b.check_out;
+      const isSecondaryGroup = b.booking_group_id && b.is_primary === false;
+
+      // In-house counts ALL bookings (including secondary) for accurate occupancy
+      if (b.booking_status === "Checked In" && ci <= todayStr && co >= todayStr) {
+        inHouse.push(b);
+      }
+
+      // Skip secondary grouped bookings for display sections only
+      if (isSecondaryGroup) continue;
 
       if (ci === todayStr && b.booking_status !== "Checked In" && b.booking_status !== "Checked Out") {
         checkIns.push(b);
@@ -245,12 +252,8 @@ export default function TodayPage() {
       if (co === todayStr && b.booking_status === "Checked Out") {
         baseCheckOuts.push(b);
       }
-      // Guests due to depart today but still checked in
       if (co === todayStr && b.booking_status === "Checked In") {
         dueDepartures.push(b);
-      }
-      if (b.booking_status === "Checked In" && ci <= todayStr && co >= todayStr) {
-        inHouse.push(b);
       }
       if (b.payment_status === "Unpaid" || b.payment_status === "Partial DP" || hasUnpaidExtras(b)) {
         pendingBalances.push(b);
@@ -394,8 +397,11 @@ export default function TodayPage() {
 
   const handleDragLeave = useCallback(() => setDragOver(null), []);
 
-  const totalPaxInHouse = inHouse.reduce((sum, b) => sum + b.pax, 0);
+  // Pax: only count from primary bookings to avoid double-counting grouped guests
+  const totalPaxInHouse = inHouse.filter((b) => b.is_primary).reduce((sum, b) => sum + b.pax, 0);
   const occupancyRate = units.length > 0 ? Math.round((inHouse.length / units.length) * 100) : 0;
+  // Display list: only show primary bookings (secondary ones appear via expand)
+  const inHouseDisplay = inHouse.filter((b) => !b.booking_group_id || b.is_primary);
   const pendingTotal = pendingBalances.reduce((s, b) => {
     const balance = b.total_amount - b.deposit_paid;
     const unpaidExtrasAmt = getUnpaidExtrasTotal(b);
@@ -537,10 +543,10 @@ export default function TodayPage() {
                 onDragOver={(e) => handleDragOver("inhouse", e)}
                 onDragLeave={handleDragLeave}
               >
-                {inHouse.length === 0 ? (
+                {inHouseDisplay.length === 0 ? (
                   <EmptyState text="No guests in-house" />
                 ) : (
-                  inHouse.map((b) => b.booking_group_id ? (
+                  inHouseDisplay.map((b) => b.booking_group_id ? (
                     <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} draggable onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} />
                   ) : (
                     <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable onEdit={() => setEditingBooking(b)} noLateCheckout={!!b.unit_id && noLateCheckoutUnitIds.has(b.unit_id)} />
