@@ -95,9 +95,9 @@ function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, group
           </Badge>
         </div>
         <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground flex-wrap">
-          <span className="flex items-center gap-1 shrink-0">
-            <BedDouble className="h-3 w-3" />
-            {groupUnitNames && groupUnitNames.length > 1 ? groupUnitNames.join(" + ") : unitName}
+          <span className="flex items-center gap-1 min-w-0">
+            <BedDouble className="h-3 w-3 shrink-0" />
+            <span className="truncate">{groupUnitNames && groupUnitNames.length > 1 ? groupUnitNames.join(" + ") : unitName}</span>
           </span>
           <span className="shrink-0">{booking.pax} PAX</span>
           <span className="shrink-0">₱{booking.total_amount.toLocaleString()}</span>
