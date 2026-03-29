@@ -292,10 +292,10 @@ export function BookingModal({
 
   // Get combined max_pax across all selected units
   const combinedMaxPax = useMemo(() => {
-    const allIds = [watchUnitId, ...additionalUnitIds].filter(Boolean);
+    const allIds = [watchUnitId, ...additionalUnitIds, ...groupSiblings.map((s) => s.unit_id)].filter(Boolean);
     const selectedUnits = units.filter((u) => allIds.includes(u.id));
     return selectedUnits.reduce((sum, u) => sum + u.max_pax, 0);
-  }, [units, watchUnitId, additionalUnitIds]);
+  }, [units, watchUnitId, additionalUnitIds, groupSiblings]);
 
   const selectedUnit = useMemo(() => units.find((u) => u.id === watchUnitId), [units, watchUnitId]);
   const extraPax = combinedMaxPax > 0 ? Math.max(0, watchPax - combinedMaxPax) : 0;
