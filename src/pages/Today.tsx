@@ -203,9 +203,13 @@ function GroupedGuestCard({ primaryBooking, siblingBookings, unitMap, groupUnitN
             </span>
             <span className="shrink-0">{groupTotalPax} PAX</span>
             <span className="shrink-0">₱{groupTotalAmount.toLocaleString()}</span>
-            <span className="shrink-0">
-              {format(parseISO(primaryBooking.check_in), "MMM d")} → {format(parseISO(primaryBooking.check_out), "MMM d")}
-            </span>
+            {primaryBooking.is_daytour_booking ? (
+              <span className="shrink-0">{format(parseISO(primaryBooking.check_in), "MMM d")}</span>
+            ) : (
+              <span className="shrink-0">
+                {format(parseISO(primaryBooking.check_in), "MMM d")} → {format(parseISO(primaryBooking.check_out), "MMM d")}
+              </span>
+            )}
           </div>
         </div>
         <Button
