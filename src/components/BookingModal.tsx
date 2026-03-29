@@ -165,6 +165,9 @@ export function BookingModal({
   const [conflictWarning, setConflictWarning] = useState<string | null>(null);
   const [showOverlapConfirm, setShowOverlapConfirm] = useState(false);
   const [pendingSubmitValues, setPendingSubmitValues] = useState<BookingFormValues | null>(null);
+  // Duplicate guest detection for group booking prompt
+  const [showGroupPrompt, setShowGroupPrompt] = useState(false);
+  const [matchingGroupBooking, setMatchingGroupBooking] = useState<{ id: string; booking_group_id: string | null; unit_id: string | null; check_in: string; check_out: string; booking_ref: string } | null>(null);
   const [unitSearch, setUnitSearch] = useState("");
   const [unitPopoverOpen, setUnitPopoverOpen] = useState(false);
   const [guestSuggestions, setGuestSuggestions] = useState<{ id: string; guest_name: string; phone: string | null; email: string | null; pets: boolean; birthday_month: number | null }[]>([]);
