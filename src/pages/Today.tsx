@@ -51,11 +51,13 @@ interface GuestCardProps {
   groupBookingId?: string | null;
   groupUnitNames?: string[];
   isContinuedStay?: boolean;
+  continuedStayInfo?: ContinuedStayInfo;
+  unitMap?: Map<string, string>;
   groupTotalAmount?: number;
   groupTotalPax?: number;
 }
 
-function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, groupBookingId, groupUnitNames, isContinuedStay, groupTotalAmount, groupTotalPax }: GuestCardProps) {
+function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, groupBookingId, groupUnitNames, isContinuedStay, continuedStayInfo, unitMap: cardUnitMap, groupTotalAmount, groupTotalPax }: GuestCardProps) {
   const [wasDragged, setWasDragged] = useState(false);
   const isGrouped = !!groupBookingId;
   return (
@@ -96,6 +98,16 @@ function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, group
             <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 bg-ocean/10 text-ocean border-ocean/30">
               <RefreshCw className="h-2.5 w-2.5 mr-1" />
               Continued
+              {continuedStayInfo && cardUnitMap && (
+                <span className="ml-1 font-normal">
+                  {continuedStayInfo.fromUnitId
+                    ? `from ${cardUnitMap.get(continuedStayInfo.fromUnitId) ?? "?"}`
+                    : ""}
+                  {continuedStayInfo.toUnitId
+                    ? `→ ${cardUnitMap.get(continuedStayInfo.toUnitId) ?? "?"}`
+                    : ""}
+                </span>
+              )}
             </Badge>
           )}
           {booking.is_daytour_booking && (
