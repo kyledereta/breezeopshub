@@ -165,6 +165,9 @@ export function BookingModal({
   const [conflictWarning, setConflictWarning] = useState<string | null>(null);
   const [showOverlapConfirm, setShowOverlapConfirm] = useState(false);
   const [pendingSubmitValues, setPendingSubmitValues] = useState<BookingFormValues | null>(null);
+  // Duplicate guest detection for group booking prompt
+  const [showGroupPrompt, setShowGroupPrompt] = useState(false);
+  const [matchingGroupBooking, setMatchingGroupBooking] = useState<{ id: string; booking_group_id: string | null; unit_id: string | null; check_in: string; check_out: string; booking_ref: string } | null>(null);
   const [unitSearch, setUnitSearch] = useState("");
   const [unitPopoverOpen, setUnitPopoverOpen] = useState(false);
   const [guestSuggestions, setGuestSuggestions] = useState<{ id: string; guest_name: string; phone: string | null; email: string | null; pets: boolean; birthday_month: number | null }[]>([]);
@@ -189,6 +192,8 @@ export function BookingModal({
   const [dpModeOfPayment, setDpModeOfPayment] = useState("");
   const [remainingModeOfPayment, setRemainingModeOfPayment] = useState("");
   const [remainingPaid, setRemainingPaid] = useState(false);
+  // Track if user chose to join an existing group
+  const [joinGroupTarget, setJoinGroupTarget] = useState<{ id: string; booking_group_id: string | null } | null>(null);
 
   const toggleExtraPaid = (key: string) => {
     setExtrasPaidStatus((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -196,7 +201,7 @@ export function BookingModal({
 
   // Load existing ID files when editing
   useEffect(() => {
-    if (!open) { setIdFiles([]); setExistingIds([]); setAdditionalUnitIds([]); setAdditionalPet(false); setBirthMonthFilter(0); setHasCar(false); setCarDetails([]); setExtrasPaidStatus({}); setGroupSiblings([]); return; }
+    if (!open) { setIdFiles([]); setExistingIds([]); setAdditionalUnitIds([]); setAdditionalPet(false); setBirthMonthFilter(0); setHasCar(false); setCarDetails([]); setExtrasPaidStatus({}); setGroupSiblings([]); setJoinGroupTarget(null); setMatchingGroupBooking(null); setShowGroupPrompt(false); return; }
     if (booking) {
       supabase.storage.from("guest-ids").list(booking.id).then(({ data }) => {
         if (data) setExistingIds(data.map((f) => `${booking.id}/${f.name}`));
@@ -557,6 +562,8 @@ export function BookingModal({
 
    // Don't override Airbnb Paid or Refunded
     if (watchPaymentStatus === "Airbnb Paid" || watchPaymentStatus === "Refunded") return;
+  // Track if user chose to join an existing group
+  const [joinGroupTarget, setJoinGroupTarget] = useState<{ id: string; booking_group_id: string | null } | null>(null);
 
 
 
@@ -713,7 +720,7 @@ export function BookingModal({
     }
   }, [open, booking, defaultUnitId, defaultDate, prefillSubmission, form]);
 
-  function handleFormSubmit(values: BookingFormValues) {
+  async function handleFormSubmit(values: BookingFormValues) {
     // Check for overlap/unavailable units - show confirmation if needed
     const allUnitIds = [values.unit_id, ...additionalUnitIds].filter(Boolean);
     const unavailableUnits = units.filter((u) => allUnitIds.includes(u.id) && u.unit_status !== "Available");
@@ -723,6 +730,30 @@ export function BookingModal({
       setShowOverlapConfirm(true);
       return;
     }
+
+    // When creating (not editing), check if same guest name has an existing booking on overlapping dates
+    if (!isEditing) {
+      const guestName = values.guest_name.trim();
+      if (guestName && values.check_in && values.check_out) {
+        const { data: matchingBookings } = await supabase
+          .from("bookings")
+          .select("id, booking_group_id, unit_id, check_in, check_out, booking_ref")
+          .ilike("guest_name", guestName)
+          .not("booking_status", "eq", "Cancelled")
+          .is("deleted_at", null)
+          .lt("check_in", values.check_out)
+          .gt("check_out", values.check_in)
+          .limit(1);
+
+        if (matchingBookings && matchingBookings.length > 0) {
+          setMatchingGroupBooking(matchingBookings[0]);
+          setPendingSubmitValues(values);
+          setShowGroupPrompt(true);
+          return;
+        }
+      }
+    }
+
     onSubmit(values);
   }
 
@@ -902,55 +933,99 @@ export function BookingModal({
         }
         toast.success("Booking updated");
       } else {
-        // Create one booking per selected unit (multi-unit support)
-        const allUnitIds = [values.unit_id, ...additionalUnitIds];
-        let createdBooking: any = null;
-        if (allUnitIds.length > 1) {
-          const groupId = crypto.randomUUID();
-          // Primary booking (first unit) holds all payment/total info
-          createdBooking = await createBooking.mutateAsync({
+        // Check if joining an existing group
+        if (joinGroupTarget) {
+          const groupId = joinGroupTarget.booking_group_id || crypto.randomUUID();
+          // If the target booking wasn't in a group yet, update it to become primary in the group
+          if (!joinGroupTarget.booking_group_id) {
+            await supabase
+              .from("bookings")
+              .update({ booking_group_id: groupId, is_primary: true } as any)
+              .eq("id", joinGroupTarget.id);
+          }
+          // Create new booking as secondary in the group
+          const createdBooking = await createBooking.mutateAsync({
             ...fullPayload,
-            unit_id: allUnitIds[0],
+            unit_id: values.unit_id || null,
             booking_group_id: groupId,
-            is_primary: true,
+            is_primary: false,
+            total_amount: 0,
+            deposit_paid: 0,
+            security_deposit: 0,
+            discount_given: 0,
+            extra_pax_fee: 0,
+            utensil_rental_fee: 0,
+            karaoke_fee: 0,
+            pet_fee: 0,
+            kitchen_use_fee: 0,
+            water_jug_fee: 0,
+            towel_rent_fee: 0,
+            bonfire_fee: 0,
+            extension_fee: 0,
+            daytour_fee: 0,
+            other_extras_fee: 0,
           } as any);
-          // Secondary bookings share dates/guest but zero out financials
-          for (const unitId of allUnitIds.slice(1)) {
-            await createBooking.mutateAsync({
-              ...fullPayload,
-              unit_id: unitId,
-              booking_group_id: groupId,
-              is_primary: false,
-              total_amount: 0,
-              deposit_paid: 0,
-              security_deposit: 0,
-              discount_given: 0,
-              extra_pax_fee: 0,
-              utensil_rental_fee: 0,
-              karaoke_fee: 0,
-              pet_fee: 0,
-              kitchen_use_fee: 0,
-              water_jug_fee: 0,
-              towel_rent_fee: 0,
-              bonfire_fee: 0,
-              extension_fee: 0,
-              daytour_fee: 0,
-              other_extras_fee: 0,
-            } as any);
+          toast.success("Booking added to existing group");
+          setJoinGroupTarget(null);
+          if (prefillSubmission && createdBooking) {
+            await supabase
+              .from("form_submissions")
+              .update({ status: "Approved", booking_id: createdBooking.id } as any)
+              .eq("id", prefillSubmission.submissionId);
+            queryClient.invalidateQueries({ queryKey: ["form_submissions"] });
+            onCreated?.({ id: createdBooking.id, booking_ref: createdBooking.booking_ref });
           }
         } else {
-          createdBooking = await createBooking.mutateAsync(fullPayload);
-        }
-        toast.success(allUnitIds.length > 1 ? `${allUnitIds.length} units booked as one group` : "Booking created");
+          // Create one booking per selected unit (multi-unit support)
+          const allUnitIds = [values.unit_id, ...additionalUnitIds];
+          let createdBooking: any = null;
+          if (allUnitIds.length > 1) {
+            const groupId = crypto.randomUUID();
+            // Primary booking (first unit) holds all payment/total info
+            createdBooking = await createBooking.mutateAsync({
+              ...fullPayload,
+              unit_id: allUnitIds[0],
+              booking_group_id: groupId,
+              is_primary: true,
+            } as any);
+            // Secondary bookings share dates/guest but zero out financials
+            for (const unitId of allUnitIds.slice(1)) {
+              await createBooking.mutateAsync({
+                ...fullPayload,
+                unit_id: unitId,
+                booking_group_id: groupId,
+                is_primary: false,
+                total_amount: 0,
+                deposit_paid: 0,
+                security_deposit: 0,
+                discount_given: 0,
+                extra_pax_fee: 0,
+                utensil_rental_fee: 0,
+                karaoke_fee: 0,
+                pet_fee: 0,
+                kitchen_use_fee: 0,
+                water_jug_fee: 0,
+                towel_rent_fee: 0,
+                bonfire_fee: 0,
+                extension_fee: 0,
+                daytour_fee: 0,
+                other_extras_fee: 0,
+              } as any);
+            }
+          } else {
+            createdBooking = await createBooking.mutateAsync(fullPayload);
+          }
+          toast.success(allUnitIds.length > 1 ? `${allUnitIds.length} units booked as one group` : "Booking created");
 
-        // If created from a form submission, mark it as approved
-        if (prefillSubmission && createdBooking) {
-          await supabase
-            .from("form_submissions")
-            .update({ status: "Approved", booking_id: createdBooking.id } as any)
-            .eq("id", prefillSubmission.submissionId);
-          queryClient.invalidateQueries({ queryKey: ["form_submissions"] });
-          onCreated?.({ id: createdBooking.id, booking_ref: createdBooking.booking_ref });
+          // If created from a form submission, mark it as approved
+          if (prefillSubmission && createdBooking) {
+            await supabase
+              .from("form_submissions")
+              .update({ status: "Approved", booking_id: createdBooking.id } as any)
+              .eq("id", prefillSubmission.submissionId);
+            queryClient.invalidateQueries({ queryKey: ["form_submissions"] });
+            onCreated?.({ id: createdBooking.id, booking_ref: createdBooking.booking_ref });
+          }
         }
       }
 
@@ -2524,6 +2599,61 @@ export function BookingModal({
             }}
           >
             Proceed Anyway
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+
+    {/* Group Booking Detection Prompt */}
+    <Dialog open={showGroupPrompt} onOpenChange={(o) => { if (!o) { setShowGroupPrompt(false); setMatchingGroupBooking(null); setPendingSubmitValues(null); } }}>
+      <DialogContent className="bg-card border-border max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="text-foreground flex items-center gap-2">
+            <Link2 className="h-5 w-5 text-primary" />
+            Existing Booking Detected
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2 text-sm text-muted-foreground">
+          <p>
+            <span className="font-medium text-foreground">{pendingSubmitValues?.guest_name}</span> already has a booking
+            {matchingGroupBooking ? ` (${matchingGroupBooking.booking_ref})` : ""} on overlapping dates
+            {matchingGroupBooking ? ` (${matchingGroupBooking.check_in} → ${matchingGroupBooking.check_out})` : ""}.
+          </p>
+          {(() => {
+            const unitName = matchingGroupBooking?.unit_id ? units.find(u => u.id === matchingGroupBooking.unit_id)?.name : null;
+            return unitName ? <p>Unit: <span className="font-medium text-foreground">{unitName}</span></p> : null;
+          })()}
+          <p className="text-foreground font-medium">Would you like to add this as a combined/grouped booking?</p>
+        </div>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button
+            variant="ghost"
+            className="text-muted-foreground"
+            onClick={() => {
+              setShowGroupPrompt(false);
+              setMatchingGroupBooking(null);
+              setJoinGroupTarget(null);
+              if (pendingSubmitValues) {
+                onSubmit(pendingSubmitValues);
+                setPendingSubmitValues(null);
+              }
+            }}
+          >
+            No, Create Separate
+          </Button>
+          <Button
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+            onClick={() => {
+              setShowGroupPrompt(false);
+              if (matchingGroupBooking && pendingSubmitValues) {
+                setJoinGroupTarget({ id: matchingGroupBooking.id, booking_group_id: matchingGroupBooking.booking_group_id });
+                onSubmit(pendingSubmitValues);
+                setPendingSubmitValues(null);
+              }
+              setMatchingGroupBooking(null);
+            }}
+          >
+            Yes, Add to Group
           </Button>
         </div>
       </DialogContent>
