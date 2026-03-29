@@ -268,7 +268,8 @@ export default function TodayPage() {
       // Skip secondary grouped bookings for display sections only
       if (isSecondaryGroup) continue;
 
-      if (ci === todayStr && b.booking_status !== "Checked In" && b.booking_status !== "Checked Out") {
+      // Show arrivals: today's check-ins OR past-due arrivals (not yet checked in, checkout still ahead)
+      if (ci <= todayStr && co >= todayStr && b.booking_status !== "Checked In" && b.booking_status !== "Checked Out") {
         checkIns.push(b);
       }
       if (co === todayStr && b.booking_status === "Checked Out") {
