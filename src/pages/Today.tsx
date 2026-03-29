@@ -143,6 +143,10 @@ interface GroupedGuestCardProps {
 
 function GroupedGuestCard({ primaryBooking, siblingBookings, unitMap, groupUnitNames, draggable, onEdit, noLateCheckoutUnitIds, continuedStayIds }: GroupedGuestCardProps) {
   const [expanded, setExpanded] = useState(false);
+  // Compute combined totals across the entire group
+  const allGroupBookings = [primaryBooking, ...siblingBookings];
+  const groupTotalAmount = allGroupBookings.reduce((sum, b) => sum + b.total_amount, 0);
+  const groupTotalPax = primaryBooking.pax; // Use primary's pax as the group pax (shared across group)
   return (
     <div className="space-y-1">
       <div className="flex items-center gap-1">
@@ -156,6 +160,8 @@ function GroupedGuestCard({ primaryBooking, siblingBookings, unitMap, groupUnitN
             groupBookingId={primaryBooking.booking_group_id}
             groupUnitNames={groupUnitNames}
             isContinuedStay={continuedStayIds?.has(primaryBooking.id)}
+            groupTotalAmount={groupTotalAmount}
+            groupTotalPax={groupTotalPax}
           />
         </div>
         {siblingBookings.length > 0 && (
