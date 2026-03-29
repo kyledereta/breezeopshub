@@ -1525,6 +1525,26 @@ export function BookingModal({
                     )}
                   />
                 )}
+                {watchPets && additionalPet && (
+                  <FormField
+                    control={form.control}
+                    name="pet_fee"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Additional Pet Fee (₱)</FormLabel>
+                        <div className="flex items-center gap-2">
+                          <FormControl>
+                            <Input {...field} type="number" min={0} step="any" className="bg-background border-border flex-1" />
+                          </FormControl>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="text-[9px] text-muted-foreground">{extrasPaidStatus.pet_fee ? "Paid" : "Unpaid"}</span>
+                            <Switch checked={!!extrasPaidStatus.pet_fee} onCheckedChange={() => toggleExtraPaid("pet_fee")} className="scale-75" />
+                          </div>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                )}
                 {watchDaytour && (
                   <div className="space-y-2">
                     <FormField
