@@ -10,7 +10,7 @@ import { useGuests } from "@/hooks/useGuests";
 import {
   LogIn, LogOut, Home, Users, BedDouble, GripVertical, Clock,
   AlertCircle, X, Pencil, Tent, TreePalm, Crown, Fan, Snowflake, CalendarDays,
-  DollarSign, AlertTriangle, ArrowRight, Link2, ChevronDown, ChevronUp, Sun,
+  DollarSign, AlertTriangle, ArrowRight, Link2, ChevronDown, ChevronUp, Sun, RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";

@@ -15,7 +15,8 @@ import { useBookings, type Booking } from "@/hooks/useBookings";
 import { useBookingAuditLog } from "@/hooks/useBookingAuditLog";
 import { useSoftDeleteBooking } from "@/hooks/useBookingMutations";
 import { cn } from "@/lib/utils";
-import { PawPrint, UtensilsCrossed, AlertTriangle, Edit, Users, CalendarDays, StickyNote, Banknote, Trash2, Link2, Car, Download } from "lucide-react";
+import { PawPrint, UtensilsCrossed, AlertTriangle, Edit, Users, CalendarDays, StickyNote, Banknote, Trash2, Link2, Car, Download, RefreshCw } from "lucide-react";
+import { useContinuedStaySet } from "@/hooks/useContinuedStay";
 import {
   AlertDialog,
   AlertDialogAction,

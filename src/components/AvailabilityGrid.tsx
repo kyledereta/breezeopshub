@@ -15,7 +15,8 @@ import {
   isWeekend,
   getDay,
 } from "date-fns";
-import { Home, Tent, TreePalm, Crown, Fan, PawPrint, Users, Facebook, Instagram, Globe, MapPin, Share2, UtensilsCrossed, TrendingUp, Link2, Ban, ChevronDown, ChevronUp } from "lucide-react";
+import { Home, Tent, TreePalm, Crown, Fan, PawPrint, Users, Facebook, Instagram, Globe, MapPin, Share2, UtensilsCrossed, TrendingUp, Link2, Ban, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
+import { useContinuedStaySet } from "@/hooks/useContinuedStay";
 import { getPHHolidaysForMonth } from "@/lib/phHolidays";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
