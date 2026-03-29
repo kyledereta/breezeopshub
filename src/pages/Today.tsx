@@ -216,13 +216,14 @@ export default function TodayPage() {
     return m;
   }, [allBookings]);
 
-  const { checkIns, baseCheckOuts, dueDepartures, inHouse, pendingBalances, todayRevenue, upcomingArrivals, overbookings, noLateCheckoutUnitIds } = useMemo(() => {
+  const { checkIns, baseCheckOuts, dueDepartures, inHouse, pendingBalances, todayRevenue, upcomingArrivals, overbookings, noLateCheckoutUnitIds, daytourGuests } = useMemo(() => {
     const checkIns: Booking[] = [];
     const baseCheckOuts: Booking[] = [];
     const dueDepartures: Booking[] = [];
     const inHouse: Booking[] = [];
     const pendingBalances: Booking[] = [];
     const upcomingArrivals: Booking[] = [];
+    const daytourGuests: Booking[] = [];
     let todayRevenue = 0;
 
     const today = new Date();
