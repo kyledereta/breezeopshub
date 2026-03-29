@@ -2191,7 +2191,9 @@ export function BookingModal({
 
                     {discountAmount > 0 && (
                       <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Discount</span>
+                        <span className="text-muted-foreground">
+                          Discount{watchDiscountReason ? ` — ${watchDiscountReason}` : ""}
+                        </span>
                         <span className="text-destructive">-₱{discountAmount.toLocaleString()}</span>
                       </div>
                     )}
