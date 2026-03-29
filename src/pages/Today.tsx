@@ -194,7 +194,7 @@ export default function TodayPage() {
   const groupUnitNamesMap = useMemo(() => {
     const m = new Map<string, string[]>();
     for (const b of allBookings) {
-      const gid = (b as any).booking_group_id;
+      const gid = b.booking_group_id;
       if (!gid) continue;
       if (!m.has(gid)) m.set(gid, []);
       const name = unitMap.get(b.unit_id ?? "") ?? "Unknown";
@@ -203,6 +203,18 @@ export default function TodayPage() {
     }
     return m;
   }, [allBookings, unitMap]);
+
+  // Map groupId → sibling (non-primary) bookings
+  const groupSiblingsMap = useMemo(() => {
+    const m = new Map<string, Booking[]>();
+    for (const b of allBookings) {
+      const gid = b.booking_group_id;
+      if (!gid || b.is_primary) continue;
+      if (!m.has(gid)) m.set(gid, []);
+      m.get(gid)!.push(b);
+    }
+    return m;
+  }, [allBookings]);
 
   const { checkIns, baseCheckOuts, dueDepartures, inHouse, pendingBalances, todayRevenue, upcomingArrivals, overbookings, noLateCheckoutUnitIds } = useMemo(() => {
     const checkIns: Booking[] = [];
