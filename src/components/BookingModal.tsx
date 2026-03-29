@@ -933,55 +933,99 @@ export function BookingModal({
         }
         toast.success("Booking updated");
       } else {
-        // Create one booking per selected unit (multi-unit support)
-        const allUnitIds = [values.unit_id, ...additionalUnitIds];
-        let createdBooking: any = null;
-        if (allUnitIds.length > 1) {
-          const groupId = crypto.randomUUID();
-          // Primary booking (first unit) holds all payment/total info
-          createdBooking = await createBooking.mutateAsync({
+        // Check if joining an existing group
+        if (joinGroupTarget) {
+          const groupId = joinGroupTarget.booking_group_id || crypto.randomUUID();
+          // If the target booking wasn't in a group yet, update it to become primary in the group
+          if (!joinGroupTarget.booking_group_id) {
+            await supabase
+              .from("bookings")
+              .update({ booking_group_id: groupId, is_primary: true } as any)
+              .eq("id", joinGroupTarget.id);
+          }
+          // Create new booking as secondary in the group
+          const createdBooking = await createBooking.mutateAsync({
             ...fullPayload,
-            unit_id: allUnitIds[0],
+            unit_id: values.unit_id || null,
             booking_group_id: groupId,
-            is_primary: true,
+            is_primary: false,
+            total_amount: 0,
+            deposit_paid: 0,
+            security_deposit: 0,
+            discount_given: 0,
+            extra_pax_fee: 0,
+            utensil_rental_fee: 0,
+            karaoke_fee: 0,
+            pet_fee: 0,
+            kitchen_use_fee: 0,
+            water_jug_fee: 0,
+            towel_rent_fee: 0,
+            bonfire_fee: 0,
+            extension_fee: 0,
+            daytour_fee: 0,
+            other_extras_fee: 0,
           } as any);
-          // Secondary bookings share dates/guest but zero out financials
-          for (const unitId of allUnitIds.slice(1)) {
-            await createBooking.mutateAsync({
-              ...fullPayload,
-              unit_id: unitId,
-              booking_group_id: groupId,
-              is_primary: false,
-              total_amount: 0,
-              deposit_paid: 0,
-              security_deposit: 0,
-              discount_given: 0,
-              extra_pax_fee: 0,
-              utensil_rental_fee: 0,
-              karaoke_fee: 0,
-              pet_fee: 0,
-              kitchen_use_fee: 0,
-              water_jug_fee: 0,
-              towel_rent_fee: 0,
-              bonfire_fee: 0,
-              extension_fee: 0,
-              daytour_fee: 0,
-              other_extras_fee: 0,
-            } as any);
+          toast.success("Booking added to existing group");
+          setJoinGroupTarget(null);
+          if (prefillSubmission && createdBooking) {
+            await supabase
+              .from("form_submissions")
+              .update({ status: "Approved", booking_id: createdBooking.id } as any)
+              .eq("id", prefillSubmission.submissionId);
+            queryClient.invalidateQueries({ queryKey: ["form_submissions"] });
+            onCreated?.({ id: createdBooking.id, booking_ref: createdBooking.booking_ref });
           }
         } else {
-          createdBooking = await createBooking.mutateAsync(fullPayload);
-        }
-        toast.success(allUnitIds.length > 1 ? `${allUnitIds.length} units booked as one group` : "Booking created");
+          // Create one booking per selected unit (multi-unit support)
+          const allUnitIds = [values.unit_id, ...additionalUnitIds];
+          let createdBooking: any = null;
+          if (allUnitIds.length > 1) {
+            const groupId = crypto.randomUUID();
+            // Primary booking (first unit) holds all payment/total info
+            createdBooking = await createBooking.mutateAsync({
+              ...fullPayload,
+              unit_id: allUnitIds[0],
+              booking_group_id: groupId,
+              is_primary: true,
+            } as any);
+            // Secondary bookings share dates/guest but zero out financials
+            for (const unitId of allUnitIds.slice(1)) {
+              await createBooking.mutateAsync({
+                ...fullPayload,
+                unit_id: unitId,
+                booking_group_id: groupId,
+                is_primary: false,
+                total_amount: 0,
+                deposit_paid: 0,
+                security_deposit: 0,
+                discount_given: 0,
+                extra_pax_fee: 0,
+                utensil_rental_fee: 0,
+                karaoke_fee: 0,
+                pet_fee: 0,
+                kitchen_use_fee: 0,
+                water_jug_fee: 0,
+                towel_rent_fee: 0,
+                bonfire_fee: 0,
+                extension_fee: 0,
+                daytour_fee: 0,
+                other_extras_fee: 0,
+              } as any);
+            }
+          } else {
+            createdBooking = await createBooking.mutateAsync(fullPayload);
+          }
+          toast.success(allUnitIds.length > 1 ? `${allUnitIds.length} units booked as one group` : "Booking created");
 
-        // If created from a form submission, mark it as approved
-        if (prefillSubmission && createdBooking) {
-          await supabase
-            .from("form_submissions")
-            .update({ status: "Approved", booking_id: createdBooking.id } as any)
-            .eq("id", prefillSubmission.submissionId);
-          queryClient.invalidateQueries({ queryKey: ["form_submissions"] });
-          onCreated?.({ id: createdBooking.id, booking_ref: createdBooking.booking_ref });
+          // If created from a form submission, mark it as approved
+          if (prefillSubmission && createdBooking) {
+            await supabase
+              .from("form_submissions")
+              .update({ status: "Approved", booking_id: createdBooking.id } as any)
+              .eq("id", prefillSubmission.submissionId);
+            queryClient.invalidateQueries({ queryKey: ["form_submissions"] });
+            onCreated?.({ id: createdBooking.id, booking_ref: createdBooking.booking_ref });
+          }
         }
       }
 
