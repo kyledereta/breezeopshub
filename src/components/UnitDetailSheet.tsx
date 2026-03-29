@@ -70,7 +70,37 @@ export function UnitDetailSheet({ open, onOpenChange, unit }: UnitDetailSheetPro
     try {
       await updateUnit.mutateAsync({ id: unit.id, unit_status: newStatus, status_updated_at: new Date().toISOString() });
       await logUnitStatusChange(unit.id, status, newStatus);
+
+      // Auto-block/unblock dates based on unit status
+      if (newStatus !== "Available") {
+        // Block next 180 days with auto-generated reason
+        const dates: { unit_id: string; blocked_date: string; reason: string }[] = [];
+        const today = new Date();
+        for (let i = 0; i < 180; i++) {
+          const d = new Date(today);
+          d.setDate(d.getDate() + i);
+          dates.push({
+            unit_id: unit.id,
+            blocked_date: format(d, "yyyy-MM-dd"),
+            reason: `Unit: ${newStatus}`,
+          });
+        }
+        // Batch upsert in chunks of 50
+        for (let i = 0; i < dates.length; i += 50) {
+          const chunk = dates.slice(i, i + 50);
+          await supabase.from("blocked_dates").upsert(chunk, { onConflict: "unit_id,blocked_date" });
+        }
+      } else {
+        // Remove auto-blocked dates when set back to Available
+        await supabase
+          .from("blocked_dates")
+          .delete()
+          .eq("unit_id", unit.id)
+          .like("reason", "Unit:%");
+      }
+
       qc.invalidateQueries({ queryKey: ["unit_status_log", unit.id] });
+      qc.invalidateQueries({ queryKey: ["blocked_dates"] });
       toast.success(`${unit.name} marked as ${newStatus}`);
     } catch (err: any) {
       toast.error(err.message ?? "Failed to update");
