@@ -303,6 +303,11 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
 
   const handleDragEnd = () => {
     if (dragState?.active) {
+      // If it's a single-cell click (no actual drag), let onClick handle it
+      if (dragState.startDate === dragState.endDate) {
+        setDragState(null);
+        return;
+      }
       setDragState((prev) => prev ? { ...prev, active: false } : null);
       setShowBlockRangePopover(true);
       setBlockRangeReason("");
@@ -741,11 +746,9 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                               }}
                               onMouseEnter={() => handleDragEnter(unit.id, dateStr)}
                               onClick={() => {
-                                if (!dragState || (dragState.startDate === dragState.endDate && !dragState.active)) {
+                                if (!dragState) {
                                   setBlockPopover({ unitId: unit.id, date: day });
                                   setBlockReason("");
-                                  setDragState(null);
-                                  setShowBlockRangePopover(false);
                                 }
                               }}
                             />
