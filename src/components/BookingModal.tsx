@@ -734,7 +734,7 @@ export function BookingModal({
       setRemainingModeOfPayment("");
       setRemainingPaid(false);
     }
-  }, [open, booking, defaultUnitId, defaultDate, prefillSubmission, form]);
+  }, [open, booking, defaultUnitId, defaultDate, prefillSubmission, groupContext, form]);
 
   async function handleFormSubmit(values: BookingFormValues) {
     // Check for overlap/unavailable units - show confirmation if needed
@@ -744,6 +744,13 @@ export function BookingModal({
     if (conflictWarning || unavailableUnits.length > 0) {
       setPendingSubmitValues(values);
       setShowOverlapConfirm(true);
+      return;
+    }
+
+    // If groupContext is set, skip duplicate detection and auto-join the group
+    if (groupContext) {
+      const target = { id: groupContext.parentBookingId, booking_group_id: groupContext.booking_group_id };
+      onSubmit(values, target);
       return;
     }
 
