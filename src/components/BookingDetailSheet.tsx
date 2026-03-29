@@ -67,6 +67,8 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
     booking?.check_in,
     booking?.check_out
   );
+  const { data: allBookingsGlobal = [] } = useBookings();
+  const continuedStayIds = useContinuedStaySet(allBookingsGlobal);
   const { data: auditLog = [] } = useBookingAuditLog(booking?.id);
   const softDelete = useSoftDeleteBooking();
 
