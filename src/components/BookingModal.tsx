@@ -320,9 +320,9 @@ export function BookingModal({
   const selectedUnit = useMemo(() => units.find((u) => u.id === watchUnitId), [units, watchUnitId]);
   const extraPax = combinedMaxPax > 0 ? Math.max(0, watchPax - combinedMaxPax) : 0;
 
-  // Auto-set pax to unit's max_pax when unit is selected (new bookings only)
+  // Auto-set pax to unit's max_pax when unit is selected (new bookings only, not when adding to group)
   useEffect(() => {
-    if (isEditing) return;
+    if (isEditing || groupContext) return;
     if (combinedMaxPax > 0) {
       form.setValue("pax", combinedMaxPax);
     }
