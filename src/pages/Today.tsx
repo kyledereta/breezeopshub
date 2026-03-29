@@ -171,6 +171,8 @@ export default function TodayPage() {
 
     for (const b of allBookings) {
       if (b.booking_status === "Cancelled") continue;
+      // For grouped bookings, only show the primary in dashboard sections
+      if ((b as any).booking_group_id && (b as any).is_primary === false) continue;
       const ci = b.check_in;
       const co = b.check_out;
 
