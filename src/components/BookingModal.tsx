@@ -403,7 +403,7 @@ export function BookingModal({
     }
   }, [watchBonfire, form]);
 
-  // Reset daytour fee when toggled off
+  // Reset daytour options when toggled off
   useEffect(() => {
     if (!watchDaytour) {
       form.setValue("daytour_fee", 0);
@@ -1367,7 +1367,7 @@ export function BookingModal({
                         watchWaterJug && "Water Jug",
                         watchTowelRent && "Towel",
                         watchBonfire && "Bonfire",
-                        Number(watchDaytourFee) > 0 && "Daytour",
+                        watchDaytour && "Day Tour",
                         Number(watchOtherExtrasFee) > 0 && "Others",
                       ].filter(Boolean).join(", ") || "Select extras..."}
                     </span>
@@ -1382,6 +1382,7 @@ export function BookingModal({
                     { key: "water_jug" as const, label: "Water Jug", desc: "₱100/jug" },
                     { key: "towel_rent" as const, label: "Towel Rent", desc: "₱100/pc" },
                     { key: "bonfire" as const, label: "Bonfire Setup", desc: "₱300" },
+                    { key: "daytour" as const, label: "Day Tour", desc: "Manual fee" },
                   ].map((item) => (
                     <label
                       key={item.key}
@@ -1613,55 +1614,6 @@ export function BookingModal({
                 )}
               />
 
-              {/* Daytour toggle */}
-              <FormField
-                control={form.control}
-                name="daytour"
-                render={({ field }) => (
-                  <FormItem className="space-y-0 rounded-lg border border-border p-3">
-                    <div className="flex items-center gap-3">
-                      <FormControl>
-                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
-                      <div>
-                        <FormLabel className="text-xs text-foreground">Day Tour</FormLabel>
-                        <p className="text-[10px] text-muted-foreground">
-                          No nightly rate, fees only
-                        </p>
-                      </div>
-                    </div>
-                    {watchDaytour && (
-                      <div className="mt-2 pt-2 border-t border-border space-y-2">
-                        <FormField
-                          control={form.control}
-                          name="daytour_fee"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs text-muted-foreground">Daytour Fee (₱/head × {watchPax} PAX)</FormLabel>
-                              <div className="flex items-center gap-2">
-                                <FormControl>
-                                  <Input {...field} type="number" min={0} step="any" className="bg-background border-border flex-1" />
-                                </FormControl>
-                                <div className="flex items-center gap-1.5 shrink-0">
-                                  <span className="text-[9px] text-muted-foreground">{extrasPaidStatus.daytour ? "Paid" : "Unpaid"}</span>
-                                  <Switch checked={!!extrasPaidStatus.daytour} onCheckedChange={() => toggleExtraPaid("daytour")} className="scale-75" />
-                                </div>
-                              </div>
-                            </FormItem>
-                          )}
-                        />
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            checked={watchIsDaytourBooking}
-                            onCheckedChange={(v) => form.setValue("is_daytour_booking", !!v)}
-                          />
-                          <span className="text-xs text-muted-foreground">Day Tour Only (no nightly rate, fees only)</span>
-                        </div>
-                      </div>
-                    )}
-                  </FormItem>
-                )}
-              />
             </div>
 
             <Separator className="bg-border" />
