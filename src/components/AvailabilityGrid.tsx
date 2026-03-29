@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useCallback } from "react";
+import { DaySummaryDialog } from "@/components/DaySummaryDialog";
 
 import {
   format,
@@ -140,6 +141,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
   const [blockPopover, setBlockPopover] = useState<{ unitId: string; date: Date } | null>(null);
   const [blockReason, setBlockReason] = useState("");
   const [legendOpen, setLegendOpen] = useState(true);
+  const [summaryDate, setSummaryDate] = useState<Date | null>(null);
 
   // Drag-to-select state for blocking
   const [dragState, setDragState] = useState<{
