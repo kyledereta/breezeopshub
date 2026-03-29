@@ -985,27 +985,15 @@ export function BookingModal({
               .update({ booking_group_id: groupId, is_primary: true } as any)
               .eq("id", effectiveJoinTarget.id);
           }
-          // Create new booking as secondary in the group
+          // Create new booking as secondary in the group — keeps its own total_amount
           const createdBooking = await createBooking.mutateAsync({
             ...fullPayload,
             unit_id: values.unit_id || null,
             booking_group_id: groupId,
             is_primary: false,
-            total_amount: 0,
             deposit_paid: 0,
             security_deposit: 0,
             discount_given: 0,
-            extra_pax_fee: 0,
-            utensil_rental_fee: 0,
-            karaoke_fee: 0,
-            pet_fee: 0,
-            kitchen_use_fee: 0,
-            water_jug_fee: 0,
-            towel_rent_fee: 0,
-            bonfire_fee: 0,
-            extension_fee: 0,
-            daytour_fee: 0,
-            other_extras_fee: 0,
           } as any);
           toast.success("Booking added to existing group");
           setJoinGroupTarget(null);
