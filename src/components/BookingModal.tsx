@@ -536,8 +536,10 @@ export function BookingModal({
     const remaining = total - deposit - paidExtrasTotal;
     const fullySettled = remaining <= 0 || remainingPaid;
 
-    // Don't override Airbnb Paid or Refunded
+   // Don't override Airbnb Paid or Refunded
     if (watchPaymentStatus === "Airbnb Paid" || watchPaymentStatus === "Refunded") return;
+
+
 
     let newStatus: string;
     if (fullySettled) {
