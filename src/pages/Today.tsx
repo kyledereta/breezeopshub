@@ -89,6 +89,12 @@ function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, group
               Group
             </Badge>
           )}
+          {isContinuedStay && (
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 bg-ocean/10 text-ocean border-ocean/30">
+              <RefreshCw className="h-2.5 w-2.5 mr-1" />
+              Continued
+            </Badge>
+          )}
           <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 shrink-0", getPaymentBadgeClass(booking.payment_status))}>
             {booking.payment_status}
           </Badge>
