@@ -109,6 +109,12 @@ const bookingSchema = z.object({
 }, {
   message: "Check-out must be after check-in",
   path: ["check_out"],
+}).refine((data) => {
+  if (data.is_daytour_booking) return true;
+  return !!data.unit_id;
+}, {
+  message: "Select a unit",
+  path: ["unit_id"],
 });
 
 type BookingFormValues = z.infer<typeof bookingSchema>;
