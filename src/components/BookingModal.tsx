@@ -1236,6 +1236,37 @@ export function BookingModal({
                   <p className="text-xs text-warning-orange">{conflictWarning}</p>
                 </div>
               )}
+
+              {/* Daytour Booking Toggle */}
+              <FormField
+                control={form.control}
+                name="is_daytour_booking"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2.5">
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={(checked) => {
+                          field.onChange(checked);
+                          if (checked) {
+                            form.setValue("daytour", true);
+                          }
+                        }}
+                      />
+                    </FormControl>
+                    <FormLabel className="!mt-0 text-sm font-medium text-foreground cursor-pointer">
+                      Daytour Booking
+                    </FormLabel>
+                    {field.value && (
+                      <span className="ml-auto text-[10px] uppercase tracking-wider text-primary font-semibold">
+                        No overnight stay
+                      </span>
+                    )}
+                  </FormItem>
+                )}
+              />
+
+              {!watchIsDaytourBooking && (
               <div className="grid grid-cols-3 gap-3">
                 <FormField
                   control={form.control}
