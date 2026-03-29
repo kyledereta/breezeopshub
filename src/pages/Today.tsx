@@ -176,6 +176,7 @@ type DropZone = "arrivals" | "inhouse" | "departures";
 export default function TodayPage() {
   const todayStr = format(new Date(), "yyyy-MM-dd");
   const { data: allBookings = [], isLoading: bookingsLoading } = useBookings();
+  const continuedStayIds = useContinuedStaySet(allBookings);
   const { data: units = [], isLoading: unitsLoading } = useUnits();
   const { data: guests = [] } = useGuests();
   const updateBooking = useUpdateBooking();
