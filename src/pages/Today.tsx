@@ -656,9 +656,9 @@ export default function TodayPage() {
                   <EmptyState text="No arrivals today" />
                 ) : (
                   checkIns.map((b) => b.booking_group_id ? (
-                    <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} draggable onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} continuedStayIds={continuedStayIds} />
+                    <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} draggable onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} continuedStayIds={continuedStayIds} continuedStayMap={continuedStayMap} />
                   ) : (
-                    <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable onEdit={() => setEditingBooking(b)} isContinuedStay={continuedStayIds.has(b.id)} />
+                    <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable onEdit={() => setEditingBooking(b)} isContinuedStay={continuedStayIds.has(b.id)} continuedStayInfo={continuedStayMap.get(b.id)} unitMap={unitMap} />
                   ))
                 )}
               </Section>
@@ -675,9 +675,9 @@ export default function TodayPage() {
                   <EmptyState text="No guests in-house" />
                 ) : (
                   inHouseDisplay.map((b) => b.booking_group_id ? (
-                    <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} draggable onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} continuedStayIds={continuedStayIds} />
+                    <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} draggable onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} continuedStayIds={continuedStayIds} continuedStayMap={continuedStayMap} />
                   ) : (
-                    <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable onEdit={() => setEditingBooking(b)} noLateCheckout={!!b.unit_id && noLateCheckoutUnitIds.has(b.unit_id)} isContinuedStay={continuedStayIds.has(b.id)} />
+                    <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable onEdit={() => setEditingBooking(b)} noLateCheckout={!!b.unit_id && noLateCheckoutUnitIds.has(b.unit_id)} isContinuedStay={continuedStayIds.has(b.id)} continuedStayInfo={continuedStayMap.get(b.id)} unitMap={unitMap} />
                   ))
                 )}
               </Section>
@@ -694,9 +694,9 @@ export default function TodayPage() {
                   <EmptyState text="No departures yet" />
                 ) : (
                   visibleDepartures.map((b) => b.booking_group_id ? (
-                    <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} continuedStayIds={continuedStayIds} />
+                    <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} continuedStayIds={continuedStayIds} continuedStayMap={continuedStayMap} />
                   ) : (
-                    <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} onEdit={() => setEditingBooking(b)} noLateCheckout={!!b.unit_id && noLateCheckoutUnitIds.has(b.unit_id)} isContinuedStay={continuedStayIds.has(b.id)} />
+                    <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} onEdit={() => setEditingBooking(b)} noLateCheckout={!!b.unit_id && noLateCheckoutUnitIds.has(b.unit_id)} isContinuedStay={continuedStayIds.has(b.id)} continuedStayInfo={continuedStayMap.get(b.id)} unitMap={unitMap} />
                   ))
                 )}
               </Section>
@@ -719,7 +719,7 @@ export default function TodayPage() {
                 </div>
                 <div className="p-2 space-y-1.5">
                   {daytourGuests.map((b) => (
-                    <GuestCard key={b.id} booking={b} unitName={b.unit_id ? (unitMap.get(b.unit_id) ?? "—") : "Day Tour"} onEdit={() => setEditingBooking(b)} isContinuedStay={continuedStayIds.has(b.id)} />
+                    <GuestCard key={b.id} booking={b} unitName={b.unit_id ? (unitMap.get(b.unit_id) ?? "—") : "Day Tour"} onEdit={() => setEditingBooking(b)} isContinuedStay={continuedStayIds.has(b.id)} continuedStayInfo={continuedStayMap.get(b.id)} unitMap={unitMap} />
                   ))}
                 </div>
               </div>
@@ -737,10 +737,10 @@ export default function TodayPage() {
                 </div>
                 <div className="p-2 space-y-1.5">
                   {upcomingArrivals.map((b) => (
-                    b.booking_group_id ? (
-                      <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} continuedStayIds={continuedStayIds} />
+                     b.booking_group_id ? (
+                      <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} continuedStayIds={continuedStayIds} continuedStayMap={continuedStayMap} />
                     ) : (
-                      <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} onEdit={() => setEditingBooking(b)} isContinuedStay={continuedStayIds.has(b.id)} />
+                      <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} onEdit={() => setEditingBooking(b)} isContinuedStay={continuedStayIds.has(b.id)} continuedStayInfo={continuedStayMap.get(b.id)} unitMap={unitMap} />
                     )
                   ))}
                 </div>
