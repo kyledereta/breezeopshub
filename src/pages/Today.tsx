@@ -234,10 +234,17 @@ export default function TodayPage() {
 
     for (const b of allBookings) {
       if (b.booking_status === "Cancelled") continue;
-      // For grouped bookings, only show the primary in dashboard sections
-      if (b.booking_group_id && b.is_primary === false) continue;
       const ci = b.check_in;
       const co = b.check_out;
+      const isSecondaryGroup = b.booking_group_id && b.is_primary === false;
+
+      // In-house counts ALL bookings (including secondary) for accurate occupancy
+      if (b.booking_status === "Checked In" && ci <= todayStr && co >= todayStr) {
+        inHouse.push(b);
+      }
+
+      // Skip secondary grouped bookings for display sections only
+      if (isSecondaryGroup) continue;
 
       if (ci === todayStr && b.booking_status !== "Checked In" && b.booking_status !== "Checked Out") {
         checkIns.push(b);
@@ -245,12 +252,8 @@ export default function TodayPage() {
       if (co === todayStr && b.booking_status === "Checked Out") {
         baseCheckOuts.push(b);
       }
-      // Guests due to depart today but still checked in
       if (co === todayStr && b.booking_status === "Checked In") {
         dueDepartures.push(b);
-      }
-      if (b.booking_status === "Checked In" && ci <= todayStr && co >= todayStr) {
-        inHouse.push(b);
       }
       if (b.payment_status === "Unpaid" || b.payment_status === "Partial DP" || hasUnpaidExtras(b)) {
         pendingBalances.push(b);
