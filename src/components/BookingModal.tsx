@@ -192,6 +192,8 @@ export function BookingModal({
   const [dpModeOfPayment, setDpModeOfPayment] = useState("");
   const [remainingModeOfPayment, setRemainingModeOfPayment] = useState("");
   const [remainingPaid, setRemainingPaid] = useState(false);
+  // Track if user chose to join an existing group
+  const [joinGroupTarget, setJoinGroupTarget] = useState<{ id: string; booking_group_id: string | null } | null>(null);
 
   const toggleExtraPaid = (key: string) => {
     setExtrasPaidStatus((prev) => ({ ...prev, [key]: !prev[key] }));
