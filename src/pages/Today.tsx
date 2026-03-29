@@ -10,7 +10,7 @@ import { useGuests } from "@/hooks/useGuests";
 import {
   LogIn, LogOut, Home, Users, BedDouble, GripVertical, Clock,
   AlertCircle, X, Pencil, Tent, TreePalm, Crown, Fan, Snowflake, CalendarDays,
-  DollarSign, AlertTriangle, ArrowRight, Link2,
+  DollarSign, AlertTriangle, ArrowRight, Link2, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -119,6 +119,57 @@ function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, group
   );
 }
 
+interface GroupedGuestCardProps {
+  primaryBooking: Booking;
+  siblingBookings: Booking[];
+  unitMap: Map<string, string>;
+  groupUnitNames: string[];
+  draggable?: boolean;
+  onEdit: (b: Booking) => void;
+  noLateCheckoutUnitIds?: Set<string>;
+}
+
+function GroupedGuestCard({ primaryBooking, siblingBookings, unitMap, groupUnitNames, draggable, onEdit, noLateCheckoutUnitIds }: GroupedGuestCardProps) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center gap-1">
+        <div className="flex-1 min-w-0">
+          <GuestCard
+            booking={primaryBooking}
+            unitName={unitMap.get(primaryBooking.unit_id ?? "") ?? "—"}
+            draggable={draggable}
+            onEdit={() => onEdit(primaryBooking)}
+            noLateCheckout={!!primaryBooking.unit_id && !!noLateCheckoutUnitIds?.has(primaryBooking.unit_id)}
+            groupBookingId={primaryBooking.booking_group_id}
+            groupUnitNames={groupUnitNames}
+          />
+        </div>
+        {siblingBookings.length > 0 && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
+            onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+          >
+            {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+          </Button>
+        )}
+      </div>
+      {expanded && siblingBookings.map((sb) => (
+        <div key={sb.id} className="ml-5 border-l-2 border-primary/20 pl-2">
+          <GuestCard
+            booking={sb}
+            unitName={unitMap.get(sb.unit_id ?? "") ?? "—"}
+            onEdit={() => onEdit(sb)}
+            noLateCheckout={!!sb.unit_id && !!noLateCheckoutUnitIds?.has(sb.unit_id)}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 type DropZone = "arrivals" | "inhouse" | "departures";
 
 export default function TodayPage() {
@@ -143,7 +194,7 @@ export default function TodayPage() {
   const groupUnitNamesMap = useMemo(() => {
     const m = new Map<string, string[]>();
     for (const b of allBookings) {
-      const gid = (b as any).booking_group_id;
+      const gid = b.booking_group_id;
       if (!gid) continue;
       if (!m.has(gid)) m.set(gid, []);
       const name = unitMap.get(b.unit_id ?? "") ?? "Unknown";
@@ -152,6 +203,18 @@ export default function TodayPage() {
     }
     return m;
   }, [allBookings, unitMap]);
+
+  // Map groupId → sibling (non-primary) bookings
+  const groupSiblingsMap = useMemo(() => {
+    const m = new Map<string, Booking[]>();
+    for (const b of allBookings) {
+      const gid = b.booking_group_id;
+      if (!gid || b.is_primary) continue;
+      if (!m.has(gid)) m.set(gid, []);
+      m.get(gid)!.push(b);
+    }
+    return m;
+  }, [allBookings]);
 
   const { checkIns, baseCheckOuts, dueDepartures, inHouse, pendingBalances, todayRevenue, upcomingArrivals, overbookings, noLateCheckoutUnitIds } = useMemo(() => {
     const checkIns: Booking[] = [];
@@ -172,7 +235,7 @@ export default function TodayPage() {
     for (const b of allBookings) {
       if (b.booking_status === "Cancelled") continue;
       // For grouped bookings, only show the primary in dashboard sections
-      if ((b as any).booking_group_id && (b as any).is_primary === false) continue;
+      if (b.booking_group_id && b.is_primary === false) continue;
       const ci = b.check_in;
       const co = b.check_out;
 
@@ -277,7 +340,7 @@ export default function TodayPage() {
       // Collect all booking IDs to update (group or single)
       const idsToUpdate: string[] = [];
       if (groupId) {
-        const groupBookings = allBookings.filter((b) => (b as any).booking_group_id === groupId);
+        const groupBookings = allBookings.filter((b) => b.booking_group_id === groupId);
         for (const gb of groupBookings) {
           if (gb.booking_status !== newStatus) idsToUpdate.push(gb.id);
         }
@@ -458,7 +521,11 @@ export default function TodayPage() {
                 {checkIns.length === 0 ? (
                   <EmptyState text="No arrivals today" />
                 ) : (
-                  checkIns.map((b) => <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable onEdit={() => setEditingBooking(b)} groupBookingId={(b as any).booking_group_id} groupUnitNames={(b as any).booking_group_id ? groupUnitNamesMap.get((b as any).booking_group_id) : undefined} />)
+                  checkIns.map((b) => b.booking_group_id ? (
+                    <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} draggable onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} />
+                  ) : (
+                    <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable onEdit={() => setEditingBooking(b)} />
+                  ))
                 )}
               </Section>
 
@@ -473,7 +540,11 @@ export default function TodayPage() {
                 {inHouse.length === 0 ? (
                   <EmptyState text="No guests in-house" />
                 ) : (
-                  inHouse.map((b) => <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable onEdit={() => setEditingBooking(b)} noLateCheckout={!!b.unit_id && noLateCheckoutUnitIds.has(b.unit_id)} groupBookingId={(b as any).booking_group_id} groupUnitNames={(b as any).booking_group_id ? groupUnitNamesMap.get((b as any).booking_group_id) : undefined} />)
+                  inHouse.map((b) => b.booking_group_id ? (
+                    <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} draggable onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} />
+                  ) : (
+                    <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable onEdit={() => setEditingBooking(b)} noLateCheckout={!!b.unit_id && noLateCheckoutUnitIds.has(b.unit_id)} />
+                  ))
                 )}
               </Section>
 
@@ -488,7 +559,11 @@ export default function TodayPage() {
                 {visibleDepartures.length === 0 ? (
                   <EmptyState text="No departures yet" />
                 ) : (
-                  visibleDepartures.map((b) => <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} onEdit={() => setEditingBooking(b)} noLateCheckout={!!b.unit_id && noLateCheckoutUnitIds.has(b.unit_id)} groupBookingId={(b as any).booking_group_id} groupUnitNames={(b as any).booking_group_id ? groupUnitNamesMap.get((b as any).booking_group_id) : undefined} />)
+                  visibleDepartures.map((b) => b.booking_group_id ? (
+                    <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} />
+                  ) : (
+                    <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} onEdit={() => setEditingBooking(b)} noLateCheckout={!!b.unit_id && noLateCheckoutUnitIds.has(b.unit_id)} />
+                  ))
                 )}
               </Section>
             </div>
@@ -507,7 +582,11 @@ export default function TodayPage() {
                 </div>
                 <div className="p-2 space-y-1.5">
                   {upcomingArrivals.map((b) => (
-                    <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} onEdit={() => setEditingBooking(b)} groupBookingId={(b as any).booking_group_id} groupUnitNames={(b as any).booking_group_id ? groupUnitNamesMap.get((b as any).booking_group_id) : undefined} />
+                    b.booking_group_id ? (
+                      <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} />
+                    ) : (
+                      <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} onEdit={() => setEditingBooking(b)} />
+                    )
                   ))}
                 </div>
               </div>
