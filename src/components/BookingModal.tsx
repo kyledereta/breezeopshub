@@ -61,7 +61,7 @@ const BIRTH_MONTHS = [
 
 const bookingSchema = z.object({
   guest_name: z.string().trim().min(1, "Guest name is required").max(100),
-  unit_id: z.string().min(1, "Select a unit"),
+  unit_id: z.string().optional().or(z.literal("")),
   check_in: z.string().min(1, "Check-in date is required"),
   check_out: z.string().min(1, "Check-out date is required"),
   pax: z.coerce.number().min(1).max(50),
@@ -695,7 +695,7 @@ export function BookingModal({
     try {
       const payload = {
         guest_name: values.guest_name,
-        unit_id: values.unit_id,
+        unit_id: values.unit_id || null,
         check_in: values.check_in,
         check_out: values.check_out,
         pax: values.pax,
