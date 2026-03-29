@@ -1041,6 +1041,11 @@ function BookingTooltip({ booking, isContinuedStay }: { booking: Booking; isCont
         <div className="text-xs text-foreground font-medium">
           ₱{booking.total_amount.toLocaleString()}
         </div>
+        {isContinuedStay && (
+          <div className="flex items-center gap-1 text-[9px] text-ocean font-medium">
+            <RefreshCw className="h-2.5 w-2.5" /> Continued Stay
+          </div>
+        )}
         {(booking as any).booking_group_id && (
           <div className="flex items-center gap-1 text-[9px] text-primary font-medium">
             <Link2 className="h-2.5 w-2.5" /> Combined Booking
