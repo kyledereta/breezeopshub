@@ -98,6 +98,11 @@ function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, group
               Continued
             </Badge>
           )}
+          {booking.is_daytour_booking && (
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 bg-ocean/20 text-ocean border-ocean/30 font-bold">
+              DT
+            </Badge>
+          )}
           <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 shrink-0", getPaymentBadgeClass(booking.payment_status))}>
             {booking.payment_status}
           </Badge>
@@ -112,9 +117,13 @@ function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, group
           </span>
           <span className="shrink-0">{groupTotalPax !== undefined ? groupTotalPax : booking.pax} PAX</span>
           <span className="shrink-0">₱{(groupTotalAmount !== undefined ? groupTotalAmount : booking.total_amount).toLocaleString()}</span>
-          <span className="shrink-0">
-            {format(parseISO(booking.check_in), "MMM d")} → {format(parseISO(booking.check_out), "MMM d")}
-          </span>
+          {booking.is_daytour_booking ? (
+            <span className="shrink-0">{format(parseISO(booking.check_in), "MMM d")}</span>
+          ) : (
+            <span className="shrink-0">
+              {format(parseISO(booking.check_in), "MMM d")} → {format(parseISO(booking.check_out), "MMM d")}
+            </span>
+          )}
         </div>
         {noLateCheckout && (
           <div className="flex items-center gap-1 mt-1 text-[10px] text-warning-orange font-medium">
