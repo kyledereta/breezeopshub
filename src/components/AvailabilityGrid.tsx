@@ -835,6 +835,89 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                 })}
               </>
             ))}
+
+            {/* Daytour Guests Section */}
+            {(() => {
+              const daytourBookings = bookings.filter(
+                (b) =>
+                  (b as any).is_daytour_booking &&
+                  b.booking_status !== "Cancelled" &&
+                  !b.unit_id
+              );
+              if (daytourBookings.length === 0) return null;
+              return (
+                <>
+                  <tr>
+                    <td
+                      className="sticky left-0 z-10 bg-secondary border-b border-r border-border px-3 py-1.5 text-[10px] uppercase tracking-[0.15em] text-ocean font-semibold shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)]"
+                    >
+                      🏖️ Day Tour Guests
+                    </td>
+                    {days.map((day) => (
+                      <td
+                        key={day.toISOString() + "-dt-header"}
+                        className={cn(
+                          "bg-secondary/50 border-b border-r border-border",
+                          isWeekend(day) && "bg-secondary/70"
+                        )}
+                      />
+                    ))}
+                  </tr>
+                  {daytourBookings.map((booking) => {
+                    const checkIn = parseISO(booking.check_in);
+                    return (
+                      <tr key={booking.id + "-dt"} className="hover:bg-muted/20 transition-colors h-[30px]">
+                        <td className="sticky left-0 z-10 bg-card border-b border-r border-border px-3 py-1 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)]">
+                          <div className="flex items-center gap-1.5">
+                            <Users className="h-3.5 w-3.5 text-ocean shrink-0" />
+                            <span className="font-medium text-foreground text-xs truncate">{booking.guest_name}</span>
+                            <span className="text-[8px] bg-ocean/20 text-ocean px-1 py-0.5 rounded font-medium">DT</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground ml-5">
+                            <span>{booking.pax} pax</span>
+                            <span className="text-border">·</span>
+                            <span className={getStatusBadge(booking.payment_status)}>{booking.payment_status}</span>
+                            <span className="text-border">·</span>
+                            <span className="text-primary/80 font-medium">₱{booking.total_amount.toLocaleString()}</span>
+                          </div>
+                        </td>
+                        {days.map((day) => {
+                          const dateStr = format(day, "yyyy-MM-dd");
+                          const isBookingDay = isSameDay(day, checkIn);
+                          return (
+                            <td
+                              key={dateStr + "-dt-" + booking.id}
+                              className={cn(
+                                "border-b border-r border-border text-center py-[4px]",
+                                isWeekend(day) && "bg-muted/10",
+                                isToday(day) && "bg-primary/5"
+                              )}
+                            >
+                              {isBookingDay && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div
+                                      className="mx-0.5 rounded-full bg-ocean cursor-pointer"
+                                      onClick={() => onBookingClick?.(booking)}
+                                    >
+                                      <div className="relative px-2 flex items-center gap-1 truncate h-[22px]">
+                                        <span className={cn("h-2 w-2 rounded-full shrink-0", getPaymentDotColor(booking.payment_status))} />
+                                        <span className="text-[9px] text-white font-medium truncate leading-none">{booking.pax} PAX</span>
+                                      </div>
+                                    </div>
+                                  </TooltipTrigger>
+                                  <BookingTooltip booking={booking} />
+                                </Tooltip>
+                              )}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+                </>
+              );
+            })()}
           </tbody>
         </table>
       </div>
