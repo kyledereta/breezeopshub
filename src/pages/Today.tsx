@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { BookingModal } from "@/components/BookingModal";
 import { FormSubmissionsSection } from "@/components/FormSubmissionsSection";
 import { useContinuedStaySet } from "@/hooks/useContinuedStay";
+import { DaySummaryDialog } from "@/components/DaySummaryDialog";
 
 function getPaymentBadgeClass(status: string) {
   switch (status) {
@@ -194,6 +195,7 @@ export default function TodayPage() {
   const [manualDepartureIds, setManualDepartureIds] = useState<string[]>([]);
   const [clearedDepartureIds, setClearedDepartureIds] = useState<string[]>([]);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
+  const [showDaySummary, setShowDaySummary] = useState(false);
 
    const unitMap = useMemo(() => {
     const m = new Map<string, string>();
@@ -471,7 +473,11 @@ export default function TodayPage() {
     <AppLayout>
       <div className="flex flex-col h-[calc(100vh-3rem)]">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border shrink-0 gap-1">
-          <div>
+          <div
+            className="cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => setShowDaySummary(true)}
+            title="Click to view today's summary"
+          >
             <h1 className="text-xl sm:text-3xl font-display text-foreground tracking-wide">Dashboard</h1>
             <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               {format(new Date(), "EEEE, MMMM d, yyyy")}
@@ -779,6 +785,15 @@ export default function TodayPage() {
           open={!!editingBooking}
           onOpenChange={(open) => { if (!open) setEditingBooking(null); }}
           booking={editingBooking}
+        />
+
+        <DaySummaryDialog
+          open={showDaySummary}
+          onOpenChange={setShowDaySummary}
+          date={new Date()}
+          bookings={allBookings}
+          units={units}
+          onBookingClick={(b) => { setShowDaySummary(false); setEditingBooking(b); }}
         />
       </div>
     </AppLayout>
