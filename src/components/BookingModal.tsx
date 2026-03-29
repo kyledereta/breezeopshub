@@ -407,13 +407,27 @@ export function BookingModal({
     }
   }, [watchBonfire, form]);
 
-  // Reset daytour options when toggled off
+  // Reset daytour options when toggled off; auto-set dates when toggled on
   useEffect(() => {
     if (!watchDaytour) {
       form.setValue("daytour_fee", 0);
       form.setValue("is_daytour_booking", false);
     }
   }, [watchDaytour, form]);
+
+  // When is_daytour_booking is toggled on, auto-set check-in to today and check-out to next day
+  useEffect(() => {
+    if (watchIsDaytourBooking) {
+      const today = format(new Date(), "yyyy-MM-dd");
+      const checkIn = form.getValues("check_in");
+      if (!checkIn) {
+        form.setValue("check_in", today);
+      }
+      const ciDate = checkIn ? parse(checkIn, "yyyy-MM-dd", new Date()) : new Date();
+      const nextDay = format(new Date(ciDate.getTime() + 86400000), "yyyy-MM-dd");
+      form.setValue("check_out", nextDay);
+    }
+  }, [watchIsDaytourBooking, form]);
 
   // Auto-set pet fee based on additional pet
   useEffect(() => {
