@@ -103,7 +103,10 @@ const bookingSchema = z.object({
   daytour_fee: z.coerce.number().min(0),
   other_extras_fee: z.coerce.number().min(0),
   other_extras_note: z.string().max(300).optional().or(z.literal("")),
-}).refine((data) => data.check_out > data.check_in, {
+}).refine((data) => {
+  if (data.is_daytour_booking) return true;
+  return data.check_out > data.check_in;
+}, {
   message: "Check-out must be after check-in",
   path: ["check_out"],
 });
