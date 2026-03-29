@@ -165,6 +165,7 @@ export function BookingModal({
   defaultDate,
   prefillSubmission,
   onCreated,
+  groupContext,
 }: BookingModalProps) {
   const { data: units = [] } = useUnits();
   const groupedUnits = useMemo(() => groupUnitsByArea(units), [units]);
