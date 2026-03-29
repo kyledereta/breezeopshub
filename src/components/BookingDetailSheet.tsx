@@ -242,6 +242,12 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
                     <span className="text-[10px] text-primary font-medium">Combined Booking (Multi-Unit)</span>
                   </div>
                 )}
+                {continuedStayIds.has(booking.id) && (
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <RefreshCw className="h-3.5 w-3.5 text-ocean" />
+                    <span className="text-[10px] text-ocean font-medium">Continued Stay — same guest, consecutive booking</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-2 mt-2">
                   <Badge variant="outline" className={cn("text-xs", getStatusBadgeStyle(booking.booking_status))}>
                     {booking.booking_status}
