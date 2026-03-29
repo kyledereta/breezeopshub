@@ -10,7 +10,7 @@ import { useGuests } from "@/hooks/useGuests";
 import {
   LogIn, LogOut, Home, Users, BedDouble, GripVertical, Clock,
   AlertCircle, X, Pencil, Tent, TreePalm, Crown, Fan, Snowflake, CalendarDays,
-  DollarSign, AlertTriangle, ArrowRight, Link2, ChevronDown, ChevronUp,
+  DollarSign, AlertTriangle, ArrowRight, Link2, ChevronDown, ChevronUp, Sun,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -303,7 +303,16 @@ export default function TodayPage() {
       if (conflicts.length > 0) overbookings.push({ unitId, bookings: conflicts });
     }
 
-    return { checkIns, baseCheckOuts, dueDepartures, inHouse, pendingBalances, todayRevenue, upcomingArrivals, overbookings, noLateCheckoutUnitIds };
+    // Day tour guests: daytour bookings for today that aren't cancelled
+    for (const b of allBookings) {
+      if (b.booking_status === "Cancelled" || b.deleted_at) continue;
+      if (!b.is_daytour_booking) continue;
+      if (b.check_in === todayStr) {
+        daytourGuests.push(b);
+      }
+    }
+
+    return { checkIns, baseCheckOuts, dueDepartures, inHouse, pendingBalances, todayRevenue, upcomingArrivals, overbookings, noLateCheckoutUnitIds, daytourGuests };
   }, [allBookings, todayStr]);
 
   const visibleDepartures = useMemo(() => {
