@@ -45,7 +45,7 @@ import { Constants, type Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { generateGuestRef } from "@/lib/guestRef";
-import { Upload, X, FileImage, PawPrint, AlertTriangle, Music, Plus, Car } from "lucide-react";
+import { Upload, X, FileImage, PawPrint, AlertTriangle, Music, Plus, Car, Link2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { logBookingChanges } from "@/hooks/useBookingAuditLog";
 
@@ -174,6 +174,8 @@ export function BookingModal({
   const [additionalUnitIds, setAdditionalUnitIds] = useState<string[]>([]);
   const [addUnitPopoverOpen, setAddUnitPopoverOpen] = useState(false);
   const [addUnitSearch, setAddUnitSearch] = useState("");
+  // Group sibling bookings (when editing a group booking)
+  const [groupSiblings, setGroupSiblings] = useState<{ id: string; unit_id: string; is_primary: boolean }[]>([]);
   // Pet additional fee
   const [additionalPet, setAdditionalPet] = useState(false);
   // Birthday month for guest verification
@@ -194,11 +196,28 @@ export function BookingModal({
 
   // Load existing ID files when editing
   useEffect(() => {
-    if (!open) { setIdFiles([]); setExistingIds([]); setAdditionalUnitIds([]); setAdditionalPet(false); setBirthMonthFilter(0); setHasCar(false); setCarDetails([]); setExtrasPaidStatus({}); return; }
+    if (!open) { setIdFiles([]); setExistingIds([]); setAdditionalUnitIds([]); setAdditionalPet(false); setBirthMonthFilter(0); setHasCar(false); setCarDetails([]); setExtrasPaidStatus({}); setGroupSiblings([]); return; }
     if (booking) {
       supabase.storage.from("guest-ids").list(booking.id).then(({ data }) => {
         if (data) setExistingIds(data.map((f) => `${booking.id}/${f.name}`));
       });
+      // Load group siblings when editing a group booking
+      if ((booking as any).booking_group_id) {
+        supabase
+          .from("bookings")
+          .select("id, unit_id, is_primary")
+          .eq("booking_group_id", (booking as any).booking_group_id)
+          .is("deleted_at", null)
+          .then(({ data }) => {
+            if (data) {
+              setGroupSiblings(data.filter((b) => b.id !== booking.id).map((b) => ({
+                id: b.id,
+                unit_id: b.unit_id || "",
+                is_primary: b.is_primary,
+              })));
+            }
+          });
+      }
     }
   }, [open, booking]);
 
@@ -273,10 +292,10 @@ export function BookingModal({
 
   // Get combined max_pax across all selected units
   const combinedMaxPax = useMemo(() => {
-    const allIds = [watchUnitId, ...additionalUnitIds].filter(Boolean);
+    const allIds = [watchUnitId, ...additionalUnitIds, ...groupSiblings.map((s) => s.unit_id)].filter(Boolean);
     const selectedUnits = units.filter((u) => allIds.includes(u.id));
     return selectedUnits.reduce((sum, u) => sum + u.max_pax, 0);
-  }, [units, watchUnitId, additionalUnitIds]);
+  }, [units, watchUnitId, additionalUnitIds, groupSiblings]);
 
   const selectedUnit = useMemo(() => units.find((u) => u.id === watchUnitId), [units, watchUnitId]);
   const extraPax = combinedMaxPax > 0 ? Math.max(0, watchPax - combinedMaxPax) : 0;
@@ -838,6 +857,44 @@ export function BookingModal({
             .eq("booking_group_id", (booking as any).booking_group_id)
             .neq("id", booking.id);
         }
+
+        // Add new units to the group during edit
+        if (additionalUnitIds.length > 0) {
+          const groupId = (booking as any).booking_group_id || crypto.randomUUID();
+          // If this booking wasn't part of a group yet, update it to be the primary
+          if (!(booking as any).booking_group_id) {
+            await supabase
+              .from("bookings")
+              .update({ booking_group_id: groupId, is_primary: true } as any)
+              .eq("id", booking.id);
+          }
+          const { unit_id, ...syncPayload } = fullPayload;
+          for (const unitId of additionalUnitIds) {
+            await createBooking.mutateAsync({
+              ...syncPayload,
+              unit_id: unitId,
+              booking_group_id: groupId,
+              is_primary: false,
+              total_amount: 0,
+              deposit_paid: 0,
+              security_deposit: 0,
+              discount_given: 0,
+              extra_pax_fee: 0,
+              utensil_rental_fee: 0,
+              karaoke_fee: 0,
+              pet_fee: 0,
+              kitchen_use_fee: 0,
+              water_jug_fee: 0,
+              towel_rent_fee: 0,
+              bonfire_fee: 0,
+              extension_fee: 0,
+              daytour_fee: 0,
+              other_extras_fee: 0,
+            } as any);
+          }
+          toast.success(`${additionalUnitIds.length} unit(s) added to group`);
+        }
+
         // Log audit trail
         if (originalValuesRef.current) {
           await logBookingChanges(booking.id, originalValuesRef.current, fullPayload);
@@ -929,9 +986,9 @@ export function BookingModal({
 
   // Available units for additional selection (exclude already selected)
   const availableUnitsForAdd = useMemo(() => {
-    const selectedIds = new Set([watchUnitId, ...additionalUnitIds]);
+    const selectedIds = new Set([watchUnitId, ...additionalUnitIds, ...groupSiblings.map((s) => s.unit_id)]);
     return units.filter((u) => !selectedIds.has(u.id));
-  }, [units, watchUnitId, additionalUnitIds]);
+  }, [units, watchUnitId, additionalUnitIds, groupSiblings]);
 
   const filteredAddUnits = useMemo(() => {
     const groups = groupUnitsByArea(availableUnitsForAdd);
@@ -1163,88 +1220,126 @@ export function BookingModal({
                 }}
               />
 
-              {/* Additional Units (multi-unit) */}
-              {!isEditing && (
-                <div className="space-y-2">
-                  {additionalUnitIds.length > 0 && (
-                    <div className="space-y-1.5">
-                      {additionalUnitIds.map((uid) => {
-                        const u = units.find((x) => x.id === uid);
-                        return (
-                          <div
-                            key={uid}
-                            className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2"
-                          >
-                            <span className="text-sm text-foreground">
-                              {u?.name || "Unit"} · {u?.max_pax ?? "?"} PAX · ₱{u?.nightly_rate?.toLocaleString() ?? "0"}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => setAdditionalUnitIds((prev) => prev.filter((id) => id !== uid))}
-                              className="text-muted-foreground hover:text-destructive"
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                  {availableUnitsForAdd.length > 0 && (
-                    <Popover open={addUnitPopoverOpen} onOpenChange={setAddUnitPopoverOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="text-xs border-dashed border-border text-muted-foreground hover:text-primary"
+              {/* Group / Additional Units (multi-unit) */}
+              <div className="space-y-2">
+                {/* Show existing group siblings when editing */}
+                {isEditing && groupSiblings.length > 0 && (
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] uppercase tracking-wider text-primary font-semibold flex items-center gap-1">
+                      <Link2 className="h-3 w-3" /> Grouped Units
+                    </p>
+                    {groupSiblings.map((sib) => {
+                      const u = units.find((x) => x.id === sib.unit_id);
+                      return (
+                        <div
+                          key={sib.id}
+                          className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 px-3 py-2"
                         >
-                          <Plus className="h-3 w-3 mr-1" />
-                          Add another unit
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-72 p-0" align="start">
-                        <div className="p-2 border-b border-border">
-                          <Input
-                            placeholder="Search units..."
-                            value={addUnitSearch}
-                            onChange={(e) => setAddUnitSearch(e.target.value)}
-                            className="h-8 bg-background border-border text-sm"
-                            autoFocus
-                          />
+                          <span className="text-sm text-foreground">
+                            {u?.name || "Unit"} · {u?.max_pax ?? "?"} PAX · ₱{u?.nightly_rate?.toLocaleString() ?? "0"}
+                          </span>
+                          <button
+                            type="button"
+                            title="Remove from group"
+                            onClick={async () => {
+                              try {
+                                await supabase.from("bookings").delete().eq("id", sib.id);
+                                setGroupSiblings((prev) => prev.filter((s) => s.id !== sib.id));
+                                queryClient.invalidateQueries({ queryKey: ["bookings"] });
+                                toast.success(`${u?.name || "Unit"} removed from group`);
+                              } catch {
+                                toast.error("Failed to remove unit from group");
+                              }
+                            }}
+                            className="text-muted-foreground hover:text-destructive"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
                         </div>
-                        <div className="max-h-48 overflow-auto p-1">
-                          {filteredAddUnits.length === 0 && (
-                            <p className="text-xs text-muted-foreground p-3 text-center">No more units</p>
-                          )}
-                          {filteredAddUnits.map(({ area, units: areaUnits }) => (
-                            <div key={area}>
-                              <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-primary font-semibold">
-                                {area}
-                              </div>
-                              {areaUnits.map((unit) => (
-                                <button
-                                  key={unit.id}
-                                  type="button"
-                                  className="w-full text-left px-3 py-1.5 text-sm rounded-sm hover:bg-muted/50 flex justify-between"
-                                  onClick={() => {
-                                    setAdditionalUnitIds((prev) => [...prev, unit.id]);
-                                    setAddUnitPopoverOpen(false);
-                                    setAddUnitSearch("");
-                                  }}
-                                >
-                                  <span>{unit.name}</span>
-                                  <span className="text-xs text-muted-foreground">₱{unit.nightly_rate.toLocaleString()}</span>
-                                </button>
-                              ))}
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* New additional units (create mode or adding to existing group) */}
+                {additionalUnitIds.length > 0 && (
+                  <div className="space-y-1.5">
+                    {additionalUnitIds.map((uid) => {
+                      const u = units.find((x) => x.id === uid);
+                      return (
+                        <div
+                          key={uid}
+                          className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2"
+                        >
+                          <span className="text-sm text-foreground">
+                            {u?.name || "Unit"} · {u?.max_pax ?? "?"} PAX · ₱{u?.nightly_rate?.toLocaleString() ?? "0"}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setAdditionalUnitIds((prev) => prev.filter((id) => id !== uid))}
+                            className="text-muted-foreground hover:text-destructive"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {availableUnitsForAdd.length > 0 && (
+                  <Popover open={addUnitPopoverOpen} onOpenChange={setAddUnitPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="text-xs border-dashed border-border text-muted-foreground hover:text-primary"
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Add another unit
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-72 p-0" align="start">
+                      <div className="p-2 border-b border-border">
+                        <Input
+                          placeholder="Search units..."
+                          value={addUnitSearch}
+                          onChange={(e) => setAddUnitSearch(e.target.value)}
+                          className="h-8 bg-background border-border text-sm"
+                          autoFocus
+                        />
+                      </div>
+                      <div className="max-h-48 overflow-auto p-1">
+                        {filteredAddUnits.length === 0 && (
+                          <p className="text-xs text-muted-foreground p-3 text-center">No more units</p>
+                        )}
+                        {filteredAddUnits.map(({ area, units: areaUnits }) => (
+                          <div key={area}>
+                            <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-primary font-semibold">
+                              {area}
                             </div>
-                          ))}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  )}
-                </div>
-              )}
+                            {areaUnits.map((unit) => (
+                              <button
+                                key={unit.id}
+                                type="button"
+                                className="w-full text-left px-3 py-1.5 text-sm rounded-sm hover:bg-muted/50 flex justify-between"
+                                onClick={() => {
+                                  setAdditionalUnitIds((prev) => [...prev, unit.id]);
+                                  setAddUnitPopoverOpen(false);
+                                  setAddUnitSearch("");
+                                }}
+                              >
+                                <span>{unit.name}</span>
+                                <span className="text-xs text-muted-foreground">₱{unit.nightly_rate.toLocaleString()}</span>
+                              </button>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                )}
+              </div>
 
               {conflictWarning && (
                 <div className="flex items-center gap-2 rounded-lg border border-warning-orange/50 bg-warning-orange/10 px-3 py-2">
