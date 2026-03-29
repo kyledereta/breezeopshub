@@ -1361,6 +1361,71 @@ export function BookingModal({
                   )}
                 />
               </div>
+              )}
+
+              {/* Daytour: show date picker + PAX only */}
+              {watchIsDaytourBooking && (
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="check_in"
+                    render={({ field }) => {
+                      const dateValue = field.value ? parse(field.value, "yyyy-MM-dd", new Date()) : undefined;
+                      return (
+                        <FormItem>
+                          <FormLabel className="text-xs text-muted-foreground">Date</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  className={cn(
+                                    "w-full pl-3 text-left font-normal bg-background border-border",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                >
+                                  {field.value ? format(dateValue!, "MMM d, yyyy") : <span>Pick date</span>}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={dateValue}
+                                onSelect={(date) => {
+                                  if (date) {
+                                    field.onChange(format(date, "yyyy-MM-dd"));
+                                    const nextDay = format(new Date(date.getTime() + 86400000), "yyyy-MM-dd");
+                                    form.setValue("check_out", nextDay);
+                                  }
+                                }}
+                                initialFocus
+                                className="p-3 pointer-events-auto"
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="pax"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">PAX</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" min={1} max={50} className="bg-background border-border" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+
               {/* Extra PAX fee */}
               {extraPax > 0 && (
                 <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
