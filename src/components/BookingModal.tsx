@@ -207,6 +207,8 @@ export function BookingModal({
   const [remainingPaid, setRemainingPaid] = useState(false);
   // Track if user chose to join an existing group
   const [joinGroupTarget, setJoinGroupTarget] = useState<{ id: string; booking_group_id: string | null } | null>(null);
+  // Nested modal for adding a unit to an existing group
+  const [showAddUnitToGroupModal, setShowAddUnitToGroupModal] = useState(false);
 
   const toggleExtraPaid = (key: string) => {
     setExtrasPaidStatus((prev) => ({ ...prev, [key]: !prev[key] }));
