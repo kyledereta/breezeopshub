@@ -422,7 +422,10 @@ export default function TodayPage() {
 
   // Pax: only count from primary bookings to avoid double-counting grouped guests
   const totalPaxInHouse = inHouse.filter((b) => b.is_primary).reduce((sum, b) => sum + b.pax, 0);
-  const occupancyRate = units.length > 0 ? Math.round((inHouse.length / units.length) * 100) : 0;
+  // Use unique occupied unit count for occupancy (avoids double-counting group bookings)
+  const occupiedUnitCount = new Set(inHouse.filter((b) => b.unit_id).map((b) => b.unit_id)).size;
+  const availableUnitCount = units.filter((u) => (u.unit_status || "Available") === "Available").length;
+  const occupancyRate = availableUnitCount > 0 ? Math.round((occupiedUnitCount / availableUnitCount) * 100) : 0;
   // Display list: only show primary bookings (secondary ones appear via expand)
   const inHouseDisplay = inHouse.filter((b) => !b.booking_group_id || b.is_primary);
   const pendingTotal = pendingBalances.reduce((s, b) => {
@@ -496,8 +499,8 @@ export default function TodayPage() {
         ) : (
           <div className="flex-1 overflow-auto p-4 sm:p-6 space-y-4">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <StatCard icon={Home} label="Occupancy" value={`${occupancyRate}%`} sub={`${inHouse.length} / ${units.length} units`} />
-              <StatCard icon={Users} label="In-House" value={`${totalPaxInHouse} pax`} sub={`${inHouse.length} bookings`} />
+              <StatCard icon={Home} label="Occupancy" value={`${occupancyRate}%`} sub={`${occupiedUnitCount} / ${availableUnitCount} units`} />
+              <StatCard icon={Users} label="In-House" value={`${totalPaxInHouse} pax`} sub={`${inHouseDisplay.length} bookings`} />
               <StatCard
                 icon={AlertCircle}
                 label="Pending"
