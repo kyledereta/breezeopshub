@@ -119,6 +119,57 @@ function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, group
   );
 }
 
+interface GroupedGuestCardProps {
+  primaryBooking: Booking;
+  siblingBookings: Booking[];
+  unitMap: Map<string, string>;
+  groupUnitNames: string[];
+  draggable?: boolean;
+  onEdit: (b: Booking) => void;
+  noLateCheckoutUnitIds?: Set<string>;
+}
+
+function GroupedGuestCard({ primaryBooking, siblingBookings, unitMap, groupUnitNames, draggable, onEdit, noLateCheckoutUnitIds }: GroupedGuestCardProps) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center gap-1">
+        <div className="flex-1 min-w-0">
+          <GuestCard
+            booking={primaryBooking}
+            unitName={unitMap.get(primaryBooking.unit_id ?? "") ?? "—"}
+            draggable={draggable}
+            onEdit={() => onEdit(primaryBooking)}
+            noLateCheckout={!!primaryBooking.unit_id && !!noLateCheckoutUnitIds?.has(primaryBooking.unit_id)}
+            groupBookingId={primaryBooking.booking_group_id}
+            groupUnitNames={groupUnitNames}
+          />
+        </div>
+        {siblingBookings.length > 0 && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
+            onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+          >
+            {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+          </Button>
+        )}
+      </div>
+      {expanded && siblingBookings.map((sb) => (
+        <div key={sb.id} className="ml-5 border-l-2 border-primary/20 pl-2">
+          <GuestCard
+            booking={sb}
+            unitName={unitMap.get(sb.unit_id ?? "") ?? "—"}
+            onEdit={() => onEdit(sb)}
+            noLateCheckout={!!sb.unit_id && !!noLateCheckoutUnitIds?.has(sb.unit_id)}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 type DropZone = "arrivals" | "inhouse" | "departures";
 
 export default function TodayPage() {
