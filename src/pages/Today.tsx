@@ -133,11 +133,25 @@ export default function TodayPage() {
   const [clearedDepartureIds, setClearedDepartureIds] = useState<string[]>([]);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
 
-  const unitMap = useMemo(() => {
+   const unitMap = useMemo(() => {
     const m = new Map<string, string>();
     units.forEach((u) => m.set(u.id, u.name));
     return m;
   }, [units]);
+
+  // Build group unit names map: groupId → [unit names]
+  const groupUnitNamesMap = useMemo(() => {
+    const m = new Map<string, string[]>();
+    for (const b of allBookings) {
+      const gid = (b as any).booking_group_id;
+      if (!gid) continue;
+      if (!m.has(gid)) m.set(gid, []);
+      const name = unitMap.get(b.unit_id ?? "") ?? "Unknown";
+      const arr = m.get(gid)!;
+      if (!arr.includes(name)) arr.push(name);
+    }
+    return m;
+  }, [allBookings, unitMap]);
 
   const { checkIns, baseCheckOuts, dueDepartures, inHouse, pendingBalances, todayRevenue, upcomingArrivals, overbookings, noLateCheckoutUnitIds } = useMemo(() => {
     const checkIns: Booking[] = [];
