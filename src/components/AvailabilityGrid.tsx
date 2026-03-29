@@ -1004,7 +1004,7 @@ function BookingCell({ booking, isContinuedStay }: { booking: Booking; isContinu
   );
 }
 
-function BookingTooltip({ booking }: { booking: Booking }) {
+function BookingTooltip({ booking, isContinuedStay }: { booking: Booking; isContinuedStay?: boolean }) {
   return (
     <TooltipContent
       side="bottom"
