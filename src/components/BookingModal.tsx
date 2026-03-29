@@ -675,16 +675,19 @@ export function BookingModal({
       setRemainingPaid((booking as any).remaining_paid ?? false);
     } else {
       const pf = prefillSubmission;
-      const guestName = pf
+      const gc = groupContext;
+      const guestName = gc
+        ? gc.guest_name
+        : pf
         ? (pf.facebook_name ? `${pf.guest_name} (${pf.facebook_name})` : pf.guest_name)
         : "";
       originalValuesRef.current = null;
       form.reset({
         guest_name: guestName,
         unit_id: pf?.unit_id ?? defaultUnitId ?? "",
-        check_in: pf?.check_in ?? (defaultDate ? format(defaultDate, "yyyy-MM-dd") : ""),
-        check_out: pf?.check_out ?? "",
-        pax: pf?.pax ?? 1,
+        check_in: gc?.check_in ?? pf?.check_in ?? (defaultDate ? format(defaultDate, "yyyy-MM-dd") : ""),
+        check_out: gc?.check_out ?? pf?.check_out ?? "",
+        pax: gc ? 0 : (pf?.pax ?? 1),
         total_amount: 0,
         deposit_paid: 0,
         deposit_deducted_amount: 0,
@@ -696,10 +699,10 @@ export function BookingModal({
         discount_reason: "",
         payment_status: pf ? "Partial DP" : "Unpaid",
         booking_status: "Confirmed",
-        booking_source: pf ? "Facebook Direct" : "Other",
+        booking_source: gc?.booking_source ?? (pf ? "Facebook Direct" : "Other"),
         mode_of_payment: "",
-        email: pf?.email ?? "",
-        phone: pf?.phone ?? "",
+        email: gc?.email ?? pf?.email ?? "",
+        phone: gc?.phone ?? pf?.phone ?? "",
         notes: "",
         utensil_rental: false,
         pets: pf?.has_pet ?? false,
@@ -726,7 +729,7 @@ export function BookingModal({
       });
       setAdditionalUnitIds([]);
       setAdditionalPet(false);
-      setBirthMonthFilter(pf?.birthday_month ?? 0);
+      setBirthMonthFilter(gc ? 0 : (pf?.birthday_month ?? 0));
       setDpModeOfPayment(pf?.payment_method ?? "");
       setRemainingModeOfPayment("");
       setRemainingPaid(false);
