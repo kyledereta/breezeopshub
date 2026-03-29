@@ -135,9 +135,10 @@ interface GroupedGuestCardProps {
   draggable?: boolean;
   onEdit: (b: Booking) => void;
   noLateCheckoutUnitIds?: Set<string>;
+  continuedStayIds?: Set<string>;
 }
 
-function GroupedGuestCard({ primaryBooking, siblingBookings, unitMap, groupUnitNames, draggable, onEdit, noLateCheckoutUnitIds }: GroupedGuestCardProps) {
+function GroupedGuestCard({ primaryBooking, siblingBookings, unitMap, groupUnitNames, draggable, onEdit, noLateCheckoutUnitIds, continuedStayIds }: GroupedGuestCardProps) {
   const [expanded, setExpanded] = useState(false);
   return (
     <div className="space-y-1">
