@@ -633,7 +633,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0.5 h-[4px] bg-primary rounded-full" />
                                   )}
                                   <div className={cn("rounded-full overflow-hidden", getBookingColor(booking))}>
-                                    <BookingCell booking={booking} />
+                                    <BookingCell booking={booking} isContinuedStay={continuedStayIds.has(booking.id)} />
                                   </div>
                                   {connectorBelow && (
                                     <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0.5 h-[4px] bg-primary rounded-full" />
@@ -659,7 +659,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                                   <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0.5 h-[4px] bg-primary rounded-full" />
                                 )}
                                 <div className={cn("rounded-full overflow-hidden", getBookingColor(booking))}>
-                                  <BookingCell booking={booking} />
+                                  <BookingCell booking={booking} isContinuedStay={continuedStayIds.has(booking.id)} />
                                 </div>
                                 {connectorBelow && (
                                   <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0.5 h-[4px] bg-primary rounded-full" />
