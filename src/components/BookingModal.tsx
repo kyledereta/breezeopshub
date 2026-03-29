@@ -461,7 +461,7 @@ export function BookingModal({
     if (!watchCheckIn || !watchCheckOut) return;
     const allIds = [watchUnitId, ...additionalUnitIds].filter(Boolean);
     const selectedUnits = units.filter((u) => allIds.includes(u.id));
-    if (selectedUnits.length === 0) return;
+    if (selectedUnits.length === 0 && !watchIsDaytourBooking) return;
     try {
       const checkInDate = parse(watchCheckIn, "yyyy-MM-dd", new Date());
       const checkOutDate = parse(watchCheckOut, "yyyy-MM-dd", new Date());
