@@ -196,12 +196,21 @@ function GroupedGuestCard({ primaryBooking, siblingBookings, unitMap, groupUnitN
               <Link2 className="h-2.5 w-2.5 mr-1" />
               Group
             </Badge>
-            {isContinuedStay && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 bg-ocean/10 text-ocean border-ocean/30">
-                <RefreshCw className="h-2.5 w-2.5 mr-1" />
-                Continued
-              </Badge>
-            )}
+            {isContinuedStay && (() => {
+              const info = continuedStayMap?.get(primaryBooking.id);
+              return (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 bg-ocean/10 text-ocean border-ocean/30">
+                  <RefreshCw className="h-2.5 w-2.5 mr-1" />
+                  Continued
+                  {info && (
+                    <span className="ml-1 font-normal">
+                      {info.fromUnitId ? `from ${unitMap.get(info.fromUnitId) ?? "?"}` : ""}
+                      {info.toUnitId ? `→ ${unitMap.get(info.toUnitId) ?? "?"}` : ""}
+                    </span>
+                  )}
+                </Badge>
+              );
+            })()}
             <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 shrink-0", getPaymentBadgeClass(primaryBooking.payment_status))}>
               {primaryBooking.payment_status}
             </Badge>
