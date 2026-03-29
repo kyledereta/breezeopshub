@@ -51,6 +51,8 @@ interface GuestCardProps {
   groupBookingId?: string | null;
   groupUnitNames?: string[];
   isContinuedStay?: boolean;
+  groupTotalAmount?: number;
+  groupTotalPax?: number;
 }
 
 function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, groupBookingId, groupUnitNames, isContinuedStay }: GuestCardProps) {
