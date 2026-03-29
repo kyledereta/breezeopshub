@@ -883,6 +883,17 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
           </div>
         )}
       </div>
+
+      {summaryDate && (
+        <DaySummaryDialog
+          open={!!summaryDate}
+          onOpenChange={(open) => { if (!open) setSummaryDate(null); }}
+          date={summaryDate}
+          bookings={bookings}
+          units={units}
+          onBookingClick={(b) => { setSummaryDate(null); onBookingClick?.(b); }}
+        />
+      )}
     </div>
   );
 }
