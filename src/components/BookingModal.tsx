@@ -196,11 +196,28 @@ export function BookingModal({
 
   // Load existing ID files when editing
   useEffect(() => {
-    if (!open) { setIdFiles([]); setExistingIds([]); setAdditionalUnitIds([]); setAdditionalPet(false); setBirthMonthFilter(0); setHasCar(false); setCarDetails([]); setExtrasPaidStatus({}); return; }
+    if (!open) { setIdFiles([]); setExistingIds([]); setAdditionalUnitIds([]); setAdditionalPet(false); setBirthMonthFilter(0); setHasCar(false); setCarDetails([]); setExtrasPaidStatus({}); setGroupSiblings([]); return; }
     if (booking) {
       supabase.storage.from("guest-ids").list(booking.id).then(({ data }) => {
         if (data) setExistingIds(data.map((f) => `${booking.id}/${f.name}`));
       });
+      // Load group siblings when editing a group booking
+      if ((booking as any).booking_group_id) {
+        supabase
+          .from("bookings")
+          .select("id, unit_id, is_primary")
+          .eq("booking_group_id", (booking as any).booking_group_id)
+          .is("deleted_at", null)
+          .then(({ data }) => {
+            if (data) {
+              setGroupSiblings(data.filter((b) => b.id !== booking.id).map((b) => ({
+                id: b.id,
+                unit_id: b.unit_id || "",
+                is_primary: b.is_primary,
+              })));
+            }
+          });
+      }
     }
   }, [open, booking]);
 
