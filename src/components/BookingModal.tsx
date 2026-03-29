@@ -773,7 +773,8 @@ export function BookingModal({
     onSubmit(values);
   }
 
-  async function onSubmit(values: BookingFormValues) {
+  async function onSubmit(values: BookingFormValues, overrideJoinTarget?: { id: string; booking_group_id: string | null } | null) {
+    const effectiveJoinTarget = overrideJoinTarget !== undefined ? overrideJoinTarget : joinGroupTarget;
     try {
       const payload = {
         guest_name: values.guest_name,
@@ -950,14 +951,14 @@ export function BookingModal({
         toast.success("Booking updated");
       } else {
         // Check if joining an existing group
-        if (joinGroupTarget) {
-          const groupId = joinGroupTarget.booking_group_id || crypto.randomUUID();
+        if (effectiveJoinTarget) {
+          const groupId = effectiveJoinTarget.booking_group_id || crypto.randomUUID();
           // If the target booking wasn't in a group yet, update it to become primary in the group
-          if (!joinGroupTarget.booking_group_id) {
+          if (!effectiveJoinTarget.booking_group_id) {
             await supabase
               .from("bookings")
               .update({ booking_group_id: groupId, is_primary: true } as any)
-              .eq("id", joinGroupTarget.id);
+              .eq("id", effectiveJoinTarget.id);
           }
           // Create new booking as secondary in the group
           const createdBooking = await createBooking.mutateAsync({
@@ -2665,8 +2666,9 @@ export function BookingModal({
             onClick={() => {
               setShowGroupPrompt(false);
               if (matchingGroupBooking && pendingSubmitValues) {
-                setJoinGroupTarget({ id: matchingGroupBooking.id, booking_group_id: matchingGroupBooking.booking_group_id });
-                onSubmit(pendingSubmitValues);
+                const target = { id: matchingGroupBooking.id, booking_group_id: matchingGroupBooking.booking_group_id };
+                setJoinGroupTarget(target);
+                onSubmit(pendingSubmitValues, target);
                 setPendingSubmitValues(null);
               }
               setMatchingGroupBooking(null);

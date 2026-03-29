@@ -51,9 +51,11 @@ interface GuestCardProps {
   groupBookingId?: string | null;
   groupUnitNames?: string[];
   isContinuedStay?: boolean;
+  groupTotalAmount?: number;
+  groupTotalPax?: number;
 }
 
-function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, groupBookingId, groupUnitNames, isContinuedStay }: GuestCardProps) {
+function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, groupBookingId, groupUnitNames, isContinuedStay, groupTotalAmount, groupTotalPax }: GuestCardProps) {
   const [wasDragged, setWasDragged] = useState(false);
   const isGrouped = !!groupBookingId;
   return (
@@ -108,8 +110,8 @@ function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, group
             <BedDouble className="h-3 w-3 shrink-0" />
             <span className="truncate">{groupUnitNames && groupUnitNames.length > 1 ? groupUnitNames.join(" + ") : unitName}</span>
           </span>
-          <span className="shrink-0">{booking.pax} PAX</span>
-          <span className="shrink-0">₱{booking.total_amount.toLocaleString()}</span>
+          <span className="shrink-0">{groupTotalPax !== undefined ? groupTotalPax : booking.pax} PAX</span>
+          <span className="shrink-0">₱{(groupTotalAmount !== undefined ? groupTotalAmount : booking.total_amount).toLocaleString()}</span>
           <span className="shrink-0">
             {format(parseISO(booking.check_in), "MMM d")} → {format(parseISO(booking.check_out), "MMM d")}
           </span>
@@ -141,6 +143,10 @@ interface GroupedGuestCardProps {
 
 function GroupedGuestCard({ primaryBooking, siblingBookings, unitMap, groupUnitNames, draggable, onEdit, noLateCheckoutUnitIds, continuedStayIds }: GroupedGuestCardProps) {
   const [expanded, setExpanded] = useState(false);
+  // Compute combined totals across the entire group
+  const allGroupBookings = [primaryBooking, ...siblingBookings];
+  const groupTotalAmount = allGroupBookings.reduce((sum, b) => sum + b.total_amount, 0);
+  const groupTotalPax = primaryBooking.pax; // Use primary's pax as the group pax (shared across group)
   return (
     <div className="space-y-1">
       <div className="flex items-center gap-1">
@@ -154,6 +160,8 @@ function GroupedGuestCard({ primaryBooking, siblingBookings, unitMap, groupUnitN
             groupBookingId={primaryBooking.booking_group_id}
             groupUnitNames={groupUnitNames}
             isContinuedStay={continuedStayIds?.has(primaryBooking.id)}
+            groupTotalAmount={groupTotalAmount}
+            groupTotalPax={groupTotalPax}
           />
         </div>
         {siblingBookings.length > 0 && (
