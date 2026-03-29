@@ -951,14 +951,14 @@ export function BookingModal({
         toast.success("Booking updated");
       } else {
         // Check if joining an existing group
-        if (joinGroupTarget) {
-          const groupId = joinGroupTarget.booking_group_id || crypto.randomUUID();
+        if (effectiveJoinTarget) {
+          const groupId = effectiveJoinTarget.booking_group_id || crypto.randomUUID();
           // If the target booking wasn't in a group yet, update it to become primary in the group
-          if (!joinGroupTarget.booking_group_id) {
+          if (!effectiveJoinTarget.booking_group_id) {
             await supabase
               .from("bookings")
               .update({ booking_group_id: groupId, is_primary: true } as any)
-              .eq("id", joinGroupTarget.id);
+              .eq("id", effectiveJoinTarget.id);
           }
           // Create new booking as secondary in the group
           const createdBooking = await createBooking.mutateAsync({
