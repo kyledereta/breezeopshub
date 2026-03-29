@@ -948,9 +948,9 @@ export function BookingModal({
 
   // Available units for additional selection (exclude already selected)
   const availableUnitsForAdd = useMemo(() => {
-    const selectedIds = new Set([watchUnitId, ...additionalUnitIds]);
+    const selectedIds = new Set([watchUnitId, ...additionalUnitIds, ...groupSiblings.map((s) => s.unit_id)]);
     return units.filter((u) => !selectedIds.has(u.id));
-  }, [units, watchUnitId, additionalUnitIds]);
+  }, [units, watchUnitId, additionalUnitIds, groupSiblings]);
 
   const filteredAddUnits = useMemo(() => {
     const groups = groupUnitsByArea(availableUnitsForAdd);
