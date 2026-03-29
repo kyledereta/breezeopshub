@@ -103,7 +103,10 @@ const bookingSchema = z.object({
   daytour_fee: z.coerce.number().min(0),
   other_extras_fee: z.coerce.number().min(0),
   other_extras_note: z.string().max(300).optional().or(z.literal("")),
-}).refine((data) => data.check_out > data.check_in, {
+}).refine((data) => {
+  if (data.is_daytour_booking) return true;
+  return data.check_out > data.check_in;
+}, {
   message: "Check-out must be after check-in",
   path: ["check_out"],
 });
@@ -404,13 +407,27 @@ export function BookingModal({
     }
   }, [watchBonfire, form]);
 
-  // Reset daytour options when toggled off
+  // Reset daytour options when toggled off; auto-set dates when toggled on
   useEffect(() => {
     if (!watchDaytour) {
       form.setValue("daytour_fee", 0);
       form.setValue("is_daytour_booking", false);
     }
   }, [watchDaytour, form]);
+
+  // When is_daytour_booking is toggled on, auto-set check-in to today and check-out to next day
+  useEffect(() => {
+    if (watchIsDaytourBooking) {
+      const today = format(new Date(), "yyyy-MM-dd");
+      const checkIn = form.getValues("check_in");
+      if (!checkIn) {
+        form.setValue("check_in", today);
+      }
+      const ciDate = checkIn ? parse(checkIn, "yyyy-MM-dd", new Date()) : new Date();
+      const nextDay = format(new Date(ciDate.getTime() + 86400000), "yyyy-MM-dd");
+      form.setValue("check_out", nextDay);
+    }
+  }, [watchIsDaytourBooking, form]);
 
   // Auto-set pet fee based on additional pet
   useEffect(() => {
@@ -1219,6 +1236,37 @@ export function BookingModal({
                   <p className="text-xs text-warning-orange">{conflictWarning}</p>
                 </div>
               )}
+
+              {/* Daytour Booking Toggle */}
+              <FormField
+                control={form.control}
+                name="is_daytour_booking"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2.5">
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={(checked) => {
+                          field.onChange(checked);
+                          if (checked) {
+                            form.setValue("daytour", true);
+                          }
+                        }}
+                      />
+                    </FormControl>
+                    <FormLabel className="!mt-0 text-sm font-medium text-foreground cursor-pointer">
+                      Daytour Booking
+                    </FormLabel>
+                    {field.value && (
+                      <span className="ml-auto text-[10px] uppercase tracking-wider text-primary font-semibold">
+                        No overnight stay
+                      </span>
+                    )}
+                  </FormItem>
+                )}
+              />
+
+              {!watchIsDaytourBooking && (
               <div className="grid grid-cols-3 gap-3">
                 <FormField
                   control={form.control}
@@ -1313,6 +1361,71 @@ export function BookingModal({
                   )}
                 />
               </div>
+              )}
+
+              {/* Daytour: show date picker + PAX only */}
+              {watchIsDaytourBooking && (
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="check_in"
+                    render={({ field }) => {
+                      const dateValue = field.value ? parse(field.value, "yyyy-MM-dd", new Date()) : undefined;
+                      return (
+                        <FormItem>
+                          <FormLabel className="text-xs text-muted-foreground">Date</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  className={cn(
+                                    "w-full pl-3 text-left font-normal bg-background border-border",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                >
+                                  {field.value ? format(dateValue!, "MMM d, yyyy") : <span>Pick date</span>}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={dateValue}
+                                onSelect={(date) => {
+                                  if (date) {
+                                    field.onChange(format(date, "yyyy-MM-dd"));
+                                    const nextDay = format(new Date(date.getTime() + 86400000), "yyyy-MM-dd");
+                                    form.setValue("check_out", nextDay);
+                                  }
+                                }}
+                                initialFocus
+                                className="p-3 pointer-events-auto"
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="pax"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">PAX</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" min={1} max={50} className="bg-background border-border" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+
               {/* Extra PAX fee */}
               {extraPax > 0 && (
                 <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
