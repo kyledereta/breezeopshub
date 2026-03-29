@@ -921,9 +921,18 @@ export function BookingModal({
 
       if (isEditing) {
         await updateBooking.mutateAsync({ id: booking.id, ...fullPayload });
-        // Sync ALL bookings in the same group (regardless of which one is edited)
+        // Sync only guest info, dates, and status to sibling bookings (NOT financial data)
         if ((booking as any).booking_group_id) {
-          const { unit_id, ...syncPayload } = fullPayload;
+          const syncPayload = {
+            guest_name: fullPayload.guest_name,
+            check_in: fullPayload.check_in,
+            check_out: fullPayload.check_out,
+            booking_status: fullPayload.booking_status,
+            booking_source: fullPayload.booking_source,
+            email: fullPayload.email,
+            phone: fullPayload.phone,
+            guest_id: fullPayload.guest_id,
+          };
           await supabase
             .from("bookings")
             .update(syncPayload)

@@ -143,46 +143,99 @@ interface GroupedGuestCardProps {
 
 function GroupedGuestCard({ primaryBooking, siblingBookings, unitMap, groupUnitNames, draggable, onEdit, noLateCheckoutUnitIds, continuedStayIds }: GroupedGuestCardProps) {
   const [expanded, setExpanded] = useState(false);
-  // Compute combined totals across the entire group
   const allGroupBookings = [primaryBooking, ...siblingBookings];
   const groupTotalAmount = allGroupBookings.reduce((sum, b) => sum + b.total_amount, 0);
-  const groupTotalPax = primaryBooking.pax; // Use primary's pax as the group pax (shared across group)
+  const groupTotalPax = primaryBooking.pax;
+  const isContinuedStay = continuedStayIds?.has(primaryBooking.id);
+
   return (
     <div className="space-y-1">
-      <div className="flex items-center gap-1">
-        <div className="flex-1 min-w-0">
-          <GuestCard
-            booking={primaryBooking}
-            unitName={unitMap.get(primaryBooking.unit_id ?? "") ?? "—"}
-            draggable={draggable}
-            onEdit={() => onEdit(primaryBooking)}
-            noLateCheckout={!!primaryBooking.unit_id && !!noLateCheckoutUnitIds?.has(primaryBooking.unit_id)}
-            groupBookingId={primaryBooking.booking_group_id}
-            groupUnitNames={groupUnitNames}
-            isContinuedStay={continuedStayIds?.has(primaryBooking.id)}
-            groupTotalAmount={groupTotalAmount}
-            groupTotalPax={groupTotalPax}
-          />
-        </div>
-        {siblingBookings.length > 0 && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
-            onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-          >
-            {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-          </Button>
+      {/* Main summary card */}
+      <div
+        draggable={draggable}
+        onDragStart={(e) => {
+          e.dataTransfer.setData("bookingId", primaryBooking.id);
+          if (primaryBooking.booking_group_id) {
+            e.dataTransfer.setData("groupId", primaryBooking.booking_group_id);
+          }
+          e.dataTransfer.effectAllowed = "move";
+        }}
+        onClick={() => onEdit(primaryBooking)}
+        className={cn(
+          "flex items-center gap-2 rounded-lg bg-background border border-border hover:border-primary/30 transition-colors p-3 group border-l-2 border-l-primary",
+          draggable ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"
         )}
+      >
+        {draggable && <GripVertical className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-medium text-sm text-foreground truncate">{primaryBooking.guest_name}</span>
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 bg-primary/10 text-primary border-primary/30">
+              <Link2 className="h-2.5 w-2.5 mr-1" />
+              Group
+            </Badge>
+            {isContinuedStay && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 bg-ocean/10 text-ocean border-ocean/30">
+                <RefreshCw className="h-2.5 w-2.5 mr-1" />
+                Continued
+              </Badge>
+            )}
+            <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 shrink-0", getPaymentBadgeClass(primaryBooking.payment_status))}>
+              {primaryBooking.payment_status}
+            </Badge>
+            <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 shrink-0", getStatusBadgeClass(primaryBooking.booking_status))}>
+              {primaryBooking.booking_status}
+            </Badge>
+          </div>
+          <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground flex-wrap">
+            <span className="flex items-center gap-1 min-w-0">
+              <BedDouble className="h-3 w-3 shrink-0" />
+              <span className="truncate">{groupUnitNames.join(" + ")}</span>
+            </span>
+            <span className="shrink-0">{groupTotalPax} PAX</span>
+            <span className="shrink-0">₱{groupTotalAmount.toLocaleString()}</span>
+            <span className="shrink-0">
+              {format(parseISO(primaryBooking.check_in), "MMM d")} → {format(parseISO(primaryBooking.check_out), "MMM d")}
+            </span>
+          </div>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
+          onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+        >
+          {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+        </Button>
       </div>
-      {expanded && siblingBookings.map((sb) => (
-        <div key={sb.id} className="ml-5 border-l-2 border-primary/20 pl-2">
-          <GuestCard
-            booking={sb}
-            unitName={unitMap.get(sb.unit_id ?? "") ?? "—"}
-            onEdit={() => onEdit(sb)}
-            noLateCheckout={!!sb.unit_id && !!noLateCheckoutUnitIds?.has(sb.unit_id)}
-          />
+      {/* Individual unit cards */}
+      {expanded && allGroupBookings.map((b) => (
+        <div key={b.id} className="ml-5 border-l-2 border-primary/20 pl-2">
+          <div
+            onClick={() => onEdit(b)}
+            className="flex items-center gap-2 rounded-lg bg-background border border-border hover:border-primary/30 transition-colors p-2.5 cursor-pointer group"
+          >
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 text-[11px] text-muted-foreground flex-wrap">
+                <span className="flex items-center gap-1">
+                  <BedDouble className="h-3 w-3 shrink-0" />
+                  <span className="font-medium text-foreground">{unitMap.get(b.unit_id ?? "") ?? "—"}</span>
+                </span>
+                {b.is_primary && (
+                  <Badge variant="outline" className="text-[9px] px-1 py-0 shrink-0 bg-primary/10 text-primary border-primary/30">Primary</Badge>
+                )}
+                <span className="shrink-0">{b.pax} PAX</span>
+                <span className="shrink-0">₱{b.total_amount.toLocaleString()}</span>
+                {!!b.unit_id && noLateCheckoutUnitIds?.has(b.unit_id) && (
+                  <span className="flex items-center gap-0.5 text-warning-orange">
+                    <Clock className="h-2.5 w-2.5" />
+                    No late checkout
+                  </span>
+                )}
+              </div>
+            </div>
+            <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+          </div>
         </div>
       ))}
     </div>
