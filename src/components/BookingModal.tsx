@@ -536,8 +536,10 @@ export function BookingModal({
     const remaining = total - deposit - paidExtrasTotal;
     const fullySettled = remaining <= 0 || remainingPaid;
 
-    // Don't override Airbnb Paid or Refunded
+   // Don't override Airbnb Paid or Refunded
     if (watchPaymentStatus === "Airbnb Paid" || watchPaymentStatus === "Refunded") return;
+
+
 
     let newStatus: string;
     if (fullySettled) {
@@ -559,6 +561,14 @@ export function BookingModal({
     watchPets, watchPetFee, additionalPet, watchDaytour, watchDaytourFee,
     watchOtherExtrasFee, watchPaymentStatus, form,
   ]);
+
+  // Auto-set source to Airbnb and remaining paid when "Airbnb Paid" is selected
+  useEffect(() => {
+    if (watchPaymentStatus === "Airbnb Paid") {
+      form.setValue("booking_source", "Airbnb");
+      setRemainingPaid(true);
+    }
+  }, [watchPaymentStatus, form]);
 
   useEffect(() => {
     if (!open) return;
