@@ -397,8 +397,11 @@ export default function TodayPage() {
 
   const handleDragLeave = useCallback(() => setDragOver(null), []);
 
-  const totalPaxInHouse = inHouse.reduce((sum, b) => sum + b.pax, 0);
+  // Pax: only count from primary bookings to avoid double-counting grouped guests
+  const totalPaxInHouse = inHouse.filter((b) => b.is_primary).reduce((sum, b) => sum + b.pax, 0);
   const occupancyRate = units.length > 0 ? Math.round((inHouse.length / units.length) * 100) : 0;
+  // Display list: only show primary bookings (secondary ones appear via expand)
+  const inHouseDisplay = inHouse.filter((b) => !b.booking_group_id || b.is_primary);
   const pendingTotal = pendingBalances.reduce((s, b) => {
     const balance = b.total_amount - b.deposit_paid;
     const unpaidExtrasAmt = getUnpaidExtrasTotal(b);
