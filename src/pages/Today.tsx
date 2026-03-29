@@ -46,16 +46,22 @@ interface GuestCardProps {
   draggable?: boolean;
   onEdit?: () => void;
   noLateCheckout?: boolean;
+  groupBookingId?: string | null;
+  groupUnitNames?: string[];
 }
 
-function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout }: GuestCardProps) {
+function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, groupBookingId, groupUnitNames }: GuestCardProps) {
   const [wasDragged, setWasDragged] = useState(false);
+  const isGrouped = !!groupBookingId;
   return (
     <div
       draggable={draggable}
       onDragStart={(e) => {
         setWasDragged(true);
         e.dataTransfer.setData("bookingId", booking.id);
+        if (groupBookingId) {
+          e.dataTransfer.setData("groupId", groupBookingId);
+        }
         e.dataTransfer.effectAllowed = "move";
       }}
       onDragEnd={() => setTimeout(() => setWasDragged(false), 100)}
@@ -65,6 +71,7 @@ function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout }: Gue
       className={cn(
         "flex items-center gap-2 rounded-lg bg-background border border-border hover:border-primary/30 transition-colors p-3 group",
         noLateCheckout && "border-warning-orange/40",
+        isGrouped && "border-l-2 border-l-primary",
         draggable ? "cursor-grab active:cursor-grabbing" : onEdit ? "cursor-pointer" : ""
       )}
     >
@@ -74,6 +81,12 @@ function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout }: Gue
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-medium text-sm text-foreground truncate">{booking.guest_name}</span>
+          {isGrouped && (
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 bg-primary/10 text-primary border-primary/30">
+              <Link2 className="h-2.5 w-2.5 mr-1" />
+              Group
+            </Badge>
+          )}
           <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 shrink-0", getPaymentBadgeClass(booking.payment_status))}>
             {booking.payment_status}
           </Badge>
@@ -84,7 +97,7 @@ function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout }: Gue
         <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground flex-wrap">
           <span className="flex items-center gap-1 shrink-0">
             <BedDouble className="h-3 w-3" />
-            {unitName}
+            {groupUnitNames && groupUnitNames.length > 1 ? groupUnitNames.join(" + ") : unitName}
           </span>
           <span className="shrink-0">{booking.pax} PAX</span>
           <span className="shrink-0">₱{booking.total_amount.toLocaleString()}</span>
