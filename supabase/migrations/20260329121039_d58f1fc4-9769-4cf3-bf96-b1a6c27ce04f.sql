@@ -1,0 +1,1 @@
+UPDATE units SET area = 'Beach Area' WHERE id = '2cc81588-6dfb-44bc-9480-50e6d486bf77';
