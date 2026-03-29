@@ -87,7 +87,10 @@ export function DaySummaryDialog({
 
   const totalAvailableUnits = units.filter((u) => (u.unit_status || "Available") === "Available").length;
   const occupancyRate = totalAvailableUnits > 0 ? Math.round((occupiedUnits / totalAvailableUnits) * 100) : 0;
-  const totalPax = inHouse.reduce((sum, b) => sum + b.pax, 0);
+  // Only count pax from primary bookings (or non-grouped) to avoid double-counting group bookings
+  const totalPax = inHouse
+    .filter((b) => !b.booking_group_id || b.is_primary)
+    .reduce((sum, b) => sum + b.pax, 0);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
