@@ -250,6 +250,7 @@ export function BookingModal({
   const watchPax = form.watch("pax");
   const watchDiscountType = form.watch("discount_type");
   const watchDiscountGiven = form.watch("discount_given");
+  const watchDiscountReason = form.watch("discount_reason");
   const watchKaraoke = form.watch("karaoke");
   const watchPets = form.watch("pets");
   const watchKitchenUse = form.watch("kitchen_use");
