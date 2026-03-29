@@ -135,6 +135,17 @@ export interface SubmissionPrefill {
   submissionId: string;
 }
 
+export interface GroupContext {
+  booking_group_id: string;
+  parentBookingId: string;
+  guest_name: string;
+  check_in: string;
+  check_out: string;
+  email?: string;
+  phone?: string;
+  booking_source?: string;
+}
+
 interface BookingModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -143,6 +154,7 @@ interface BookingModalProps {
   defaultDate?: Date;
   prefillSubmission?: SubmissionPrefill | null;
   onCreated?: (booking: { id: string; booking_ref: string }) => void;
+  groupContext?: GroupContext | null;
 }
 
 export function BookingModal({
