@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useCallback } from "react";
+import { DaySummaryDialog } from "@/components/DaySummaryDialog";
 
 import {
   format,
@@ -140,6 +141,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
   const [blockPopover, setBlockPopover] = useState<{ unitId: string; date: Date } | null>(null);
   const [blockReason, setBlockReason] = useState("");
   const [legendOpen, setLegendOpen] = useState(true);
+  const [summaryDate, setSummaryDate] = useState<Date | null>(null);
 
   // Drag-to-select state for blocking
   const [dragState, setDragState] = useState<{
@@ -457,11 +459,12 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                   <th
                     key={day.toISOString()}
                     className={cn(
-                      "border-b border-r border-border px-0 py-1.5 text-center min-w-[36px] w-[36px] font-medium",
+                      "border-b border-r border-border px-0 py-1.5 text-center min-w-[36px] w-[36px] font-medium cursor-pointer hover:bg-primary/10 transition-colors",
                       weekend && "bg-muted/30",
                       isToday(day) ? "bg-primary/20 text-primary" : "text-muted-foreground"
                     )}
                     ref={isToday(day) ? todayRef : undefined}
+                    onClick={() => setSummaryDate(day)}
                   >
                     <div className="text-[10px] leading-none mb-0.5">
                       {format(day, "EEE").charAt(0)}
@@ -880,6 +883,17 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
           </div>
         )}
       </div>
+
+      {summaryDate && (
+        <DaySummaryDialog
+          open={!!summaryDate}
+          onOpenChange={(open) => { if (!open) setSummaryDate(null); }}
+          date={summaryDate}
+          bookings={bookings}
+          units={units}
+          onBookingClick={(b) => { setSummaryDate(null); onBookingClick?.(b); }}
+        />
+      )}
     </div>
   );
 }
