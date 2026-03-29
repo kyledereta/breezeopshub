@@ -1182,88 +1182,126 @@ export function BookingModal({
                 }}
               />
 
-              {/* Additional Units (multi-unit) */}
-              {!isEditing && (
-                <div className="space-y-2">
-                  {additionalUnitIds.length > 0 && (
-                    <div className="space-y-1.5">
-                      {additionalUnitIds.map((uid) => {
-                        const u = units.find((x) => x.id === uid);
-                        return (
-                          <div
-                            key={uid}
-                            className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2"
-                          >
-                            <span className="text-sm text-foreground">
-                              {u?.name || "Unit"} · {u?.max_pax ?? "?"} PAX · ₱{u?.nightly_rate?.toLocaleString() ?? "0"}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => setAdditionalUnitIds((prev) => prev.filter((id) => id !== uid))}
-                              className="text-muted-foreground hover:text-destructive"
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                  {availableUnitsForAdd.length > 0 && (
-                    <Popover open={addUnitPopoverOpen} onOpenChange={setAddUnitPopoverOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="text-xs border-dashed border-border text-muted-foreground hover:text-primary"
+              {/* Group / Additional Units (multi-unit) */}
+              <div className="space-y-2">
+                {/* Show existing group siblings when editing */}
+                {isEditing && groupSiblings.length > 0 && (
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] uppercase tracking-wider text-primary font-semibold flex items-center gap-1">
+                      <Link2 className="h-3 w-3" /> Grouped Units
+                    </p>
+                    {groupSiblings.map((sib) => {
+                      const u = units.find((x) => x.id === sib.unit_id);
+                      return (
+                        <div
+                          key={sib.id}
+                          className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 px-3 py-2"
                         >
-                          <Plus className="h-3 w-3 mr-1" />
-                          Add another unit
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-72 p-0" align="start">
-                        <div className="p-2 border-b border-border">
-                          <Input
-                            placeholder="Search units..."
-                            value={addUnitSearch}
-                            onChange={(e) => setAddUnitSearch(e.target.value)}
-                            className="h-8 bg-background border-border text-sm"
-                            autoFocus
-                          />
+                          <span className="text-sm text-foreground">
+                            {u?.name || "Unit"} · {u?.max_pax ?? "?"} PAX · ₱{u?.nightly_rate?.toLocaleString() ?? "0"}
+                          </span>
+                          <button
+                            type="button"
+                            title="Remove from group"
+                            onClick={async () => {
+                              try {
+                                await supabase.from("bookings").delete().eq("id", sib.id);
+                                setGroupSiblings((prev) => prev.filter((s) => s.id !== sib.id));
+                                queryClient.invalidateQueries({ queryKey: ["bookings"] });
+                                toast.success(`${u?.name || "Unit"} removed from group`);
+                              } catch {
+                                toast.error("Failed to remove unit from group");
+                              }
+                            }}
+                            className="text-muted-foreground hover:text-destructive"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
                         </div>
-                        <div className="max-h-48 overflow-auto p-1">
-                          {filteredAddUnits.length === 0 && (
-                            <p className="text-xs text-muted-foreground p-3 text-center">No more units</p>
-                          )}
-                          {filteredAddUnits.map(({ area, units: areaUnits }) => (
-                            <div key={area}>
-                              <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-primary font-semibold">
-                                {area}
-                              </div>
-                              {areaUnits.map((unit) => (
-                                <button
-                                  key={unit.id}
-                                  type="button"
-                                  className="w-full text-left px-3 py-1.5 text-sm rounded-sm hover:bg-muted/50 flex justify-between"
-                                  onClick={() => {
-                                    setAdditionalUnitIds((prev) => [...prev, unit.id]);
-                                    setAddUnitPopoverOpen(false);
-                                    setAddUnitSearch("");
-                                  }}
-                                >
-                                  <span>{unit.name}</span>
-                                  <span className="text-xs text-muted-foreground">₱{unit.nightly_rate.toLocaleString()}</span>
-                                </button>
-                              ))}
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* New additional units (create mode or adding to existing group) */}
+                {additionalUnitIds.length > 0 && (
+                  <div className="space-y-1.5">
+                    {additionalUnitIds.map((uid) => {
+                      const u = units.find((x) => x.id === uid);
+                      return (
+                        <div
+                          key={uid}
+                          className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2"
+                        >
+                          <span className="text-sm text-foreground">
+                            {u?.name || "Unit"} · {u?.max_pax ?? "?"} PAX · ₱{u?.nightly_rate?.toLocaleString() ?? "0"}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setAdditionalUnitIds((prev) => prev.filter((id) => id !== uid))}
+                            className="text-muted-foreground hover:text-destructive"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {availableUnitsForAdd.length > 0 && (
+                  <Popover open={addUnitPopoverOpen} onOpenChange={setAddUnitPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="text-xs border-dashed border-border text-muted-foreground hover:text-primary"
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Add another unit
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-72 p-0" align="start">
+                      <div className="p-2 border-b border-border">
+                        <Input
+                          placeholder="Search units..."
+                          value={addUnitSearch}
+                          onChange={(e) => setAddUnitSearch(e.target.value)}
+                          className="h-8 bg-background border-border text-sm"
+                          autoFocus
+                        />
+                      </div>
+                      <div className="max-h-48 overflow-auto p-1">
+                        {filteredAddUnits.length === 0 && (
+                          <p className="text-xs text-muted-foreground p-3 text-center">No more units</p>
+                        )}
+                        {filteredAddUnits.map(({ area, units: areaUnits }) => (
+                          <div key={area}>
+                            <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-primary font-semibold">
+                              {area}
                             </div>
-                          ))}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  )}
-                </div>
-              )}
+                            {areaUnits.map((unit) => (
+                              <button
+                                key={unit.id}
+                                type="button"
+                                className="w-full text-left px-3 py-1.5 text-sm rounded-sm hover:bg-muted/50 flex justify-between"
+                                onClick={() => {
+                                  setAdditionalUnitIds((prev) => [...prev, unit.id]);
+                                  setAddUnitPopoverOpen(false);
+                                  setAddUnitSearch("");
+                                }}
+                              >
+                                <span>{unit.name}</span>
+                                <span className="text-xs text-muted-foreground">₱{unit.nightly_rate.toLocaleString()}</span>
+                              </button>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                )}
+              </div>
 
               {conflictWarning && (
                 <div className="flex items-center gap-2 rounded-lg border border-warning-orange/50 bg-warning-orange/10 px-3 py-2">
