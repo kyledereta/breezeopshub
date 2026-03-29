@@ -857,6 +857,44 @@ export function BookingModal({
             .eq("booking_group_id", (booking as any).booking_group_id)
             .neq("id", booking.id);
         }
+
+        // Add new units to the group during edit
+        if (additionalUnitIds.length > 0) {
+          const groupId = (booking as any).booking_group_id || crypto.randomUUID();
+          // If this booking wasn't part of a group yet, update it to be the primary
+          if (!(booking as any).booking_group_id) {
+            await supabase
+              .from("bookings")
+              .update({ booking_group_id: groupId, is_primary: true } as any)
+              .eq("id", booking.id);
+          }
+          const { unit_id, ...syncPayload } = fullPayload;
+          for (const unitId of additionalUnitIds) {
+            await createBooking.mutateAsync({
+              ...syncPayload,
+              unit_id: unitId,
+              booking_group_id: groupId,
+              is_primary: false,
+              total_amount: 0,
+              deposit_paid: 0,
+              security_deposit: 0,
+              discount_given: 0,
+              extra_pax_fee: 0,
+              utensil_rental_fee: 0,
+              karaoke_fee: 0,
+              pet_fee: 0,
+              kitchen_use_fee: 0,
+              water_jug_fee: 0,
+              towel_rent_fee: 0,
+              bonfire_fee: 0,
+              extension_fee: 0,
+              daytour_fee: 0,
+              other_extras_fee: 0,
+            } as any);
+          }
+          toast.success(`${additionalUnitIds.length} unit(s) added to group`);
+        }
+
         // Log audit trail
         if (originalValuesRef.current) {
           await logBookingChanges(booking.id, originalValuesRef.current, fullPayload);
