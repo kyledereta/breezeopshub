@@ -1391,7 +1391,20 @@ export function BookingModal({
                     })}
                   </div>
                 )}
-                {availableUnitsForAdd.length > 0 && (
+                {/* In edit mode with a group, open nested booking form; in create mode, use inline popover */}
+                {isEditing && (booking as any)?.booking_group_id && availableUnitsForAdd.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="text-xs border-dashed border-border text-muted-foreground hover:text-primary"
+                    onClick={() => setShowAddUnitToGroupModal(true)}
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Add another unit
+                  </Button>
+                )}
+                {(!isEditing || !(booking as any)?.booking_group_id) && availableUnitsForAdd.length > 0 && (
                   <Popover open={addUnitPopoverOpen} onOpenChange={setAddUnitPopoverOpen}>
                     <PopoverTrigger asChild>
                       <Button
