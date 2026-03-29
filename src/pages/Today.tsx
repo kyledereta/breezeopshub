@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { BookingModal } from "@/components/BookingModal";
 import { FormSubmissionsSection } from "@/components/FormSubmissionsSection";
+import { useContinuedStaySet } from "@/hooks/useContinuedStay";
 
 function getPaymentBadgeClass(status: string) {
   switch (status) {
