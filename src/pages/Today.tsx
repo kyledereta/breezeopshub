@@ -10,7 +10,7 @@ import { useGuests } from "@/hooks/useGuests";
 import {
   LogIn, LogOut, Home, Users, BedDouble, GripVertical, Clock,
   AlertCircle, X, Pencil, Tent, TreePalm, Crown, Fan, Snowflake, CalendarDays,
-  DollarSign, AlertTriangle, ArrowRight, Link2, ChevronDown, ChevronUp,
+  DollarSign, AlertTriangle, ArrowRight, Link2, ChevronDown, ChevronUp, Sun,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -216,13 +216,14 @@ export default function TodayPage() {
     return m;
   }, [allBookings]);
 
-  const { checkIns, baseCheckOuts, dueDepartures, inHouse, pendingBalances, todayRevenue, upcomingArrivals, overbookings, noLateCheckoutUnitIds } = useMemo(() => {
+  const { checkIns, baseCheckOuts, dueDepartures, inHouse, pendingBalances, todayRevenue, upcomingArrivals, overbookings, noLateCheckoutUnitIds, daytourGuests } = useMemo(() => {
     const checkIns: Booking[] = [];
     const baseCheckOuts: Booking[] = [];
     const dueDepartures: Booking[] = [];
     const inHouse: Booking[] = [];
     const pendingBalances: Booking[] = [];
     const upcomingArrivals: Booking[] = [];
+    const daytourGuests: Booking[] = [];
     let todayRevenue = 0;
 
     const today = new Date();
@@ -302,7 +303,16 @@ export default function TodayPage() {
       if (conflicts.length > 0) overbookings.push({ unitId, bookings: conflicts });
     }
 
-    return { checkIns, baseCheckOuts, dueDepartures, inHouse, pendingBalances, todayRevenue, upcomingArrivals, overbookings, noLateCheckoutUnitIds };
+    // Day tour guests: daytour bookings for today that aren't cancelled
+    for (const b of allBookings) {
+      if (b.booking_status === "Cancelled" || b.deleted_at) continue;
+      if (!b.is_daytour_booking) continue;
+      if (b.check_in === todayStr) {
+        daytourGuests.push(b);
+      }
+    }
+
+    return { checkIns, baseCheckOuts, dueDepartures, inHouse, pendingBalances, todayRevenue, upcomingArrivals, overbookings, noLateCheckoutUnitIds, daytourGuests };
   }, [allBookings, todayStr]);
 
   const visibleDepartures = useMemo(() => {
@@ -574,7 +584,28 @@ export default function TodayPage() {
               </Section>
             </div>
 
-            {/* Upcoming Arrivals - Next 3 Days */}
+            {/* Day Tour Guests */}
+            {daytourGuests.length > 0 && (
+              <div className="rounded-lg border border-border bg-card overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
+                  <div className="flex items-center gap-2">
+                    <Sun className="h-4 w-4 text-warning-orange" />
+                    <span className="text-sm font-medium text-foreground">Day Tour Guests</span>
+                    <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
+                      {daytourGuests.length}
+                    </Badge>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground">
+                    {daytourGuests.reduce((s, b) => s + b.pax, 0)} total pax
+                  </span>
+                </div>
+                <div className="p-2 space-y-1.5">
+                  {daytourGuests.map((b) => (
+                    <GuestCard key={b.id} booking={b} unitName={b.unit_id ? (unitMap.get(b.unit_id) ?? "—") : "Day Tour"} onEdit={() => setEditingBooking(b)} />
+                  ))}
+                </div>
+              </div>
+            )}
             {upcomingArrivals.length > 0 && (
               <div className="rounded-lg border border-border bg-card overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
