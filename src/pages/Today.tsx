@@ -584,7 +584,28 @@ export default function TodayPage() {
               </Section>
             </div>
 
-            {/* Upcoming Arrivals - Next 3 Days */}
+            {/* Day Tour Guests */}
+            {daytourGuests.length > 0 && (
+              <div className="rounded-lg border border-border bg-card overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
+                  <div className="flex items-center gap-2">
+                    <Sun className="h-4 w-4 text-warning-orange" />
+                    <span className="text-sm font-medium text-foreground">Day Tour Guests</span>
+                    <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
+                      {daytourGuests.length}
+                    </Badge>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground">
+                    {daytourGuests.reduce((s, b) => s + b.pax, 0)} total pax
+                  </span>
+                </div>
+                <div className="p-2 space-y-1.5">
+                  {daytourGuests.map((b) => (
+                    <GuestCard key={b.id} booking={b} unitName={b.unit_id ? (unitMap.get(b.unit_id) ?? "—") : "Day Tour"} onEdit={() => setEditingBooking(b)} />
+                  ))}
+                </div>
+              </div>
+            )}
             {upcomingArrivals.length > 0 && (
               <div className="rounded-lg border border-border bg-card overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
