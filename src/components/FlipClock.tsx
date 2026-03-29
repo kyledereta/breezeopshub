@@ -36,15 +36,17 @@ export function FlipClock() {
     return () => clearInterval(interval);
   }, []);
 
-  const hours = time.getHours().toString().padStart(2, "0");
+  const rawHours = time.getHours();
+  const ampm = rawHours >= 12 ? "PM" : "AM";
+  const h12 = (rawHours % 12 || 12).toString().padStart(2, "0");
   const minutes = time.getMinutes().toString().padStart(2, "0");
   const seconds = time.getSeconds().toString().padStart(2, "0");
 
   return (
     <div className="flex items-center gap-0.5">
       <div className="flex gap-0.5">
-        <FlipDigit digit={hours[0]} />
-        <FlipDigit digit={hours[1]} />
+        <FlipDigit digit={h12[0]} />
+        <FlipDigit digit={h12[1]} />
       </div>
       <span className="text-foreground/60 font-mono text-sm font-bold mx-px animate-pulse">:</span>
       <div className="flex gap-0.5">
@@ -56,6 +58,7 @@ export function FlipClock() {
         <FlipDigit digit={seconds[0]} />
         <FlipDigit digit={seconds[1]} />
       </div>
+      <span className="text-foreground/70 font-mono text-[10px] font-bold ml-1">{ampm}</span>
     </div>
   );
 }
