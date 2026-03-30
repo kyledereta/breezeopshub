@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { getUnpaidExtras, getUnpaidExtrasTotal, hasUnpaidExtras } from "@/lib/unpaidExtras";
 import { format, parseISO, addDays, eachDayOfInterval, isWithinInterval, isSameDay, startOfMonth, endOfMonth } from "date-fns";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +20,15 @@ import { BookingModal } from "@/components/BookingModal";
 import { FormSubmissionsSection } from "@/components/FormSubmissionsSection";
 import { useContinuedStaySet, useContinuedStayMap, type ContinuedStayInfo } from "@/hooks/useContinuedStay";
 import { DaySummaryDialog } from "@/components/DaySummaryDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 function getPaymentBadgeClass(status: string) {
   switch (status) {
@@ -293,6 +302,7 @@ export default function TodayPage() {
   const [clearedDepartureIds, setClearedDepartureIds] = useState<string[]>([]);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [showDaySummary, setShowDaySummary] = useState(false);
+  const [showCheckoutReminder, setShowCheckoutReminder] = useState(false);
 
    const unitMap = useMemo(() => {
     const m = new Map<string, string>();
@@ -535,7 +545,48 @@ export default function TodayPage() {
   }, 0);
   const isLoading = bookingsLoading || unitsLoading;
 
+  // Build unit → area lookup
+  const unitAreaMap = useMemo(() => {
+    const m = new Map<string, string>();
+    units.forEach((u) => m.set(u.id, u.area));
+    return m;
+  }, [units]);
+
+  // Helper: group bookings by area
+  const groupByArea = useCallback((bookingsList: Booking[]) => {
+    const areaOrder = ["Owner's Villa", "Pool Area", "Beach Area"];
+    const grouped = new Map<string, Booking[]>();
+    for (const b of bookingsList) {
+      const area = b.unit_id ? (unitAreaMap.get(b.unit_id) ?? "Other") : "Other";
+      if (!grouped.has(area)) grouped.set(area, []);
+      grouped.get(area)!.push(b);
+    }
+    // Sort by area order
+    const sorted: { area: string; bookings: Booking[] }[] = [];
+    for (const area of areaOrder) {
+      if (grouped.has(area)) sorted.push({ area, bookings: grouped.get(area)! });
+    }
+    // Add any remaining areas
+    for (const [area, bookings] of grouped) {
+      if (!areaOrder.includes(area)) sorted.push({ area, bookings });
+    }
+    return sorted;
+  }, [unitAreaMap]);
+
+  const arrivalsGrouped = useMemo(() => groupByArea(checkIns), [checkIns, groupByArea]);
+  const inHouseGrouped = useMemo(() => groupByArea(inHouseDisplay), [inHouseDisplay, groupByArea]);
+
   const groupedUnits = useMemo(() => groupUnitsByArea(units), [units]);
+
+  // Show checkout reminder popup when there are due departures
+  useEffect(() => {
+    if (dueDepartures.length > 0 && !isLoading) {
+      const dismissed = sessionStorage.getItem("checkout_reminder_dismissed_" + todayStr);
+      if (!dismissed) {
+        setShowCheckoutReminder(true);
+      }
+    }
+  }, [dueDepartures.length, isLoading, todayStr]);
 
   // Compute available units for today and each day this week
   const weekDays = useMemo(() => {
@@ -655,10 +706,18 @@ export default function TodayPage() {
                 {checkIns.length === 0 ? (
                   <EmptyState text="No arrivals today" />
                 ) : (
-                  checkIns.map((b) => b.booking_group_id ? (
-                    <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} draggable onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} continuedStayIds={continuedStayIds} continuedStayMap={continuedStayMap} />
-                  ) : (
-                    <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable onEdit={() => setEditingBooking(b)} isContinuedStay={continuedStayIds.has(b.id)} continuedStayInfo={continuedStayMap.get(b.id)} unitMap={unitMap} />
+                  arrivalsGrouped.map(({ area, bookings: areaBookings }) => (
+                    <div key={area}>
+                      <div className="flex items-center gap-2 px-2 py-1.5">
+                        <span className="text-[10px] uppercase tracking-wider text-primary font-semibold">{area}</span>
+                        <div className="flex-1 h-px bg-border" />
+                      </div>
+                      {areaBookings.map((b) => b.booking_group_id ? (
+                        <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} draggable onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} continuedStayIds={continuedStayIds} continuedStayMap={continuedStayMap} />
+                      ) : (
+                        <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable onEdit={() => setEditingBooking(b)} isContinuedStay={continuedStayIds.has(b.id)} continuedStayInfo={continuedStayMap.get(b.id)} unitMap={unitMap} />
+                      ))}
+                    </div>
                   ))
                 )}
               </Section>
@@ -674,10 +733,18 @@ export default function TodayPage() {
                 {inHouseDisplay.length === 0 ? (
                   <EmptyState text="No guests in-house" />
                 ) : (
-                  inHouseDisplay.map((b) => b.booking_group_id ? (
-                    <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} draggable onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} continuedStayIds={continuedStayIds} continuedStayMap={continuedStayMap} />
-                  ) : (
-                    <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable onEdit={() => setEditingBooking(b)} noLateCheckout={!!b.unit_id && noLateCheckoutUnitIds.has(b.unit_id)} isContinuedStay={continuedStayIds.has(b.id)} continuedStayInfo={continuedStayMap.get(b.id)} unitMap={unitMap} />
+                  inHouseGrouped.map(({ area, bookings: areaBookings }) => (
+                    <div key={area}>
+                      <div className="flex items-center gap-2 px-2 py-1.5">
+                        <span className="text-[10px] uppercase tracking-wider text-ocean font-semibold">{area}</span>
+                        <div className="flex-1 h-px bg-border" />
+                      </div>
+                      {areaBookings.map((b) => b.booking_group_id ? (
+                        <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} draggable onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} continuedStayIds={continuedStayIds} continuedStayMap={continuedStayMap} />
+                      ) : (
+                        <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable onEdit={() => setEditingBooking(b)} noLateCheckout={!!b.unit_id && noLateCheckoutUnitIds.has(b.unit_id)} isContinuedStay={continuedStayIds.has(b.id)} continuedStayInfo={continuedStayMap.get(b.id)} unitMap={unitMap} />
+                      ))}
+                    </div>
                   ))
                 )}
               </Section>
@@ -896,6 +963,46 @@ export default function TodayPage() {
           units={units}
           onBookingClick={(b) => { setShowDaySummary(false); setEditingBooking(b); }}
         />
+
+        {/* 10AM Checkout Reminder Popup */}
+        <AlertDialog open={showCheckoutReminder} onOpenChange={setShowCheckoutReminder}>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2 text-coral">
+                <Clock className="h-5 w-5" />
+                Checkout Reminder — Due by 10:00 AM
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 pt-2">
+                  <p className="text-sm text-muted-foreground">
+                    The following guests are due to check out by <span className="font-semibold text-foreground">10:00 AM</span> today. Please remind them to vacate their rooms on time.
+                  </p>
+                  <div className="space-y-1.5 max-h-[200px] overflow-y-auto">
+                    {dueDepartures.map((b) => (
+                      <div key={b.id} className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+                        <div>
+                          <span className="text-sm font-medium text-foreground">{b.guest_name}</span>
+                          <span className="text-xs text-muted-foreground ml-2">{unitMap.get(b.unit_id ?? "") ?? "—"}</span>
+                        </div>
+                        <Badge variant="outline" className="text-[10px] bg-coral/20 text-coral border-coral/30">Due out</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction
+                onClick={() => {
+                  setShowCheckoutReminder(false);
+                  sessionStorage.setItem("checkout_reminder_dismissed_" + todayStr, "1");
+                }}
+              >
+                Got it, will remind them
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AppLayout>
   );
