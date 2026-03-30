@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback, useEffect } from "react";
+import React, { useMemo, useState, useCallback, useEffect } from "react";
 import { getUnpaidExtras, getUnpaidExtrasTotal, hasUnpaidExtras } from "@/lib/unpaidExtras";
 import { format, parseISO, addDays, eachDayOfInterval, isWithinInterval, isSameDay, startOfMonth, endOfMonth } from "date-fns";
 import { useNavigate } from "react-router-dom";
@@ -950,7 +950,7 @@ export default function TodayPage() {
                             </tr>
                           );
                         })}
-                      </>
+                      </React.Fragment>
                     ))}
                   </tbody>
                 </table>
