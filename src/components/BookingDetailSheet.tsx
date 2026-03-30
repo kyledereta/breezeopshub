@@ -181,6 +181,21 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
     return m;
   }, [units]);
 
+  // Compute the combined PAX for the group
+  const totalGroupPax = isGrouped && booking
+    ? allGroupBookings.reduce((s, b) => s + b.pax, 0)
+    : (booking?.pax ?? 0);
+
+  // Determine overall group payment status
+  const groupPaymentStatus = useMemo(() => {
+    if (!isGrouped || !booking) return booking?.payment_status ?? "Unpaid";
+    const allPaid = allGroupBookings.every((b) => b.payment_status === "Fully Paid" || b.payment_status === "Airbnb Paid");
+    if (allPaid) return "Fully Paid";
+    const anyPartial = allGroupBookings.some((b) => b.deposit_paid > 0);
+    if (anyPartial) return "Partial DP";
+    return "Unpaid";
+  }, [isGrouped, allGroupBookings, booking]);
+
   if (!booking) return null;
 
   const handleDelete = async () => {
