@@ -87,16 +87,34 @@ export function FormSubmissionsSection({ unitMap }: FormSubmissionsSectionProps)
   const handleDownloadConfirmation = () => {
     if (!approvedBooking) return;
     const s = approvedBooking.submission;
+    const checkInDate = parseISO(s.check_in);
+    const checkOutDate = parseISO(s.check_out);
     generateBookingConfirmationPdf({
       bookingRef: approvedBooking.bookingRef,
       guestName: s.facebook_name ? `${s.guest_name} (${s.facebook_name})` : s.guest_name,
-      checkIn: format(parseISO(s.check_in), "MMMM d, yyyy"),
-      checkOut: format(parseISO(s.check_out), "MMMM d, yyyy"),
+      checkIn: format(checkInDate, "MMMM d, yyyy"),
+      checkOut: format(checkOutDate, "MMMM d, yyyy"),
+      nights: Math.max(1, Math.round((checkOutDate.getTime() - checkInDate.getTime()) / 86400000)),
       unitName: s.unit_id ? (unitMap.get(s.unit_id) ?? "TBA") : "TBA",
       pax: s.pax,
       paymentMethod: s.payment_method,
       phone: s.phone,
       email: s.email,
+      bookingStatus: "Confirmed",
+      bookingSource: "Other",
+      paymentStatus: "Unpaid",
+      totalAmount: 0,
+      depositPaid: 0,
+      discountGiven: 0,
+      discountType: "fixed",
+      discountReason: null,
+      securityDeposit: 0,
+      extras: [],
+      notes: null,
+      hasCar: false,
+      isDaytour: false,
+      lateCheckout: false,
+      earlyCheckin: false,
     });
   };
 
