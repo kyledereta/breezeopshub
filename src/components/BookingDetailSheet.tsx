@@ -473,11 +473,12 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
                     <h4 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
                       <Car className="h-3 w-3" /> Vehicles
                     </h4>
-                    {((booking as any).car_details as { type: string; color: string; plate: string }[]).map((car, i) => (
+                    {((booking as any).car_details as { type: string; color: string; plate: string; parking?: string }[]).map((car, i) => (
                       <div key={i} className="text-xs text-muted-foreground bg-muted/30 rounded px-2 py-1.5">
                         {car.type && <span className="font-medium text-foreground">{car.type}</span>}
                         {car.color && <span> · {car.color}</span>}
                         {car.plate && <span> · <span className="font-mono text-foreground">{car.plate}</span></span>}
+                        {car.parking && <span> · 📍 {car.parking}</span>}
                       </div>
                     ))}
                   </div>
