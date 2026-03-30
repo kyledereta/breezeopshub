@@ -935,6 +935,58 @@ export default function TodayPage() {
                         <div className="flex-1 h-px bg-border" />
             </div>
 
+                      {areaBookings.map((b) => b.booking_group_id ? (
+                        <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} draggable onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} continuedStayIds={continuedStayIds} continuedStayMap={continuedStayMap} />
+                      ) : (
+                        <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable onEdit={() => setEditingBooking(b)} noLateCheckout={!!b.unit_id && noLateCheckoutUnitIds.has(b.unit_id)} isContinuedStay={continuedStayIds.has(b.id)} continuedStayInfo={continuedStayMap.get(b.id)} unitMap={unitMap} />
+                      ))}
+                    </div>
+                  ))
+                )}
+              </Section>
+
+              <Section
+                icon={LogOut} title="Departures" count={visibleDepartures.length} color="text-coral"
+                isDropTarget={dragOver === "departures"}
+                onDrop={(e) => handleDrop("departures", e)}
+                onDragOver={(e) => handleDragOver("departures", e)}
+                onDragLeave={handleDragLeave}
+                onClear={visibleDepartures.length > 0 ? handleClearDepartures : undefined}
+              >
+                {visibleDepartures.length === 0 ? (
+                  <EmptyState text="No departures yet" />
+                ) : (
+                  visibleDepartures.map((b) => b.booking_group_id ? (
+                    <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} continuedStayIds={continuedStayIds} continuedStayMap={continuedStayMap} isDeparture onToggleSettlement={handleToggleSettlement} onClearDeparture={handleClearSingleDeparture} />
+                  ) : (
+                    <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} onEdit={() => setEditingBooking(b)} noLateCheckout={!!b.unit_id && noLateCheckoutUnitIds.has(b.unit_id)} isContinuedStay={continuedStayIds.has(b.id)} continuedStayInfo={continuedStayMap.get(b.id)} unitMap={unitMap} isDeparture onToggleSettlement={handleToggleSettlement} onClearDeparture={handleClearSingleDeparture} />
+                  ))
+                )}
+              </Section>
+            </div>
+
+            {/* Day Tour Guests */}
+            {daytourGuests.length > 0 && (
+              <div className="rounded-lg border border-border bg-card overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
+                  <div className="flex items-center gap-2">
+                    <Sun className="h-4 w-4 text-warning-orange" />
+                    <span className="text-sm font-medium text-foreground">Day Tour Guests</span>
+                    <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
+                      {daytourGuests.length}
+                    </Badge>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground">
+                    {daytourGuests.reduce((s, b) => s + b.pax, 0)} total pax
+                  </span>
+                </div>
+                <div className="p-2 space-y-1.5">
+                  {daytourGuests.map((b) => (
+                    <GuestCard key={b.id} booking={b} unitName={b.unit_id ? (unitMap.get(b.unit_id) ?? "—") : "Day Tour"} onEdit={() => setEditingBooking(b)} isContinuedStay={continuedStayIds.has(b.id)} continuedStayInfo={continuedStayMap.get(b.id)} unitMap={unitMap} />
+                  ))}
+                </div>
+              </div>
+            )}
             {/* Turnover / Cleaning Attention */}
             {turnoverUnits.length > 0 && (
               <div className="rounded-lg border border-border bg-card overflow-hidden">
@@ -1003,58 +1055,6 @@ export default function TodayPage() {
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
-                      {areaBookings.map((b) => b.booking_group_id ? (
-                        <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} draggable onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} continuedStayIds={continuedStayIds} continuedStayMap={continuedStayMap} />
-                      ) : (
-                        <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} draggable onEdit={() => setEditingBooking(b)} noLateCheckout={!!b.unit_id && noLateCheckoutUnitIds.has(b.unit_id)} isContinuedStay={continuedStayIds.has(b.id)} continuedStayInfo={continuedStayMap.get(b.id)} unitMap={unitMap} />
-                      ))}
-                    </div>
-                  ))
-                )}
-              </Section>
-
-              <Section
-                icon={LogOut} title="Departures" count={visibleDepartures.length} color="text-coral"
-                isDropTarget={dragOver === "departures"}
-                onDrop={(e) => handleDrop("departures", e)}
-                onDragOver={(e) => handleDragOver("departures", e)}
-                onDragLeave={handleDragLeave}
-                onClear={visibleDepartures.length > 0 ? handleClearDepartures : undefined}
-              >
-                {visibleDepartures.length === 0 ? (
-                  <EmptyState text="No departures yet" />
-                ) : (
-                  visibleDepartures.map((b) => b.booking_group_id ? (
-                    <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} continuedStayIds={continuedStayIds} continuedStayMap={continuedStayMap} isDeparture onToggleSettlement={handleToggleSettlement} onClearDeparture={handleClearSingleDeparture} />
-                  ) : (
-                    <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} onEdit={() => setEditingBooking(b)} noLateCheckout={!!b.unit_id && noLateCheckoutUnitIds.has(b.unit_id)} isContinuedStay={continuedStayIds.has(b.id)} continuedStayInfo={continuedStayMap.get(b.id)} unitMap={unitMap} isDeparture onToggleSettlement={handleToggleSettlement} onClearDeparture={handleClearSingleDeparture} />
-                  ))
-                )}
-              </Section>
-            </div>
-
-            {/* Day Tour Guests */}
-            {daytourGuests.length > 0 && (
-              <div className="rounded-lg border border-border bg-card overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
-                  <div className="flex items-center gap-2">
-                    <Sun className="h-4 w-4 text-warning-orange" />
-                    <span className="text-sm font-medium text-foreground">Day Tour Guests</span>
-                    <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
-                      {daytourGuests.length}
-                    </Badge>
-                  </div>
-                  <span className="text-[10px] text-muted-foreground">
-                    {daytourGuests.reduce((s, b) => s + b.pax, 0)} total pax
-                  </span>
-                </div>
-                <div className="p-2 space-y-1.5">
-                  {daytourGuests.map((b) => (
-                    <GuestCard key={b.id} booking={b} unitName={b.unit_id ? (unitMap.get(b.unit_id) ?? "—") : "Day Tour"} onEdit={() => setEditingBooking(b)} isContinuedStay={continuedStayIds.has(b.id)} continuedStayInfo={continuedStayMap.get(b.id)} unitMap={unitMap} />
                   ))}
                 </div>
               </div>
