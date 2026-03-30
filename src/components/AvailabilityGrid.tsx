@@ -1012,6 +1012,9 @@ function BookingCell({ booking, continuedStayInfo, unitNameMap }: { booking: Boo
       <span className={cn("h-2 w-2 rounded-full shrink-0", getPaymentDotColor(booking.payment_status))} />
       {isGrouped && <Link2 className="h-2 w-2 text-background/70 shrink-0" />}
       {isContinuedStay && <RefreshCw className="h-2 w-2 text-background/70 shrink-0" />}
+      {isGrouped && booking.deposit_paid > 0 && (
+        <span className="text-[7px] text-background/90 font-bold bg-background/20 rounded px-0.5 shrink-0 leading-tight">DP</span>
+      )}
       <span className="text-[9px] text-background font-medium truncate leading-none">{booking.guest_name}</span>
       <span className="text-[9px] text-background/60 shrink-0 leading-none">{booking.pax}</span>
       {booking.pets && <PawPrint className="h-2 w-2 text-background/60 shrink-0" />}
@@ -1074,6 +1077,11 @@ function BookingTooltip({ booking, continuedStayInfo, unitNameMap }: { booking: 
         <div className="text-xs text-foreground font-medium">
           ₱{booking.total_amount.toLocaleString()}
         </div>
+        {booking.deposit_paid > 0 && (
+          <div className="text-[10px] text-primary font-medium">
+            DP: ₱{booking.deposit_paid.toLocaleString()}
+          </div>
+        )}
         {continuedStayInfo && (
           <div className="space-y-0.5">
             {fromName && (
