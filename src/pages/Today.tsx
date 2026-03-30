@@ -933,7 +933,80 @@ export default function TodayPage() {
                       <div className="flex items-center gap-2 px-2 py-1.5">
                         <span className="text-[10px] uppercase tracking-wider text-ocean font-semibold">{area}</span>
                         <div className="flex-1 h-px bg-border" />
+            </div>
+
+            {/* Turnover / Cleaning Attention */}
+            {turnoverUnits.length > 0 && (
+              <div className="rounded-lg border border-border bg-card overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
+                  <div className="flex items-center gap-2">
+                    <SprayCan className="h-4 w-4 text-warning-orange" />
+                    <span className="text-sm font-medium text-foreground">Turnover — Needs Cleaning</span>
+                    <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
+                      {turnoverUnits.length}
+                    </Badge>
+                    {turnoverUnits.some(t => t.urgency === "urgent") && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-destructive/20 text-destructive border-destructive/30">
+                        {turnoverUnits.filter(t => t.urgency === "urgent").length} urgent
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                <div className="p-2 space-y-1.5">
+                  {turnoverUnits.map((t) => (
+                    <div
+                      key={t.unitId}
+                      className={cn(
+                        "flex items-center justify-between rounded-md border px-3 py-2.5 text-xs transition-colors",
+                        t.urgency === "urgent"
+                          ? "border-destructive/40 bg-destructive/5"
+                          : t.urgency === "tomorrow"
+                          ? "border-warning-orange/40 bg-warning-orange/5"
+                          : "border-border bg-background"
+                      )}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <BedDouble className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                          <span className="font-medium text-foreground">{unitMap.get(t.unitId) ?? "Unknown"}</span>
+                          {t.urgency === "urgent" && (
+                            <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-destructive/20 text-destructive border-destructive/30">
+                              <AlertTriangle className="h-2.5 w-2.5 mr-0.5" />
+                              Same-day arrival
+                            </Badge>
+                          )}
+                          {t.urgency === "tomorrow" && (
+                            <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-warning-orange/20 text-warning-orange border-warning-orange/30">
+                              <Clock className="h-2.5 w-2.5 mr-0.5" />
+                              Tomorrow arrival
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <LogOut className="h-2.5 w-2.5" />
+                            Departing: <span className="text-foreground font-medium">{t.departingGuest}</span>
+                          </span>
+                          {t.nextBooking && (
+                            <>
+                              <span className="mx-0.5">→</span>
+                              <span className="flex items-center gap-1">
+                                <LogIn className="h-2.5 w-2.5" />
+                                Next: <span className="text-foreground font-medium">{t.nextBooking.guest_name}</span>
+                                <span>({format(parseISO(t.nextBooking.check_in), "MMM d")})</span>
+                              </span>
+                            </>
+                          )}
+                          {!t.nextBooking && (
+                            <span className="text-primary/70">No upcoming booking</span>
+                          )}
+                        </div>
                       </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
                       {areaBookings.map((b) => b.booking_group_id ? (
                         <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} draggable onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} continuedStayIds={continuedStayIds} continuedStayMap={continuedStayMap} />
                       ) : (
