@@ -93,7 +93,7 @@ function buildFeeLines(b: Booking, unitName: string, nights: number, unitRate: n
   return { lines, eps };
 }
 
-export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: BookingDetailSheetProps) {
+export function BookingDetailSheet({ open, onOpenChange, booking, onEdit, onEditGroup }: BookingDetailSheetProps) {
   const { data: units = [] } = useUnits();
   const { data: allBookings = [] } = useBookings(
     booking?.check_in,
