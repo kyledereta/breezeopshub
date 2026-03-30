@@ -1002,7 +1002,10 @@ export default function TodayPage() {
               const pendingTurnover = turnoverUnits.filter(t => !clearedTurnoverIds.includes(t.unitId));
               return pendingTurnover.length > 0 ? (
               <div className="rounded-lg border border-border bg-card overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
+                <div
+                  className="flex items-center justify-between px-4 py-2.5 border-b border-border cursor-pointer hover:bg-muted/30 transition-colors"
+                  onClick={() => setTurnoverExpanded(!turnoverExpanded)}
+                >
                   <div className="flex items-center gap-2">
                     <SprayCan className="h-4 w-4 text-warning-orange" />
                     <span className="text-sm font-medium text-foreground">Turnover — Needs Cleaning</span>
@@ -1015,8 +1018,9 @@ export default function TodayPage() {
                       </Badge>
                     )}
                   </div>
+                  {turnoverExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                 </div>
-                <div className="p-2 space-y-1.5">
+                {turnoverExpanded && <div className="p-2 space-y-1.5">
                   {pendingTurnover.map((t) => (
                     <label
                       key={t.unitId}
