@@ -166,6 +166,16 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
     }, 50);
   }, []);
 
+  useEffect(() => {
+    const now = new Date();
+    if (
+      currentMonth.getMonth() === now.getMonth() &&
+      currentMonth.getFullYear() === now.getFullYear()
+    ) {
+      scrollToToday();
+    }
+  }, [currentMonth, scrollToToday]);
+
   const groupedUnits = useMemo(() => groupUnitsByArea(units), [units]);
 
   // Resort capacity summary for legend
