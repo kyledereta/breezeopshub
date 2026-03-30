@@ -954,6 +954,46 @@ export default function TodayPage() {
           units={units}
           onBookingClick={(b) => { setShowDaySummary(false); setEditingBooking(b); }}
         />
+
+        {/* 10AM Checkout Reminder Popup */}
+        <AlertDialog open={showCheckoutReminder} onOpenChange={setShowCheckoutReminder}>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2 text-coral">
+                <Clock className="h-5 w-5" />
+                Checkout Reminder — Due by 10:00 AM
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 pt-2">
+                  <p className="text-sm text-muted-foreground">
+                    The following guests are due to check out by <span className="font-semibold text-foreground">10:00 AM</span> today. Please remind them to vacate their rooms on time.
+                  </p>
+                  <div className="space-y-1.5 max-h-[200px] overflow-y-auto">
+                    {dueDepartures.map((b) => (
+                      <div key={b.id} className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+                        <div>
+                          <span className="text-sm font-medium text-foreground">{b.guest_name}</span>
+                          <span className="text-xs text-muted-foreground ml-2">{unitMap.get(b.unit_id ?? "") ?? "—"}</span>
+                        </div>
+                        <Badge variant="outline" className="text-[10px] bg-coral/20 text-coral border-coral/30">Due out</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction
+                onClick={() => {
+                  setShowCheckoutReminder(false);
+                  sessionStorage.setItem("checkout_reminder_dismissed_" + todayStr, "1");
+                }}
+              >
+                Got it, will remind them
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AppLayout>
   );
