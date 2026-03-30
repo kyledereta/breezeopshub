@@ -578,22 +578,23 @@ export default function TodayPage() {
 
       if (!newStatus) return;
 
-      // Collect all booking IDs to update (group or single)
-      const idsToUpdate: string[] = [];
+      // Collect all booking IDs to update (group or single) with their previous statuses
+      const updates: { id: string; previousStatus: string }[] = [];
       if (groupId) {
         const groupBookings = allBookings.filter((b) => b.booking_group_id === groupId);
         for (const gb of groupBookings) {
-          if (gb.booking_status !== newStatus) idsToUpdate.push(gb.id);
+          if (gb.booking_status !== newStatus) updates.push({ id: gb.id, previousStatus: gb.booking_status });
         }
       } else {
         const booking = allBookings.find((b) => b.id === bookingId);
         if (!booking || booking.booking_status === newStatus) return;
-        idsToUpdate.push(bookingId);
+        updates.push({ id: bookingId, previousStatus: booking.booking_status });
       }
 
-      if (idsToUpdate.length === 0) return;
+      if (updates.length === 0) return;
 
       const booking = allBookings.find((b) => b.id === bookingId)!;
+      const idsToUpdate = updates.map((u) => u.id);
 
       if (zone === "departures") {
         for (const id of idsToUpdate) {
@@ -604,13 +605,48 @@ export default function TodayPage() {
         setManualDepartureIds((prev) => prev.filter((id) => !idsToUpdate.includes(id)));
       }
 
+      // Undo handler: revert all bookings to their previous statuses
+      const undoMove = () => {
+        for (const { id, previousStatus } of updates) {
+          updateBooking.mutate(
+            { id, booking_status: previousStatus as any },
+            {
+              onSuccess: id === bookingId
+                ? () => toast.success(`Reverted ${booking.guest_name} → ${previousStatus}`)
+                : undefined,
+            }
+          );
+        }
+        // Restore departure tracking state
+        if (zone === "departures") {
+          setManualDepartureIds((prev) => prev.filter((id) => !idsToUpdate.includes(id)));
+        } else {
+          // If we moved them OUT of departures, put them back
+          for (const { id, previousStatus } of updates) {
+            if (previousStatus === "Checked Out") {
+              setManualDepartureIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+              setClearedDepartureIds((prev) => prev.filter((cid) => cid !== id));
+            }
+          }
+        }
+      };
+
       // Update all bookings in the group
       for (const id of idsToUpdate) {
         updateBooking.mutate(
           { id, booking_status: newStatus as any },
           {
             onSuccess: id === bookingId
-              ? () => toast.success(`${booking.guest_name}${idsToUpdate.length > 1 ? ` (${idsToUpdate.length} units)` : ""} → ${newStatus}`)
+              ? () => toast.success(
+                  `${booking.guest_name}${idsToUpdate.length > 1 ? ` (${idsToUpdate.length} units)` : ""} → ${newStatus}`,
+                  {
+                    action: {
+                      label: "Undo",
+                      onClick: undoMove,
+                    },
+                    duration: 8000,
+                  }
+                )
               : undefined,
             onError: id === bookingId
               ? (err) => toast.error(`Failed to update: ${err.message}`)
