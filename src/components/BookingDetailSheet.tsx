@@ -38,6 +38,7 @@ interface BookingDetailSheetProps {
   onOpenChange: (open: boolean) => void;
   booking: Booking | null;
   onEdit: (booking: Booking) => void;
+  onEditGroup?: (groupBookings: Booking[]) => void;
 }
 
 function getPaymentBadgeStyle(status: string) {
