@@ -637,6 +637,11 @@ export default function TodayPage() {
     setManualDepartureIds([]);
   }, [visibleDepartures]);
 
+  const handleClearSingleDeparture = useCallback((bookingId: string) => {
+    setClearedDepartureIds((prev) => prev.includes(bookingId) ? prev : [...prev, bookingId]);
+    setManualDepartureIds((prev) => prev.filter((id) => id !== bookingId));
+  }, []);
+
   const handleDragOver = useCallback((zone: DropZone, e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
