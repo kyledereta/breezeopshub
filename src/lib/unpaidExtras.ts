@@ -31,6 +31,9 @@ export function getUnpaidExtras(booking: any): UnpaidExtra[] {
   if (booking.bonfire && !paid.bonfire && booking.bonfire_fee > 0) {
     extras.push({ name: "Bonfire", amount: booking.bonfire_fee });
   }
+  if (booking.early_checkin && !paid.early_checkin && booking.early_checkin_fee > 0) {
+    extras.push({ name: "Early Check-in", amount: booking.early_checkin_fee });
+  }
   if (booking.pets && !paid.pet_fee && booking.pet_fee > 0) {
     extras.push({ name: "Pet Fee", amount: booking.pet_fee });
   }

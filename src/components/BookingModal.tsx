@@ -98,6 +98,8 @@ const bookingSchema = z.object({
   towel_rent_fee: z.coerce.number().min(0),
   bonfire: z.boolean(),
   bonfire_fee: z.coerce.number().min(0),
+  early_checkin: z.boolean(),
+  early_checkin_fee: z.coerce.number().min(0),
   daytour: z.boolean(),
   is_daytour_booking: z.boolean(),
   daytour_fee: z.coerce.number().min(0),
@@ -282,6 +284,8 @@ export function BookingModal({
       towel_rent_fee: 0,
       bonfire: false,
       bonfire_fee: 0,
+      early_checkin: false,
+      early_checkin_fee: 0,
       daytour: false,
       is_daytour_booking: false,
       daytour_fee: 0,
@@ -305,6 +309,7 @@ export function BookingModal({
   const watchWaterJug = form.watch("water_jug");
   const watchTowelRent = form.watch("towel_rent");
   const watchBonfire = form.watch("bonfire");
+  const watchEarlyCheckin = form.watch("early_checkin");
   const watchDaytour = form.watch("daytour");
   const watchIsDaytourBooking = form.watch("is_daytour_booking");
   const watchDaytourFee = form.watch("daytour_fee");
@@ -517,6 +522,7 @@ export function BookingModal({
         (watchWaterJug ? Number(watchWaterJugFee) || 0 : 0) +
         (watchTowelRent ? Number(watchTowelRentFee) || 0 : 0) +
         (watchBonfire ? Number(watchBonfireFee) || 0 : 0) +
+        (watchEarlyCheckin ? Number(watchEarlyCheckinFee) || 0 : 0) +
         (watchDaytour ? Number(watchDaytourFee) || 0 : 0) +
         (Number(watchOtherExtrasFee) || 0);
 
@@ -545,6 +551,7 @@ export function BookingModal({
     watchWaterJug, watchWaterJugFee,
     watchTowelRent, watchTowelRentFee,
     watchBonfire, watchBonfireFee,
+    watchEarlyCheckin, watchEarlyCheckinFee,
     watchDaytour, watchDaytourFee, watchOtherExtrasFee,
     watchIsDaytourBooking,
     watchDiscountType, watchDiscountGiven,
@@ -568,6 +575,7 @@ export function BookingModal({
     if (watchWaterJug && extrasPaidStatus.water_jug) paidExtrasTotal += Number(watchWaterJugFee) || 0;
     if (watchTowelRent && extrasPaidStatus.towel_rent) paidExtrasTotal += Number(watchTowelRentFee) || 0;
     if (watchBonfire && extrasPaidStatus.bonfire) paidExtrasTotal += Number(watchBonfireFee) || 0;
+    if (watchEarlyCheckin && extrasPaidStatus.early_checkin) paidExtrasTotal += Number(watchEarlyCheckinFee) || 0;
     if (watchPets && additionalPet && extrasPaidStatus.pet_fee) paidExtrasTotal += Number(watchPetFee) || 0;
     if (watchDaytour && extrasPaidStatus.daytour) paidExtrasTotal += Number(watchDaytourFee) || 0;
     if (extrasPaidStatus.other_extras) paidExtrasTotal += Number(watchOtherExtrasFee) || 0;
@@ -597,6 +605,7 @@ export function BookingModal({
     watchUtensilRental, watchUtensilFee, watchKaraoke, watchKaraokeFee,
     watchKitchenUse, watchKitchenFee, watchWaterJug, watchWaterJugFee,
     watchTowelRent, watchTowelRentFee, watchBonfire, watchBonfireFee,
+    watchEarlyCheckin, watchEarlyCheckinFee,
     watchPets, watchPetFee, additionalPet, watchDaytour, watchDaytourFee,
     watchOtherExtrasFee, watchPaymentStatus, form,
   ]);
@@ -652,6 +661,8 @@ export function BookingModal({
         towel_rent_fee: (booking as any).towel_rent_fee ?? 0,
         bonfire: (booking as any).bonfire ?? false,
         bonfire_fee: (booking as any).bonfire_fee ?? 0,
+        early_checkin: (booking as any).early_checkin ?? false,
+        early_checkin_fee: (booking as any).early_checkin_fee ?? 0,
         daytour: (booking as any).daytour ?? false,
         is_daytour_booking: (booking as any).is_daytour_booking ?? false,
         daytour_fee: (booking as any).daytour_fee ?? 0,
@@ -721,6 +732,8 @@ export function BookingModal({
         towel_rent_fee: 0,
         bonfire: false,
         bonfire_fee: 0,
+        early_checkin: false,
+        early_checkin_fee: 0,
         daytour: false,
         is_daytour_booking: false,
         daytour_fee: 0,
@@ -843,6 +856,8 @@ export function BookingModal({
         towel_rent_fee: values.towel_rent ? values.towel_rent_fee : 0,
         bonfire: values.bonfire,
         bonfire_fee: values.bonfire ? values.bonfire_fee : 0,
+        early_checkin: values.early_checkin,
+        early_checkin_fee: values.early_checkin ? values.early_checkin_fee : 0,
         daytour: values.daytour,
         is_daytour_booking: values.is_daytour_booking,
         daytour_fee: values.daytour ? values.daytour_fee : 0,
@@ -968,13 +983,14 @@ export function BookingModal({
               kitchen_use_fee: 0,
               water_jug_fee: 0,
               towel_rent_fee: 0,
-              bonfire_fee: 0,
-              extension_fee: 0,
-              daytour_fee: 0,
-              other_extras_fee: 0,
-            } as any);
-          }
-          toast.success(`${additionalUnitIds.length} unit(s) added to group`);
+               bonfire_fee: 0,
+               early_checkin_fee: 0,
+               extension_fee: 0,
+               daytour_fee: 0,
+               other_extras_fee: 0,
+             } as any);
+           }
+           toast.success(`${additionalUnitIds.length} unit(s) added to group`);
         }
 
         // Log audit trail
@@ -1045,11 +1061,12 @@ export function BookingModal({
                 kitchen_use_fee: 0,
                 water_jug_fee: 0,
                 towel_rent_fee: 0,
-                bonfire_fee: 0,
-                extension_fee: 0,
-                daytour_fee: 0,
-                other_extras_fee: 0,
-              } as any);
+                 bonfire_fee: 0,
+                 early_checkin_fee: 0,
+                 extension_fee: 0,
+                 daytour_fee: 0,
+                 other_extras_fee: 0,
+               } as any);
             }
           } else {
             createdBooking = await createBooking.mutateAsync(fullPayload);
@@ -1707,6 +1724,7 @@ export function BookingModal({
                         watchWaterJug && "Water Jug",
                         watchTowelRent && "Towel",
                         watchBonfire && "Bonfire",
+                        watchEarlyCheckin && "Early Check-in",
                         watchDaytour && "Day Tour",
                         Number(watchOtherExtrasFee) > 0 && "Others",
                       ].filter(Boolean).join(", ") || "Select extras..."}
@@ -1722,6 +1740,7 @@ export function BookingModal({
                     { key: "water_jug" as const, label: "Water Jug", desc: "₱100/jug" },
                     { key: "towel_rent" as const, label: "Towel Rent", desc: "₱100/pc" },
                     { key: "bonfire" as const, label: "Bonfire Setup", desc: "₱300" },
+                    { key: "early_checkin" as const, label: "Early Check-in", desc: "₱500" },
                     { key: "daytour" as const, label: "Day Tour", desc: "Manual fee" },
                   ].map((item) => (
                     <label
