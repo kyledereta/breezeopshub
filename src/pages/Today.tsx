@@ -11,6 +11,7 @@ import {
   LogIn, LogOut, Home, Users, BedDouble, GripVertical, Clock,
   AlertCircle, X, Pencil, Tent, TreePalm, Crown, Fan, Snowflake, CalendarDays,
   DollarSign, AlertTriangle, ArrowRight, Link2, ChevronDown, ChevronUp, Sun, RefreshCw,
+  CircleDollarSign,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -70,6 +71,8 @@ interface GuestCardProps {
   unitMap?: Map<string, string>;
   groupTotalAmount?: number;
   groupTotalPax?: number;
+  isDeparture?: boolean;
+  onToggleSettlement?: (bookingId: string, value: boolean) => void;
 }
 
 function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, groupBookingId, groupUnitNames, isContinuedStay, continuedStayInfo, unitMap: cardUnitMap, groupTotalAmount, groupTotalPax }: GuestCardProps) {
