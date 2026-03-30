@@ -403,6 +403,9 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
                   if ((booking as any).security_deposit > 0) {
                     lines.push({ label: "Security Deposit", amount: (booking as any).security_deposit });
                   }
+                  if (booking.deposit_status === "Deducted" && booking.deposit_deducted_amount > 0) {
+                    lines.push({ label: booking.deposit_deducted_reason || "Damage/Deduction", amount: booking.deposit_deducted_amount, paidKey: "deposit_deduction" });
+                  }
 
                   if (booking.discount_given > 0) {
                     lines.push({ label: `Discount (${booking.discount_type})${booking.discount_reason ? ` — ${booking.discount_reason}` : ""}`, amount: -(booking.discount_type === "percentage" ? booking.discount_given : booking.discount_given) });
