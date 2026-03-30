@@ -76,7 +76,7 @@ interface GuestCardProps {
   onClearDeparture?: (bookingId: string) => void;
 }
 
-function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, groupBookingId, groupUnitNames, isContinuedStay, continuedStayInfo, unitMap: cardUnitMap, groupTotalAmount, groupTotalPax, isDeparture, onToggleSettlement }: GuestCardProps) {
+function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, groupBookingId, groupUnitNames, isContinuedStay, continuedStayInfo, unitMap: cardUnitMap, groupTotalAmount, groupTotalPax, isDeparture, onToggleSettlement, onClearDeparture }: GuestCardProps) {
   const [wasDragged, setWasDragged] = useState(false);
   const isGrouped = !!groupBookingId;
   return (
