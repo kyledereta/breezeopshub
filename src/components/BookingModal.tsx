@@ -314,6 +314,7 @@ export function BookingModal({
   const watchIsDaytourBooking = form.watch("is_daytour_booking");
   const watchDaytourFee = form.watch("daytour_fee");
   const watchOtherExtrasFee = form.watch("other_extras_fee");
+  const watchDepositDeductedAmount = form.watch("deposit_deducted_amount");
 
   // Get combined max_pax across all selected units
   const combinedMaxPax = useMemo(() => {
@@ -591,6 +592,7 @@ export function BookingModal({
     if (watchPets && additionalPet && extrasPaidStatus.pet_fee) paidExtrasTotal += Number(watchPetFee) || 0;
     if (watchDaytour && extrasPaidStatus.daytour) paidExtrasTotal += Number(watchDaytourFee) || 0;
     if (extrasPaidStatus.other_extras) paidExtrasTotal += Number(watchOtherExtrasFee) || 0;
+    if (watchDepositStatus === "Deducted" && extrasPaidStatus.deposit_deduction) paidExtrasTotal += Number(watchDepositDeductedAmount) || 0;
 
     const remaining = total - deposit - paidExtrasTotal;
     const fullySettled = remaining <= 0 || remainingPaid;
@@ -619,7 +621,7 @@ export function BookingModal({
     watchTowelRent, watchTowelRentFee, watchBonfire, watchBonfireFee,
     watchEarlyCheckin, watchEarlyCheckinFee,
     watchPets, watchPetFee, additionalPet, watchDaytour, watchDaytourFee,
-    watchOtherExtrasFee, watchPaymentStatus, form,
+    watchOtherExtrasFee, watchPaymentStatus, watchDepositStatus, watchDepositDeductedAmount, form,
   ]);
 
   // Auto-set source to Airbnb and remaining paid when "Airbnb Paid" is selected
@@ -2275,31 +2277,44 @@ export function BookingModal({
                 />
               </div>
               {watchDepositStatus === "Deducted" && (
-                <div className="grid grid-cols-2 gap-3">
-                  <FormField
-                    control={form.control}
-                    name="deposit_deducted_amount"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs text-muted-foreground">Amount Deducted (₱)</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="deposit_deducted_reason"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs text-muted-foreground">Deduction Reason</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="e.g. Damaged linens..." className="bg-background border-border" />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormField
+                      control={form.control}
+                      name="deposit_deducted_amount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs text-muted-foreground">Amount Deducted (₱)</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="deposit_deducted_reason"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs text-muted-foreground">Deduction Reason</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="e.g. Damaged linens..." className="bg-background border-border" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  {Number(form.watch("deposit_deducted_amount")) > 0 && (
+                    <div className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-3 py-2">
+                      <span className="text-xs text-muted-foreground">
+                        Damage/Deduction Charge: ₱{Number(form.watch("deposit_deducted_amount")).toLocaleString()}
+                      </span>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="text-[9px] text-muted-foreground">{extrasPaidStatus.deposit_deduction ? "Paid" : "Unpaid"}</span>
+                        <Switch checked={!!extrasPaidStatus.deposit_deduction} onCheckedChange={() => toggleExtraPaid("deposit_deduction")} className="scale-75" />
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -2544,6 +2559,7 @@ export function BookingModal({
                 if (watchBonfire && Number(watchBonfireFee) > 0) extrasList.push({ name: "Bonfire Setup", amount: Number(watchBonfireFee), paid: !!extrasPaidStatus.bonfire });
                 if (Number(watchDaytourFee) > 0) extrasList.push({ name: "Daytour Fee", amount: Number(watchDaytourFee), paid: !!extrasPaidStatus.daytour });
                 if (Number(watchOtherExtrasFee) > 0) extrasList.push({ name: form.watch("other_extras_note") || "Other Extras", amount: Number(watchOtherExtrasFee), paid: !!extrasPaidStatus.other_extras });
+                if (watchDepositStatus === "Deducted" && Number(watchDepositDeductedAmount) > 0) extrasList.push({ name: form.watch("deposit_deducted_reason") || "Damage/Deduction", amount: Number(watchDepositDeductedAmount), paid: !!extrasPaidStatus.deposit_deduction });
 
                 const paidExtrasTotal = extrasList.filter(e => e.paid).reduce((s, e) => s + e.amount, 0);
                 const unpaidExtras = extrasList.filter(e => !e.paid);

@@ -466,6 +466,15 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
                       {booking.deposit_status === "Deducted" && booking.deposit_deducted_amount > 0 && ` (₱${booking.deposit_deducted_amount.toLocaleString()})`}
                     </Badge>
                   )}
+                  {booking.deposit_status === "Deducted" && booking.deposit_deducted_amount > 0 && (
+                    <Badge variant="outline" className={cn("text-[10px]",
+                      (booking as any).extras_paid_status?.deposit_deduction ? "border-primary/30 text-primary" : "border-warning-orange/30 text-warning-orange"
+                    )}>
+                      {(booking as any).extras_paid_status?.deposit_deduction ? "✓ " : ""}
+                      {booking.deposit_deducted_reason || "Damage"}: ₱{booking.deposit_deducted_amount.toLocaleString()}
+                      {(booking as any).extras_paid_status?.deposit_deduction ? " Paid" : " Unpaid"}
+                    </Badge>
+                  )}
                 </div>
                 {/* Car Details */}
                 {(booking as any).has_car && (booking as any).car_details && Array.isArray((booking as any).car_details) && (booking as any).car_details.length > 0 && (
