@@ -443,7 +443,7 @@ export default function TodayPage() {
     return m;
   }, [allBookings]);
 
-  const { checkIns, baseCheckOuts, dueDepartures, inHouse, pendingBalances, todayRevenue, upcomingArrivals, overbookings, noLateCheckoutUnitIds, daytourGuests } = useMemo(() => {
+  const { checkIns, baseCheckOuts, dueDepartures, inHouse, pendingBalances, todayRevenue, upcomingArrivals, overbookings, noLateCheckoutUnitIds, daytourGuests, turnoverUnits } = useMemo(() => {
     const checkIns: Booking[] = [];
     const baseCheckOuts: Booking[] = [];
     const dueDepartures: Booking[] = [];
@@ -540,7 +540,42 @@ export default function TodayPage() {
       }
     }
 
-    return { checkIns, baseCheckOuts, dueDepartures, inHouse, pendingBalances, todayRevenue, upcomingArrivals, overbookings, noLateCheckoutUnitIds, daytourGuests };
+    // Turnover units: units departing today that need cleaning
+    const departuresToday = allBookings.filter(b =>
+      b.booking_status !== "Cancelled" && !b.deleted_at && b.unit_id &&
+      b.check_out === todayStr
+    );
+    const departingUnitIds = new Set(departuresToday.map(b => b.unit_id!));
+    const turnoverUnits: { unitId: string; departingGuest: string; nextBooking: Booking | null; urgency: "urgent" | "tomorrow" | "none" }[] = [];
+
+    for (const unitId of departingUnitIds) {
+      const departingBooking = departuresToday.find(b => b.unit_id === unitId)!;
+      // Find next booking for this unit
+      const nextBooking = allBookings
+        .filter(b => b.unit_id === unitId && b.booking_status !== "Cancelled" && !b.deleted_at && b.check_in >= todayStr && b.id !== departingBooking.id)
+        .sort((a, b) => a.check_in.localeCompare(b.check_in))[0] ?? null;
+
+      let urgency: "urgent" | "tomorrow" | "none" = "none";
+      if (nextBooking) {
+        if (nextBooking.check_in === todayStr) urgency = "urgent";
+        else if (nextBooking.check_in === tomorrowStr) urgency = "tomorrow";
+      }
+
+      turnoverUnits.push({
+        unitId,
+        departingGuest: departingBooking.guest_name,
+        nextBooking,
+        urgency,
+      });
+    }
+
+    // Sort: urgent first, then tomorrow, then none
+    turnoverUnits.sort((a, b) => {
+      const order = { urgent: 0, tomorrow: 1, none: 2 };
+      return order[a.urgency] - order[b.urgency];
+    });
+
+    return { checkIns, baseCheckOuts, dueDepartures, inHouse, pendingBalances, todayRevenue, upcomingArrivals, overbookings, noLateCheckoutUnitIds, daytourGuests, turnoverUnits };
   }, [allBookings, todayStr]);
 
   const visibleDepartures = useMemo(() => {
