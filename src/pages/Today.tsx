@@ -1080,7 +1080,7 @@ export default function TodayPage() {
                       </div>
                     </label>
                   ))}
-                </div>
+                </div>}
               </div>
               ) : null;
             })()}
@@ -1165,7 +1165,7 @@ export default function TodayPage() {
                 >
                   Full grid →
                 </Button>
-                </div>}
+                </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
