@@ -1270,6 +1270,14 @@ export default function TodayPage() {
           onBookingClick={(b) => { setShowDaySummary(false); setEditingBooking(b); }}
         />
 
+        <TodayReportDialog
+          open={showTodayReport}
+          onOpenChange={setShowTodayReport}
+          bookings={allBookings}
+          units={units}
+          todayStr={todayStr}
+        />
+
         {/* 10AM Checkout Reminder Popup */}
         <AlertDialog open={showCheckoutReminder} onOpenChange={setShowCheckoutReminder}>
           <AlertDialogContent className="max-w-md">
