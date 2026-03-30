@@ -157,7 +157,7 @@ export default function RevenuePage() {
   // Summary stats
   const currentMonth = format(new Date(), "yyyy-MM");
   const currentMonthData = monthlyData.find((m) => m.month === currentMonth);
-  const activeBookings = allBookings.filter((b) => b.booking_status !== "Cancelled");
+  const activeBookings = allBookings.filter((b) => b.booking_status !== "Cancelled" && b.is_primary !== false);
   const totalRevenue = activeBookings.reduce((s, b) => s + b.total_amount, 0);
 
   // Today's revenue
