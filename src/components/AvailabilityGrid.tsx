@@ -991,9 +991,10 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
   );
 }
 
-function BookingCell({ booking, isContinuedStay }: { booking: Booking; isContinuedStay?: boolean }) {
+function BookingCell({ booking, continuedStayInfo, unitNameMap }: { booking: Booking; continuedStayInfo?: ContinuedStayInfo; unitNameMap?: Map<string, string> }) {
   const isGrouped = !!(booking as any).booking_group_id;
   const hasDaytour = (booking as any).daytour_fee > 0 || (booking as any).daytour || (booking as any).is_daytour_booking;
+  const isContinuedStay = !!continuedStayInfo;
   return (
     <div className="relative px-2 flex items-center gap-1 truncate h-[22px]">
       <span className={cn("h-2 w-2 rounded-full shrink-0", getPaymentDotColor(booking.payment_status))} />
@@ -1008,11 +1009,23 @@ function BookingCell({ booking, isContinuedStay }: { booking: Booking; isContinu
           DT
         </span>
       )}
+      {isContinuedStay && continuedStayInfo?.toUnitId && unitNameMap && (
+        <span className="absolute -bottom-2 right-0 bg-ocean/90 text-[5px] text-white font-bold rounded px-0.5 leading-tight whitespace-nowrap">
+          → {unitNameMap.get(continuedStayInfo.toUnitId) || ""}
+        </span>
+      )}
+      {isContinuedStay && continuedStayInfo?.fromUnitId && !continuedStayInfo?.toUnitId && unitNameMap && (
+        <span className="absolute -bottom-2 right-0 bg-ocean/90 text-[5px] text-white font-bold rounded px-0.5 leading-tight whitespace-nowrap">
+          ← {unitNameMap.get(continuedStayInfo.fromUnitId) || ""}
+        </span>
+      )}
     </div>
   );
 }
 
-function BookingTooltip({ booking, isContinuedStay }: { booking: Booking; isContinuedStay?: boolean }) {
+function BookingTooltip({ booking, continuedStayInfo, unitNameMap }: { booking: Booking; continuedStayInfo?: ContinuedStayInfo; unitNameMap?: Map<string, string> }) {
+  const fromName = continuedStayInfo?.fromUnitId && unitNameMap ? unitNameMap.get(continuedStayInfo.fromUnitId) : null;
+  const toName = continuedStayInfo?.toUnitId && unitNameMap ? unitNameMap.get(continuedStayInfo.toUnitId) : null;
   return (
     <TooltipContent
       side="bottom"
@@ -1049,9 +1062,23 @@ function BookingTooltip({ booking, isContinuedStay }: { booking: Booking; isCont
         <div className="text-xs text-foreground font-medium">
           ₱{booking.total_amount.toLocaleString()}
         </div>
-        {isContinuedStay && (
-          <div className="flex items-center gap-1 text-[9px] text-ocean font-medium">
-            <RefreshCw className="h-2.5 w-2.5" /> Continued Stay
+        {continuedStayInfo && (
+          <div className="space-y-0.5">
+            {fromName && (
+              <div className="flex items-center gap-1 text-[9px] text-ocean font-medium">
+                <RefreshCw className="h-2.5 w-2.5" /> Continued from {fromName}
+              </div>
+            )}
+            {toName && (
+              <div className="flex items-center gap-1 text-[9px] text-ocean font-medium">
+                <RefreshCw className="h-2.5 w-2.5" /> Continues to {toName}
+              </div>
+            )}
+            {!fromName && !toName && (
+              <div className="flex items-center gap-1 text-[9px] text-ocean font-medium">
+                <RefreshCw className="h-2.5 w-2.5" /> Continued Stay
+              </div>
+            )}
           </div>
         )}
         {(booking as any).booking_group_id && (
