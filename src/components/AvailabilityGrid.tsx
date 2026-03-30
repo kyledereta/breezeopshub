@@ -285,6 +285,8 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
   // Get booking span (number of days visible in current month)
   const getBookingSpan = (booking: Booking, day: Date) => {
     const checkOut = parseISO(booking.check_out);
+    const isDaytour = (booking as any).is_daytour_booking && isSameDay(parseISO(booking.check_in), checkOut);
+    if (isDaytour) return 1;
     const end = checkOut > monthEnd ? monthEnd : checkOut;
     return differenceInDays(end, day);
   };
