@@ -190,6 +190,10 @@ export function TodayReportDialog({
     if (activeGroups.length > 0) takeaways.push(`${activeGroups.length} active group booking${activeGroups.length > 1 ? "s" : ""}`);
     const unpaidArrivals = arrivals.filter((b) => b.payment_status === "Unpaid").length;
     if (unpaidArrivals > 0) takeaways.push(`⚠ ${unpaidArrivals} unpaid arrival${unpaidArrivals > 1 ? "s" : ""} — collect payment on check-in`);
+    if (depositDeductions.length > 0) {
+      const totalDeducted = depositDeductions.reduce((s, d) => s + d.amount, 0);
+      takeaways.push(`₱${totalDeducted.toLocaleString()} in security deposit deductions from ${depositDeductions.length} booking${depositDeductions.length > 1 ? "s" : ""}`);
+    }
 
     return {
       arrivals, checkedIn, inHouse, departures, checkedOut, daytours,
@@ -197,6 +201,7 @@ export function TodayReportDialog({
       pendingBalances, totalPendingAmount,
       continuedBookings, activeGroups,
       extrasCollected, totalExtrasAmount,
+      depositDeductions,
       takeaways,
     };
   }, [bookings, units, todayStr]);
