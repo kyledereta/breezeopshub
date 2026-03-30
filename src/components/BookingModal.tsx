@@ -227,7 +227,7 @@ export function BookingModal({
       if ((booking as any).booking_group_id) {
         supabase
           .from("bookings")
-          .select("id, unit_id, is_primary")
+          .select("id, unit_id, is_primary, total_amount, deposit_paid, payment_status, extras_paid_status, booking_ref")
           .eq("booking_group_id", (booking as any).booking_group_id)
           .is("deleted_at", null)
           .then(({ data }) => {
@@ -236,6 +236,11 @@ export function BookingModal({
                 id: b.id,
                 unit_id: b.unit_id || "",
                 is_primary: b.is_primary,
+                total_amount: b.total_amount ?? 0,
+                deposit_paid: b.deposit_paid ?? 0,
+                payment_status: b.payment_status ?? "Unpaid",
+                extras_paid_status: (b.extras_paid_status && typeof b.extras_paid_status === 'object' ? b.extras_paid_status : {}) as Record<string, boolean>,
+                booking_ref: b.booking_ref ?? "",
               })));
             }
           });
