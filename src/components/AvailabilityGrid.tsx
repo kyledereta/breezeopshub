@@ -643,14 +643,14 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0.5 h-[4px] bg-primary rounded-full" />
                                   )}
                                   <div className={cn("rounded-full overflow-hidden", getBookingColor(booking))}>
-                                    <BookingCell booking={booking} isContinuedStay={continuedStayIds.has(booking.id)} />
+                                    <BookingCell booking={booking} continuedStayInfo={continuedStayMap.get(booking.id)} unitNameMap={unitNameMap} />
                                   </div>
                                   {connectorBelow && (
                                     <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0.5 h-[4px] bg-primary rounded-full" />
                                   )}
                                 </td>
                               </TooltipTrigger>
-                              <BookingTooltip booking={booking} isContinuedStay={continuedStayIds.has(booking.id)} />
+                              <BookingTooltip booking={booking} continuedStayInfo={continuedStayMap.get(booking.id)} unitNameMap={unitNameMap} />
                             </Tooltip>
                           );
                         }
@@ -669,14 +669,14 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                                   <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0.5 h-[4px] bg-primary rounded-full" />
                                 )}
                                 <div className={cn("rounded-full overflow-hidden", getBookingColor(booking))}>
-                                  <BookingCell booking={booking} isContinuedStay={continuedStayIds.has(booking.id)} />
+                                  <BookingCell booking={booking} continuedStayInfo={continuedStayMap.get(booking.id)} unitNameMap={unitNameMap} />
                                 </div>
                                 {connectorBelow && (
                                   <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0.5 h-[4px] bg-primary rounded-full" />
                                 )}
                               </td>
                             </TooltipTrigger>
-                            <BookingTooltip booking={booking} isContinuedStay={continuedStayIds.has(booking.id)} />
+                            <BookingTooltip booking={booking} continuedStayInfo={continuedStayMap.get(booking.id)} unitNameMap={unitNameMap} />
                           </Tooltip>
                         );
                       }
@@ -916,7 +916,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                                       </div>
                                     </div>
                                   </TooltipTrigger>
-                                  <BookingTooltip booking={booking} isContinuedStay={continuedStayIds.has(booking.id)} />
+                                  <BookingTooltip booking={booking} continuedStayInfo={continuedStayMap.get(booking.id)} unitNameMap={unitNameMap} />
                                 </Tooltip>
                               )}
                             </td>
