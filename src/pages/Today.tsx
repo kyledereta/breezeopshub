@@ -189,6 +189,20 @@ function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, group
             <CircleDollarSign className="h-3.5 w-3.5" />
           </Button>
         )}
+        {isDeparture && onClearDeparture && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-destructive"
+            title="Clear from departures"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClearDeparture(booking.id);
+            }}
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        )}
         {onEdit && (
           <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
         )}
