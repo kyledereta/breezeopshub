@@ -68,6 +68,9 @@ export function TodayReportDialog({
     // Extras collected
     const extrasCollected: { booking: Booking; extras: { name: string; amount: number }[] }[] = [];
 
+    // Security deposit deductions
+    const depositDeductions: { booking: Booking; amount: number; reason: string }[] = [];
+
     for (const b of bookings) {
       if (b.booking_status === "Cancelled" || b.deleted_at) continue;
       const isSecondary = b.booking_group_id && !b.is_primary;
