@@ -293,6 +293,7 @@ export default function TodayPage() {
   const [clearedDepartureIds, setClearedDepartureIds] = useState<string[]>([]);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [showDaySummary, setShowDaySummary] = useState(false);
+  const [showCheckoutReminder, setShowCheckoutReminder] = useState(false);
 
    const unitMap = useMemo(() => {
     const m = new Map<string, string>();
