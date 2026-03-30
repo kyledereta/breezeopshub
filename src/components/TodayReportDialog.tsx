@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import {
   LogIn, LogOut, Home, Users, BedDouble, DollarSign,
   Sun, AlertTriangle, CircleDollarSign, ArrowRightLeft,
-  Layers, Download, Package,
+  Layers, Download, Package, ShieldAlert,
 } from "lucide-react";
 import type { Booking } from "@/hooks/useBookings";
 import type { Unit } from "@/hooks/useUnits";
