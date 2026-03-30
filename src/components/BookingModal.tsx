@@ -1642,6 +1642,31 @@ export function BookingModal({
               </div>
               )}
 
+              {/* Late Check-out Approval */}
+              {!watchIsDaytourBooking && (
+              <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-xs text-foreground">Late Check-out Approved</span>
+                </div>
+                <FormField
+                  control={form.control}
+                  name="late_checkout"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center gap-0 space-y-0">
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="scale-75"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+              )}
+
               {/* Daytour: show date picker + PAX only */}
               {watchIsDaytourBooking && (
                 <div className="grid grid-cols-2 gap-3">
