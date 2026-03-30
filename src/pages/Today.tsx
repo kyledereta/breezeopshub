@@ -599,13 +599,21 @@ export default function TodayPage() {
   const visibleDepartures = useMemo(() => {
     const byId = new Map<string, Booking>();
 
-    // Include already checked-out guests
+    // Include already checked-out guests (checkout today)
     for (const booking of baseCheckOuts) {
       if (!clearedDepartureIds.includes(booking.id)) {
         byId.set(booking.id, booking);
       }
     }
 
+    // Include due departures (checked in, checkout today — need to check out)
+    for (const booking of dueDepartures) {
+      if (!clearedDepartureIds.includes(booking.id)) {
+        byId.set(booking.id, booking);
+      }
+    }
+
+    // Include manually dragged bookings
     for (const bookingId of manualDepartureIds) {
       const booking = allBookings.find((item) => item.id === bookingId);
       if (booking && !clearedDepartureIds.includes(booking.id)) {
