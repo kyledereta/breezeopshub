@@ -1,4 +1,5 @@
-import { Calendar, ClipboardList, Wallet, BarChart3, Users, Settings, LayoutDashboard, Home } from "lucide-react";
+import { Calendar, ClipboardList, Wallet, BarChart3, Users, Settings, LayoutDashboard, Home, LogOut } from "lucide-react";
+import { useAuth } from "@/components/AuthProvider";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import breezeLogo from "@/assets/breeze-logo.png";
@@ -74,6 +75,17 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        {/* Sign out */}
+        <div className="mt-auto border-t border-sidebar-border p-2">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Sign Out" onClick={() => signOut()}>
+                <LogOut className="h-4 w-4 shrink-0" />
+                {!collapsed && <span>Sign Out</span>}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </div>
       </SidebarContent>
     </Sidebar>
   );
