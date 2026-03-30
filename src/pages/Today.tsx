@@ -168,9 +168,30 @@ function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, group
           </div>
         )}
       </div>
-      {onEdit && (
-        <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
-      )}
+      <div className="flex items-center gap-1 shrink-0">
+        {isDeparture && onToggleSettlement && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "h-7 w-7",
+              (booking as any).post_checkout_settlement
+                ? "text-warning-orange hover:text-warning-orange/80"
+                : "text-muted-foreground opacity-0 group-hover:opacity-100"
+            )}
+            title={(booking as any).post_checkout_settlement ? "Mark as settled" : "Flag for post-checkout settlement"}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleSettlement(booking.id, !(booking as any).post_checkout_settlement);
+            }}
+          >
+            <CircleDollarSign className="h-3.5 w-3.5" />
+          </Button>
+        )}
+        {onEdit && (
+          <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+        )}
+      </div>
     </div>
   );
 }
