@@ -129,6 +129,7 @@ export type Database = {
           pet_fee: number
           pets: boolean
           phone: string | null
+          post_checkout_settlement: boolean
           referral_code: string | null
           remaining_mode_of_payment: string | null
           remaining_paid: boolean
@@ -193,6 +194,7 @@ export type Database = {
           pet_fee?: number
           pets?: boolean
           phone?: string | null
+          post_checkout_settlement?: boolean
           referral_code?: string | null
           remaining_mode_of_payment?: string | null
           remaining_paid?: boolean
@@ -257,6 +259,7 @@ export type Database = {
           pet_fee?: number
           pets?: boolean
           phone?: string | null
+          post_checkout_settlement?: boolean
           referral_code?: string | null
           remaining_mode_of_payment?: string | null
           remaining_paid?: boolean

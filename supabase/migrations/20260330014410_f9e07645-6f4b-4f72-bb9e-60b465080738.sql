@@ -1,0 +1,1 @@
+ALTER TABLE public.bookings ADD COLUMN post_checkout_settlement boolean NOT NULL DEFAULT false;
