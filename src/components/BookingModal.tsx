@@ -45,7 +45,7 @@ import { Constants, type Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { generateGuestRef } from "@/lib/guestRef";
-import { Upload, X, FileImage, PawPrint, AlertTriangle, Music, Plus, Car, Link2, Clock } from "lucide-react";
+import { Upload, X, FileImage, PawPrint, AlertTriangle, Music, Plus, Car, Link2, Clock, ClipboardPaste, Loader2, Wand2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { logBookingChanges } from "@/hooks/useBookingAuditLog";
 
@@ -212,6 +212,10 @@ export function BookingModal({
   const [joinGroupTarget, setJoinGroupTarget] = useState<{ id: string; booking_group_id: string | null } | null>(null);
   // Nested modal for adding a unit to an existing group
   const [showAddUnitToGroupModal, setShowAddUnitToGroupModal] = useState(false);
+  // Quick Paste mode
+  const [pasteMode, setPasteMode] = useState(false);
+  const [pasteText, setPasteText] = useState("");
+  const [isParsing, setIsParsing] = useState(false);
 
   const toggleExtraPaid = (key: string) => {
     setExtrasPaidStatus((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -219,7 +223,7 @@ export function BookingModal({
 
   // Load existing ID files when editing
   useEffect(() => {
-    if (!open) { setIdFiles([]); setExistingIds([]); setAdditionalUnitIds([]); setAdditionalPet(false); setBirthMonthFilter(0); setHasCar(false); setCarDetails([]); setExtrasPaidStatus({}); setGroupSiblings([]); setJoinGroupTarget(null); setMatchingGroupBooking(null); setShowGroupPrompt(false); return; }
+    if (!open) { setIdFiles([]); setExistingIds([]); setAdditionalUnitIds([]); setAdditionalPet(false); setBirthMonthFilter(0); setHasCar(false); setCarDetails([]); setExtrasPaidStatus({}); setGroupSiblings([]); setJoinGroupTarget(null); setMatchingGroupBooking(null); setShowGroupPrompt(false); setPasteMode(false); setPasteText(""); setIsParsing(false); return; }
     if (booking) {
       supabase.storage.from("guest-ids").list(booking.id).then(({ data }) => {
         if (data) setExistingIds(data.map((f) => `${booking.id}/${f.name}`));
@@ -1139,6 +1143,51 @@ export function BookingModal({
 
   const isPending = createBooking.isPending || updateBooking.isPending;
 
+  // Quick Paste: parse text via edge function
+  const handleParseText = async () => {
+    if (!pasteText.trim()) {
+      toast.error("Paste some text first");
+      return;
+    }
+    setIsParsing(true);
+    try {
+      const { data: fnData, error: fnError } = await supabase.functions.invoke("parse-booking-text", {
+        body: {
+          text: pasteText,
+          units: units.map((u) => ({ id: u.id, name: u.name, max_pax: u.max_pax })),
+        },
+      });
+      if (fnError) throw fnError;
+      if (!fnData?.success || !fnData?.data) throw new Error("Failed to parse");
+
+      const p = fnData.data;
+      // Prefill form fields
+      if (p.guest_name) form.setValue("guest_name", p.guest_name);
+      if (p.phone) form.setValue("phone", p.phone);
+      if (p.email) form.setValue("email", p.email);
+      if (p.check_in) form.setValue("check_in", p.check_in);
+      if (p.check_out) form.setValue("check_out", p.check_out);
+      if (p.pax != null) form.setValue("pax", p.pax);
+      if (p.unit_id) form.setValue("unit_id", p.unit_id);
+      if (p.booking_source) form.setValue("booking_source", p.booking_source);
+      if (p.booking_status) form.setValue("booking_status", p.booking_status);
+      if (p.notes) form.setValue("notes", p.notes);
+      if (p.pets) form.setValue("pets", true);
+      if (p.has_car) setHasCar(true);
+      if (p.deposit_paid != null && p.deposit_paid > 0) form.setValue("deposit_paid", p.deposit_paid);
+      if (p.total_amount != null && p.total_amount > 0) form.setValue("total_amount", p.total_amount);
+      if (p.payment_status) form.setValue("payment_status", p.payment_status);
+
+      setPasteMode(false);
+      toast.success("Booking details extracted! Review and save.");
+    } catch (err: any) {
+      console.error("Parse error:", err);
+      toast.error("Could not parse text. Try editing manually.");
+    } finally {
+      setIsParsing(false);
+    }
+  };
+
   // Available units for additional selection (exclude already selected)
   const availableUnitsForAdd = useMemo(() => {
     const selectedIds = new Set([watchUnitId, ...additionalUnitIds, ...groupSiblings.map((s) => s.unit_id)]);
@@ -1162,10 +1211,58 @@ export function BookingModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-card border-border max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl text-foreground">
-            {isEditing ? "Edit Booking" : "New Booking"}
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="font-display text-xl text-foreground">
+              {isEditing ? "Edit Booking" : "New Booking"}
+            </DialogTitle>
+            {!isEditing && !groupContext && (
+              <Button
+                type="button"
+                variant={pasteMode ? "default" : "outline"}
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={() => setPasteMode(!pasteMode)}
+              >
+                <ClipboardPaste className="h-3.5 w-3.5" />
+                {pasteMode ? "Manual" : "Quick Paste"}
+              </Button>
+            )}
+          </div>
         </DialogHeader>
+
+        {/* Quick Paste Mode */}
+        {pasteMode && (
+          <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-4">
+            <p className="text-xs text-muted-foreground">
+              Paste a message, chat conversation, or booking notes below. AI will extract the booking details automatically.
+            </p>
+            <Textarea
+              value={pasteText}
+              onChange={(e) => setPasteText(e.target.value)}
+              placeholder={"e.g.\nHi, I'd like to book Villa 1 for March 15-17.\n2 adults, 1 kid. My name is Juan Dela Cruz.\nContact: 0917-123-4567\nWill send DP of 2000 via GCash."}
+              className="min-h-[150px] bg-background border-border text-sm"
+              disabled={isParsing}
+            />
+            <Button
+              type="button"
+              className="w-full gap-2"
+              onClick={handleParseText}
+              disabled={isParsing || !pasteText.trim()}
+            >
+              {isParsing ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Parsing...
+                </>
+              ) : (
+                <>
+                  <Wand2 className="h-4 w-4" />
+                  Extract Booking Details
+                </>
+              )}
+            </Button>
+          </div>
+        )}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
