@@ -73,9 +73,10 @@ interface GuestCardProps {
   groupTotalPax?: number;
   isDeparture?: boolean;
   onToggleSettlement?: (bookingId: string, value: boolean) => void;
+  onClearDeparture?: (bookingId: string) => void;
 }
 
-function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, groupBookingId, groupUnitNames, isContinuedStay, continuedStayInfo, unitMap: cardUnitMap, groupTotalAmount, groupTotalPax, isDeparture, onToggleSettlement }: GuestCardProps) {
+function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, groupBookingId, groupUnitNames, isContinuedStay, continuedStayInfo, unitMap: cardUnitMap, groupTotalAmount, groupTotalPax, isDeparture, onToggleSettlement, onClearDeparture }: GuestCardProps) {
   const [wasDragged, setWasDragged] = useState(false);
   const isGrouped = !!groupBookingId;
   return (
@@ -188,6 +189,20 @@ function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, group
             <CircleDollarSign className="h-3.5 w-3.5" />
           </Button>
         )}
+        {isDeparture && onClearDeparture && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-destructive"
+            title="Clear from departures"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClearDeparture(booking.id);
+            }}
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        )}
         {onEdit && (
           <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
         )}
@@ -208,9 +223,10 @@ interface GroupedGuestCardProps {
   continuedStayMap?: Map<string, ContinuedStayInfo>;
   isDeparture?: boolean;
   onToggleSettlement?: (bookingId: string, value: boolean) => void;
+  onClearDeparture?: (bookingId: string) => void;
 }
 
-function GroupedGuestCard({ primaryBooking, siblingBookings, unitMap, groupUnitNames, draggable, onEdit, noLateCheckoutUnitIds, continuedStayIds, continuedStayMap, isDeparture, onToggleSettlement }: GroupedGuestCardProps) {
+function GroupedGuestCard({ primaryBooking, siblingBookings, unitMap, groupUnitNames, draggable, onEdit, noLateCheckoutUnitIds, continuedStayIds, continuedStayMap, isDeparture, onToggleSettlement, onClearDeparture }: GroupedGuestCardProps) {
   const [expanded, setExpanded] = useState(false);
   const allGroupBookings = [primaryBooking, ...siblingBookings];
   const groupTotalAmount = allGroupBookings.reduce((sum, b) => sum + b.total_amount, 0);
@@ -307,6 +323,20 @@ function GroupedGuestCard({ primaryBooking, siblingBookings, unitMap, groupUnitN
               <CircleDollarSign className="h-3.5 w-3.5" />
             </Button>
           )}
+          {isDeparture && onClearDeparture && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-destructive"
+              title="Clear from departures"
+              onClick={(e) => {
+                e.stopPropagation();
+                onClearDeparture(primaryBooking.id);
+              }}
+            >
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -364,7 +394,17 @@ export default function TodayPage() {
   const navigate = useNavigate();
   const [dragOver, setDragOver] = useState<DropZone | null>(null);
   const [manualDepartureIds, setManualDepartureIds] = useState<string[]>([]);
-  const [clearedDepartureIds, setClearedDepartureIds] = useState<string[]>([]);
+  const [clearedDepartureIds, setClearedDepartureIds] = useState<string[]>(() => {
+    try {
+      const stored = sessionStorage.getItem("cleared_departures_" + format(new Date(), "yyyy-MM-dd"));
+      return stored ? JSON.parse(stored) : [];
+    } catch { return []; }
+  });
+
+  // Persist cleared departures to sessionStorage
+  useEffect(() => {
+    sessionStorage.setItem("cleared_departures_" + todayStr, JSON.stringify(clearedDepartureIds));
+  }, [clearedDepartureIds, todayStr]);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [showDaySummary, setShowDaySummary] = useState(false);
   const [showCheckoutReminder, setShowCheckoutReminder] = useState(false);
@@ -596,6 +636,11 @@ export default function TodayPage() {
     setClearedDepartureIds((prev) => Array.from(new Set([...prev, ...visibleDepartures.map((b) => b.id)])));
     setManualDepartureIds([]);
   }, [visibleDepartures]);
+
+  const handleClearSingleDeparture = useCallback((bookingId: string) => {
+    setClearedDepartureIds((prev) => prev.includes(bookingId) ? prev : [...prev, bookingId]);
+    setManualDepartureIds((prev) => prev.filter((id) => id !== bookingId));
+  }, []);
 
   const handleDragOver = useCallback((zone: DropZone, e: React.DragEvent) => {
     e.preventDefault();
@@ -840,9 +885,9 @@ export default function TodayPage() {
                   <EmptyState text="No departures yet" />
                 ) : (
                   visibleDepartures.map((b) => b.booking_group_id ? (
-                    <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} continuedStayIds={continuedStayIds} continuedStayMap={continuedStayMap} isDeparture onToggleSettlement={handleToggleSettlement} />
+                    <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} continuedStayIds={continuedStayIds} continuedStayMap={continuedStayMap} isDeparture onToggleSettlement={handleToggleSettlement} onClearDeparture={handleClearSingleDeparture} />
                   ) : (
-                    <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} onEdit={() => setEditingBooking(b)} noLateCheckout={!!b.unit_id && noLateCheckoutUnitIds.has(b.unit_id)} isContinuedStay={continuedStayIds.has(b.id)} continuedStayInfo={continuedStayMap.get(b.id)} unitMap={unitMap} isDeparture onToggleSettlement={handleToggleSettlement} />
+                    <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} onEdit={() => setEditingBooking(b)} noLateCheckout={!!b.unit_id && noLateCheckoutUnitIds.has(b.unit_id)} isContinuedStay={continuedStayIds.has(b.id)} continuedStayInfo={continuedStayMap.get(b.id)} unitMap={unitMap} isDeparture onToggleSettlement={handleToggleSettlement} onClearDeparture={handleClearSingleDeparture} />
                   ))
                 )}
               </Section>
