@@ -2840,102 +2840,93 @@ export function BookingModal({
                         ₱{effectiveRemaining.toLocaleString()}
                       </span>
                     </div>
+
+                    {/* 6. Group Summary — consolidated within computation summary */}
+                    {isEditing && groupSiblings.length > 0 && (() => {
+                      const groupEntries = [
+                        {
+                          unitName: selectedUnit?.name || "This Unit",
+                          total: total,
+                          deposit: depositPaid,
+                          paymentStatus: form.watch("payment_status"),
+                          isCurrent: true,
+                        },
+                        ...groupSiblings.map((sib) => {
+                          const u = units.find((x) => x.id === sib.unit_id);
+                          return {
+                            unitName: u?.name || "Unit",
+                            total: sib.total_amount,
+                            deposit: sib.deposit_paid,
+                            paymentStatus: sib.payment_status,
+                            isCurrent: false,
+                          };
+                        }),
+                      ];
+
+                      const grandTotal = groupEntries.reduce((s, e) => s + e.total, 0);
+                      const grandDeposit = groupEntries.reduce((s, e) => s + e.deposit, 0);
+                      const grandBalance = Math.max(0, grandTotal - grandDeposit);
+                      const allSettled = groupEntries.every((e) => e.paymentStatus === "Fully Paid" || e.paymentStatus === "Airbnb Paid");
+
+                      return (
+                        <>
+                          <Separator className="bg-primary/30 my-1" />
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-primary flex items-center gap-1.5 pt-1">
+                            <Link2 className="h-3 w-3" /> Group Summary
+                            <span className="font-normal text-muted-foreground">({groupEntries.length} units)</span>
+                          </div>
+
+                          {groupEntries.map((entry, idx) => (
+                            <div key={idx} className={cn(
+                              "flex items-center justify-between text-xs rounded px-2 py-1",
+                              entry.isCurrent ? "bg-primary/10 border border-primary/20" : "bg-muted/30"
+                            )}>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-foreground font-medium">{entry.unitName}</span>
+                                {entry.isCurrent && <span className="text-[8px] bg-primary/20 text-primary px-1 rounded">editing</span>}
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span className="text-muted-foreground">₱{entry.total.toLocaleString()}</span>
+                                <span className={cn(
+                                  "text-[10px] font-medium px-1.5 py-0.5 rounded",
+                                  entry.paymentStatus === "Fully Paid" || entry.paymentStatus === "Airbnb Paid"
+                                    ? "bg-primary/20 text-primary"
+                                    : entry.paymentStatus === "Partial DP"
+                                    ? "bg-warning-orange/20 text-warning-orange"
+                                    : "bg-destructive/20 text-destructive"
+                                )}>
+                                  {entry.paymentStatus}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+
+                          <div className="flex justify-between text-sm font-semibold pt-1">
+                            <span className="text-primary">Group Total</span>
+                            <span className="text-primary">₱{grandTotal.toLocaleString()}</span>
+                          </div>
+                          {grandDeposit > 0 && (
+                            <div className="flex justify-between text-xs">
+                              <span className="text-muted-foreground">Total Deposits</span>
+                              <span className="text-foreground">-₱{grandDeposit.toLocaleString()}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between text-sm font-bold">
+                            <span className={allSettled ? "text-primary" : "text-destructive"}>
+                              {allSettled ? "All Settled ✓" : "Group Balance"}
+                            </span>
+                            <span className={allSettled ? "text-primary" : "text-destructive"}>
+                              ₱{grandBalance.toLocaleString()}
+                            </span>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                 );
               } catch {
                 return null;
               }
-            })()}
-
-            {/* Group Master Summary - shows all bookings in group */}
-            {isEditing && groupSiblings.length > 0 && (() => {
-              // Current booking's values
-              const currentTotal = Number(form.watch("total_amount")) || 0;
-              const currentDeposit = Number(form.watch("deposit_paid")) || 0;
-
-              // Build per-unit breakdown
-              const currentUnitName = selectedUnit?.name || "This Unit";
-              const currentPaymentStatus = form.watch("payment_status");
-
-              const groupEntries = [
-                {
-                  unitName: currentUnitName,
-                  total: currentTotal,
-                  deposit: currentDeposit,
-                  paymentStatus: currentPaymentStatus,
-                  isCurrent: true,
-                },
-                ...groupSiblings.map((sib) => {
-                  const u = units.find((x) => x.id === sib.unit_id);
-                  return {
-                    unitName: u?.name || "Unit",
-                    total: sib.total_amount,
-                    deposit: sib.deposit_paid,
-                    paymentStatus: sib.payment_status,
-                    isCurrent: false,
-                  };
-                }),
-              ];
-
-              const grandTotal = groupEntries.reduce((s, e) => s + e.total, 0);
-              const grandDeposit = groupEntries.reduce((s, e) => s + e.deposit, 0);
-              const grandRemaining = Math.max(0, grandTotal - grandDeposit);
-              const allSettled = groupEntries.every((e) => e.paymentStatus === "Fully Paid" || e.paymentStatus === "Airbnb Paid");
-
-              return (
-                <div className="rounded-lg border-2 border-primary/50 bg-primary/10 p-3 space-y-2">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
-                    <Link2 className="h-3.5 w-3.5" /> Group Master Summary
-                    <span className="text-[10px] font-normal text-muted-foreground ml-1">({groupEntries.length} units)</span>
-                  </h3>
-
-                  {groupEntries.map((entry, idx) => (
-                    <div key={idx} className={cn(
-                      "flex items-center justify-between text-xs rounded px-2 py-1",
-                      entry.isCurrent ? "bg-primary/10 border border-primary/20" : "bg-muted/30"
-                    )}>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-foreground font-medium">{entry.unitName}</span>
-                        {entry.isCurrent && <span className="text-[8px] bg-primary/20 text-primary px-1 rounded">editing</span>}
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-muted-foreground">₱{entry.total.toLocaleString()}</span>
-                        <span className={cn(
-                          "text-[10px] font-medium px-1.5 py-0.5 rounded",
-                          entry.paymentStatus === "Fully Paid" || entry.paymentStatus === "Airbnb Paid"
-                            ? "bg-primary/20 text-primary"
-                            : entry.paymentStatus === "Partial DP"
-                            ? "bg-warning-orange/20 text-warning-orange"
-                            : "bg-destructive/20 text-destructive"
-                        )}>
-                          {entry.paymentStatus}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-
-                  <Separator className="bg-primary/30" />
-
-                  <div className="flex justify-between text-sm font-semibold">
-                    <span className="text-primary">Group Total</span>
-                    <span className="text-primary">₱{grandTotal.toLocaleString()}</span>
-                  </div>
-                  {grandDeposit > 0 && (
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">Total Deposits</span>
-                      <span className="text-foreground">-₱{grandDeposit.toLocaleString()}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-sm font-bold">
-                    <span className={allSettled ? "text-primary" : "text-destructive"}>
-                      {allSettled ? "All Settled ✓" : "Group Balance"}
-                    </span>
-                    <span className={allSettled ? "text-primary" : "text-destructive"}>
-                      ₱{grandRemaining.toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              );
             })()}
 
             <div className="flex justify-end gap-2 pt-2">
