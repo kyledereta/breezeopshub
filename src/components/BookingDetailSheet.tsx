@@ -16,7 +16,7 @@ import { useBookingAuditLog } from "@/hooks/useBookingAuditLog";
 import { useSoftDeleteBooking } from "@/hooks/useBookingMutations";
 import { cn } from "@/lib/utils";
 import { PawPrint, UtensilsCrossed, AlertTriangle, Edit, Users, CalendarDays, StickyNote, Banknote, Trash2, Link2, Car, Download, RefreshCw } from "lucide-react";
-import { useContinuedStaySet } from "@/hooks/useContinuedStay";
+import { useContinuedStayMap } from "@/hooks/useContinuedStay";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -68,7 +68,12 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
     booking?.check_out
   );
   const { data: allBookingsGlobal = [] } = useBookings();
-  const continuedStayIds = useContinuedStaySet(allBookingsGlobal);
+  const continuedStayMap = useContinuedStayMap(allBookingsGlobal);
+  const unitNameMap = useMemo(() => {
+    const m: Record<string, string> = {};
+    units.forEach((u) => { m[u.id] = u.name; });
+    return m;
+  }, [units]);
   const { data: auditLog = [] } = useBookingAuditLog(booking?.id);
   const softDelete = useSoftDeleteBooking();
 

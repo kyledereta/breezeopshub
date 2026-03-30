@@ -16,7 +16,7 @@ import {
   getDay,
 } from "date-fns";
 import { Home, Tent, TreePalm, Crown, Fan, PawPrint, Users, Facebook, Instagram, Globe, MapPin, Share2, UtensilsCrossed, TrendingUp, Link2, Ban, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
-import { useContinuedStaySet } from "@/hooks/useContinuedStay";
+import { useContinuedStayMap, type ContinuedStayInfo } from "@/hooks/useContinuedStay";
 import { getPHHolidaysForMonth } from "@/lib/phHolidays";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -134,7 +134,12 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
 
   const { data: units = [], isLoading: unitsLoading } = useUnits();
   const { data: bookings = [], isLoading: bookingsLoading } = useBookings(startStr, endStr);
-  const continuedStayIds = useContinuedStaySet(bookings);
+  const continuedStayMap = useContinuedStayMap(bookings);
+  const unitNameMap = useMemo(() => {
+    const m = new Map<string, string>();
+    units.forEach((u) => m.set(u.id, u.name));
+    return m;
+  }, [units]);
   const { data: blockedDates = [] } = useBlockedDates(startStr, endStr);
   const blockDate = useBlockDate();
   const unblockDate = useUnblockDate();
