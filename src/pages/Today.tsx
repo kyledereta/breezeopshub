@@ -287,14 +287,35 @@ function GroupedGuestCard({ primaryBooking, siblingBookings, unitMap, groupUnitN
             )}
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
-          onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-        >
-          {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-        </Button>
+        <div className="flex items-center gap-0.5 shrink-0">
+          {isDeparture && onToggleSettlement && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "h-7 w-7",
+                (primaryBooking as any).post_checkout_settlement
+                  ? "text-warning-orange hover:text-warning-orange/80"
+                  : "text-muted-foreground opacity-0 group-hover:opacity-100"
+              )}
+              title={(primaryBooking as any).post_checkout_settlement ? "Mark as settled" : "Flag for post-checkout settlement"}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleSettlement(primaryBooking.id, !(primaryBooking as any).post_checkout_settlement);
+              }}
+            >
+              <CircleDollarSign className="h-3.5 w-3.5" />
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+            onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+          >
+            {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+          </Button>
+        </div>
       </div>
       {/* Individual unit cards */}
       {expanded && allGroupBookings.map((b) => (
