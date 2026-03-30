@@ -457,6 +457,17 @@ export function BookingModal({
     }
   }, [watchBonfire, form]);
 
+  // Auto-set early check-in fee when toggled
+  useEffect(() => {
+    if (watchEarlyCheckin) {
+      if (form.getValues("early_checkin_fee") === 0) {
+        form.setValue("early_checkin_fee", 500);
+      }
+    } else {
+      form.setValue("early_checkin_fee", 0);
+    }
+  }, [watchEarlyCheckin, form]);
+
   // Reset daytour options when toggled off; auto-set dates when toggled on
   useEffect(() => {
     if (!watchDaytour) {
@@ -498,6 +509,7 @@ export function BookingModal({
   const watchWaterJugFee = form.watch("water_jug_fee");
   const watchTowelRentFee = form.watch("towel_rent_fee");
   const watchBonfireFee = form.watch("bonfire_fee");
+  const watchEarlyCheckinFee = form.watch("early_checkin_fee");
 
   // Auto-calculate total amount based on nightly rate × nights + all extras - discount
   // Supports multi-unit: sums nightly rates across all selected units
