@@ -45,7 +45,7 @@ import { Constants, type Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { generateGuestRef } from "@/lib/guestRef";
-import { Upload, X, FileImage, PawPrint, AlertTriangle, Music, Plus, Car, Link2, Clock } from "lucide-react";
+import { Upload, X, FileImage, PawPrint, AlertTriangle, Music, Plus, Car, Link2, Clock, ClipboardPaste, Loader2, Wand2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { logBookingChanges } from "@/hooks/useBookingAuditLog";
 
@@ -212,6 +212,10 @@ export function BookingModal({
   const [joinGroupTarget, setJoinGroupTarget] = useState<{ id: string; booking_group_id: string | null } | null>(null);
   // Nested modal for adding a unit to an existing group
   const [showAddUnitToGroupModal, setShowAddUnitToGroupModal] = useState(false);
+  // Quick Paste mode
+  const [pasteMode, setPasteMode] = useState(false);
+  const [pasteText, setPasteText] = useState("");
+  const [isParsing, setIsParsing] = useState(false);
 
   const toggleExtraPaid = (key: string) => {
     setExtrasPaidStatus((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -219,7 +223,7 @@ export function BookingModal({
 
   // Load existing ID files when editing
   useEffect(() => {
-    if (!open) { setIdFiles([]); setExistingIds([]); setAdditionalUnitIds([]); setAdditionalPet(false); setBirthMonthFilter(0); setHasCar(false); setCarDetails([]); setExtrasPaidStatus({}); setGroupSiblings([]); setJoinGroupTarget(null); setMatchingGroupBooking(null); setShowGroupPrompt(false); return; }
+    if (!open) { setIdFiles([]); setExistingIds([]); setAdditionalUnitIds([]); setAdditionalPet(false); setBirthMonthFilter(0); setHasCar(false); setCarDetails([]); setExtrasPaidStatus({}); setGroupSiblings([]); setJoinGroupTarget(null); setMatchingGroupBooking(null); setShowGroupPrompt(false); setPasteMode(false); setPasteText(""); setIsParsing(false); return; }
     if (booking) {
       supabase.storage.from("guest-ids").list(booking.id).then(({ data }) => {
         if (data) setExistingIds(data.map((f) => `${booking.id}/${f.name}`));
