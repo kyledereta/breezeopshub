@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Lock, Mail, Loader2 } from "lucide-react";
+import { Lock, User, Loader2 } from "lucide-react";
 import breezeLogo from "@/assets/breeze-logo.png";
 import { useToast } from "@/hooks/use-toast";
 
+const EMAIL_DOMAIN = "breeze.local";
+
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -18,12 +20,13 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
 
+    const email = `${username.trim().toLowerCase()}@${EMAIL_DOMAIN}`;
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       toast({
         title: "Login failed",
-        description: error.message,
+        description: "Invalid username or password.",
         variant: "destructive",
       });
     } else {
@@ -47,14 +50,14 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-2">
-            <label className="text-xs text-muted-foreground font-medium">Email</label>
+            <label className="text-xs text-muted-foreground font-medium">Username</label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="staff@breeze.ph"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter username"
                 className="pl-9 bg-card border-border"
                 autoFocus
                 required
