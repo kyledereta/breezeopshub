@@ -1896,6 +1896,26 @@ export function BookingModal({
                     )}
                   />
                 )}
+                {watchEarlyCheckin && (
+                  <FormField
+                    control={form.control}
+                    name="early_checkin_fee"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Early Check-in Fee (₱)</FormLabel>
+                        <div className="flex items-center gap-2">
+                          <FormControl>
+                            <Input {...field} type="number" min={0} step="any" className="bg-background border-border flex-1" />
+                          </FormControl>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="text-[9px] text-muted-foreground">{extrasPaidStatus.early_checkin ? "Paid" : "Unpaid"}</span>
+                            <Switch checked={!!extrasPaidStatus.early_checkin} onCheckedChange={() => toggleExtraPaid("early_checkin")} className="scale-75" />
+                          </div>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                )}
                 {watchPets && additionalPet && (
                   <FormField
                     control={form.control}
