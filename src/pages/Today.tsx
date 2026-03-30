@@ -223,9 +223,10 @@ interface GroupedGuestCardProps {
   continuedStayMap?: Map<string, ContinuedStayInfo>;
   isDeparture?: boolean;
   onToggleSettlement?: (bookingId: string, value: boolean) => void;
+  onClearDeparture?: (bookingId: string) => void;
 }
 
-function GroupedGuestCard({ primaryBooking, siblingBookings, unitMap, groupUnitNames, draggable, onEdit, noLateCheckoutUnitIds, continuedStayIds, continuedStayMap, isDeparture, onToggleSettlement }: GroupedGuestCardProps) {
+function GroupedGuestCard({ primaryBooking, siblingBookings, unitMap, groupUnitNames, draggable, onEdit, noLateCheckoutUnitIds, continuedStayIds, continuedStayMap, isDeparture, onToggleSettlement, onClearDeparture }: GroupedGuestCardProps) {
   const [expanded, setExpanded] = useState(false);
   const allGroupBookings = [primaryBooking, ...siblingBookings];
   const groupTotalAmount = allGroupBookings.reduce((sum, b) => sum + b.total_amount, 0);
