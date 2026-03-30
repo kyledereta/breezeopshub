@@ -303,6 +303,8 @@ export default function TodayPage() {
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [showDaySummary, setShowDaySummary] = useState(false);
   const [showCheckoutReminder, setShowCheckoutReminder] = useState(false);
+  const [showArrivalsSummary, setShowArrivalsSummary] = useState(false);
+  const [showInHouseSummary, setShowInHouseSummary] = useState(false);
 
    const unitMap = useMemo(() => {
     const m = new Map<string, string>();
@@ -698,6 +700,7 @@ export default function TodayPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <Section
                 icon={LogIn} title="Arrivals" count={checkIns.length} color="text-primary"
+                onTitleClick={() => setShowArrivalsSummary(true)}
                 isDropTarget={dragOver === "arrivals"}
                 onDrop={(e) => handleDrop("arrivals", e)}
                 onDragOver={(e) => handleDragOver("arrivals", e)}
@@ -724,6 +727,7 @@ export default function TodayPage() {
 
               <Section
                 icon={Home} title="In-House" count={inHouse.length} color="text-ocean"
+                onTitleClick={() => setShowInHouseSummary(true)}
                 extraBadge={dueDepartures.length > 0 ? { label: `${dueDepartures.length} due out`, color: "bg-coral/20 text-coral" } : undefined}
                 isDropTarget={dragOver === "inhouse"}
                 onDrop={(e) => handleDrop("inhouse", e)}
