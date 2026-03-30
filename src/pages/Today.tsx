@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { getUnpaidExtras, getUnpaidExtrasTotal, hasUnpaidExtras } from "@/lib/unpaidExtras";
 import { format, parseISO, addDays, eachDayOfInterval, isWithinInterval, isSameDay, startOfMonth, endOfMonth } from "date-fns";
 import { useNavigate } from "react-router-dom";
@@ -535,7 +535,36 @@ export default function TodayPage() {
   }, 0);
   const isLoading = bookingsLoading || unitsLoading;
 
-  const groupedUnits = useMemo(() => groupUnitsByArea(units), [units]);
+  // Build unit → area lookup
+  const unitAreaMap = useMemo(() => {
+    const m = new Map<string, string>();
+    units.forEach((u) => m.set(u.id, u.area));
+    return m;
+  }, [units]);
+
+  // Helper: group bookings by area
+  const groupByArea = useCallback((bookingsList: Booking[]) => {
+    const areaOrder = ["Owner's Villa", "Pool Area", "Beach Area"];
+    const grouped = new Map<string, Booking[]>();
+    for (const b of bookingsList) {
+      const area = b.unit_id ? (unitAreaMap.get(b.unit_id) ?? "Other") : "Other";
+      if (!grouped.has(area)) grouped.set(area, []);
+      grouped.get(area)!.push(b);
+    }
+    // Sort by area order
+    const sorted: { area: string; bookings: Booking[] }[] = [];
+    for (const area of areaOrder) {
+      if (grouped.has(area)) sorted.push({ area, bookings: grouped.get(area)! });
+    }
+    // Add any remaining areas
+    for (const [area, bookings] of grouped) {
+      if (!areaOrder.includes(area)) sorted.push({ area, bookings });
+    }
+    return sorted;
+  }, [unitAreaMap]);
+
+  const arrivalsGrouped = useMemo(() => groupByArea(checkIns), [checkIns, groupByArea]);
+  const inHouseGrouped = useMemo(() => groupByArea(inHouseDisplay), [inHouseDisplay, groupByArea]);
 
   // Compute available units for today and each day this week
   const weekDays = useMemo(() => {
