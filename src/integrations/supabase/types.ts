@@ -105,6 +105,8 @@ export type Database = {
           discount_reason: string | null
           discount_type: string
           dp_mode_of_payment: string | null
+          early_checkin: boolean
+          early_checkin_fee: number
           email: string | null
           extension_fee: number
           extra_pax_fee: number
@@ -170,6 +172,8 @@ export type Database = {
           discount_reason?: string | null
           discount_type?: string
           dp_mode_of_payment?: string | null
+          early_checkin?: boolean
+          early_checkin_fee?: number
           email?: string | null
           extension_fee?: number
           extra_pax_fee?: number
@@ -235,6 +239,8 @@ export type Database = {
           discount_reason?: string | null
           discount_type?: string
           dp_mode_of_payment?: string | null
+          early_checkin?: boolean
+          early_checkin_fee?: number
           email?: string | null
           extension_fee?: number
           extra_pax_fee?: number
