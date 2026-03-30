@@ -899,8 +899,8 @@ export default function TodayPage() {
                   </thead>
                   <tbody>
                     {groupedUnits.map(({ area, units: areaUnits }) => (
-                      <>
-                        <tr key={area}>
+                      <React.Fragment key={area}>
+                        <tr>
                           <td
                             colSpan={weekDays.length + 1}
                             className="bg-secondary/50 px-3 py-1 text-[10px] uppercase tracking-[0.15em] text-primary font-semibold border-t border-border sticky left-0"

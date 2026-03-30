@@ -40,8 +40,11 @@ export function GuestProfileSheet({ guest, open, onOpenChange }: GuestProfileShe
   const deleteGuest = useDeleteGuest();
   const [idUrls, setIdUrls] = useState<string[]>([]);
 
+  const bookingIds = bookings.map((b: any) => b.id).sort().join(",");
+
   useEffect(() => {
     if (!guest || !open || bookings.length === 0) { setIdUrls([]); return; }
+    let cancelled = false;
     const loadIds = async () => {
       const urls: string[] = [];
       for (const b of bookings) {
@@ -53,10 +56,12 @@ export function GuestProfileSheet({ guest, open, onOpenChange }: GuestProfileShe
           }
         }
       }
-      setIdUrls(urls);
+      if (!cancelled) setIdUrls(urls);
     };
     loadIds();
-  }, [guest, open, bookings]);
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [guest?.id, open, bookingIds]);
 
   if (!guest) return null;
 
