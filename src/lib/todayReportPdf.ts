@@ -31,6 +31,7 @@ interface ReportData {
   activeGroups: { groupId: string; bookings: Booking[] }[];
   extrasCollected: { booking: Booking; extras: { name: string; amount: number }[] }[];
   totalExtrasAmount: number;
+  depositDeductions: { booking: Booking; amount: number; reason: string }[];
   takeaways: string[];
 }
 
