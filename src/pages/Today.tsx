@@ -11,7 +11,7 @@ import {
   LogIn, LogOut, Home, Users, BedDouble, GripVertical, Clock,
   AlertCircle, X, Pencil, Tent, TreePalm, Crown, Fan, Snowflake, CalendarDays,
   DollarSign, AlertTriangle, ArrowRight, Link2, ChevronDown, ChevronUp, Sun, RefreshCw,
-  CircleDollarSign, SprayCan,
+  CircleDollarSign, SprayCan, ClipboardList,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,7 @@ import { BookingModal } from "@/components/BookingModal";
 import { FormSubmissionsSection } from "@/components/FormSubmissionsSection";
 import { useContinuedStaySet, useContinuedStayMap, type ContinuedStayInfo } from "@/hooks/useContinuedStay";
 import { DaySummaryDialog } from "@/components/DaySummaryDialog";
+import { TodayReportDialog } from "@/components/TodayReportDialog";
 import {
   Dialog,
   DialogContent,
@@ -420,6 +421,7 @@ export default function TodayPage() {
   const [showArrivalsSummary, setShowArrivalsSummary] = useState(false);
   const [showInHouseSummary, setShowInHouseSummary] = useState(false);
   const [turnoverExpanded, setTurnoverExpanded] = useState(true);
+  const [showTodayReport, setShowTodayReport] = useState(false);
 
    const unitMap = useMemo(() => {
     const m = new Map<string, string>();
@@ -838,9 +840,20 @@ export default function TodayPage() {
               {format(new Date(), "EEEE, MMMM d, yyyy")}
             </p>
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Clock className="h-3.5 w-3.5" />
-            <span>Check-in 1 PM · Check-out 11 AM</span>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs gap-1.5"
+              onClick={() => setShowTodayReport(true)}
+            >
+              <ClipboardList className="h-3.5 w-3.5" />
+              Today's Report
+            </Button>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Clock className="h-3.5 w-3.5" />
+              <span>Check-in 1 PM · Check-out 11 AM</span>
+            </div>
           </div>
         </div>
 
@@ -1255,6 +1268,14 @@ export default function TodayPage() {
           bookings={allBookings}
           units={units}
           onBookingClick={(b) => { setShowDaySummary(false); setEditingBooking(b); }}
+        />
+
+        <TodayReportDialog
+          open={showTodayReport}
+          onOpenChange={setShowTodayReport}
+          bookings={allBookings}
+          units={units}
+          todayStr={todayStr}
         />
 
         {/* 10AM Checkout Reminder Popup */}
