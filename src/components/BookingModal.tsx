@@ -760,7 +760,7 @@ export function BookingModal({
         discount_reason: "",
         payment_status: pf ? "Partial DP" : "Unpaid",
         booking_status: "Confirmed",
-        booking_source: gc?.booking_source ?? (pf ? "Facebook Direct" : "Other"),
+        booking_source: gc?.booking_source ?? "Facebook Direct",
         mode_of_payment: "",
         email: gc?.email ?? pf?.email ?? "",
         phone: gc?.phone ?? pf?.phone ?? "",
