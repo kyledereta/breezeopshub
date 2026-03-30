@@ -364,7 +364,17 @@ export default function TodayPage() {
   const navigate = useNavigate();
   const [dragOver, setDragOver] = useState<DropZone | null>(null);
   const [manualDepartureIds, setManualDepartureIds] = useState<string[]>([]);
-  const [clearedDepartureIds, setClearedDepartureIds] = useState<string[]>([]);
+  const [clearedDepartureIds, setClearedDepartureIds] = useState<string[]>(() => {
+    try {
+      const stored = sessionStorage.getItem("cleared_departures_" + format(new Date(), "yyyy-MM-dd"));
+      return stored ? JSON.parse(stored) : [];
+    } catch { return []; }
+  });
+
+  // Persist cleared departures to sessionStorage
+  useEffect(() => {
+    sessionStorage.setItem("cleared_departures_" + todayStr, JSON.stringify(clearedDepartureIds));
+  }, [clearedDepartureIds, todayStr]);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [showDaySummary, setShowDaySummary] = useState(false);
   const [showCheckoutReminder, setShowCheckoutReminder] = useState(false);
