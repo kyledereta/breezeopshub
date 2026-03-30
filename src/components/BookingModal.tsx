@@ -2321,6 +2321,7 @@ export function BookingModal({
 
               {/* Remaining Balance Row */}
               {(() => {
+                // Use auto-computed total_amount from the form (synced by the auto-calc effect)
                 const totalAmt = Number(form.watch("total_amount")) || 0;
                 const dpAmt = Number(form.watch("deposit_paid")) || 0;
                 const remaining = totalAmt - dpAmt;
