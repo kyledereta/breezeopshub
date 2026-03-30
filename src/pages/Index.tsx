@@ -4,6 +4,7 @@ import { AvailabilityGrid } from "@/components/AvailabilityGrid";
 import { BookingModal } from "@/components/BookingModal";
 import { BookingDetailSheet } from "@/components/BookingDetailSheet";
 import { UnitDetailSheet } from "@/components/UnitDetailSheet";
+import { GroupBookingEditor } from "@/components/GroupBookingEditor";
 import type { Booking } from "@/hooks/useBookings";
 import type { Unit } from "@/hooks/useUnits";
 
@@ -15,6 +16,8 @@ const Index = () => {
   const [defaultDate, setDefaultDate] = useState<Date>();
   const [unitSheetOpen, setUnitSheetOpen] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
+  const [groupEditorOpen, setGroupEditorOpen] = useState(false);
+  const [groupEditorBookings, setGroupEditorBookings] = useState<Booking[]>([]);
 
   const openNewBooking = (unitId?: string, date?: Date) => {
     setSelectedBooking(null);
@@ -59,8 +62,9 @@ const Index = () => {
         booking={selectedBooking}
         onEdit={openEditBooking}
         onEditGroup={(groupBookings) => {
-          const primary = groupBookings.find((b) => (b as any).is_primary) || groupBookings[0];
-          if (primary) openEditBooking(primary);
+          setSheetOpen(false);
+          setGroupEditorBookings(groupBookings);
+          setGroupEditorOpen(true);
         }}
       />
 
@@ -76,6 +80,12 @@ const Index = () => {
         booking={selectedBooking}
         defaultUnitId={defaultUnitId}
         defaultDate={defaultDate}
+      />
+
+      <GroupBookingEditor
+        open={groupEditorOpen}
+        onOpenChange={setGroupEditorOpen}
+        groupBookings={groupEditorBookings}
       />
     </AppLayout>
   );
