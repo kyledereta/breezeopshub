@@ -1036,9 +1036,10 @@ interface SectionProps {
   onDragOver?: (e: React.DragEvent) => void; onDragLeave?: () => void;
   onClear?: () => void;
   extraBadge?: { label: string; color: string };
+  onTitleClick?: () => void;
 }
 
-function Section({ icon: Icon, title, count, color, children, isDropTarget, onDrop, onDragOver, onDragLeave, onClear, extraBadge }: SectionProps) {
+function Section({ icon: Icon, title, count, color, children, isDropTarget, onDrop, onDragOver, onDragLeave, onClear, extraBadge, onTitleClick }: SectionProps) {
   return (
     <div
       className={cn(
@@ -1050,7 +1051,10 @@ function Section({ icon: Icon, title, count, color, children, isDropTarget, onDr
       onDragLeave={onDragLeave}
     >
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
-        <div className="flex items-center gap-2">
+        <div
+          className={cn("flex items-center gap-2", onTitleClick && "cursor-pointer hover:opacity-80 transition-opacity")}
+          onClick={onTitleClick}
+        >
           <Icon className={cn("h-4 w-4", color)} />
           <span className="text-sm font-medium text-foreground">{title}</span>
           <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full font-medium">{count}</span>
