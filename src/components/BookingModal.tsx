@@ -210,6 +210,8 @@ export function BookingModal({
   const [remainingPaid, setRemainingPaid] = useState(false);
   // Track if user chose to join an existing group
   const [joinGroupTarget, setJoinGroupTarget] = useState<{ id: string; booking_group_id: string | null } | null>(null);
+  // Units booked during the selected date range (for availability filtering)
+  const [bookedUnitIds, setBookedUnitIds] = useState<Set<string>>(new Set());
   // Nested modal for adding a unit to an existing group
   const [showAddUnitToGroupModal, setShowAddUnitToGroupModal] = useState(false);
   // Quick Paste mode
@@ -381,6 +383,28 @@ export function BookingModal({
     };
     checkConflict();
   }, [watchUnitId, additionalUnitIds, watchCheckIn, watchCheckOut, booking, units]);
+
+  // Fetch units that are booked for the selected date range (for availability filtering)
+  useEffect(() => {
+    if (!watchCheckIn || !watchCheckOut) {
+      setBookedUnitIds(new Set());
+      return;
+    }
+    const fetchBooked = async () => {
+      let query = supabase
+        .from("bookings")
+        .select("unit_id")
+        .not("booking_status", "eq", "Cancelled")
+        .is("deleted_at", null)
+        .lt("check_in", watchCheckOut)
+        .gt("check_out", watchCheckIn);
+      if (booking) query = query.neq("id", booking.id);
+      const { data } = await query;
+      const ids = new Set((data || []).map(b => b.unit_id).filter(Boolean) as string[]);
+      setBookedUnitIds(ids);
+    };
+    fetchBooked();
+  }, [watchCheckIn, watchCheckOut, booking]);
 
   // Auto-set utensil rental fee to ₱500 when toggled on
   useEffect(() => {
