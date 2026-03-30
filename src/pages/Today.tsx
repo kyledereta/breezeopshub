@@ -405,6 +405,15 @@ export default function TodayPage() {
   useEffect(() => {
     sessionStorage.setItem("cleared_departures_" + todayStr, JSON.stringify(clearedDepartureIds));
   }, [clearedDepartureIds, todayStr]);
+  const [clearedTurnoverIds, setClearedTurnoverIds] = useState<string[]>(() => {
+    try {
+      const stored = sessionStorage.getItem("cleared_turnover_" + format(new Date(), "yyyy-MM-dd"));
+      return stored ? JSON.parse(stored) : [];
+    } catch { return []; }
+  });
+  useEffect(() => {
+    sessionStorage.setItem("cleared_turnover_" + todayStr, JSON.stringify(clearedTurnoverIds));
+  }, [clearedTurnoverIds, todayStr]);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [showDaySummary, setShowDaySummary] = useState(false);
   const [showCheckoutReminder, setShowCheckoutReminder] = useState(false);
