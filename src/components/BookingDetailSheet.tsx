@@ -172,16 +172,47 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
 
   const handleDownloadConfirmation = () => {
     if (!booking) return;
+
+    const extras: { label: string; amount: number }[] = [];
+    if (booking.extra_pax_fee > 0) extras.push({ label: "Extra PAX Fee", amount: booking.extra_pax_fee });
+    if (booking.daytour_fee > 0) extras.push({ label: "Daytour Fee", amount: booking.daytour_fee });
+    if (booking.utensil_rental && booking.utensil_rental_fee > 0) extras.push({ label: "Utensil Rental", amount: booking.utensil_rental_fee });
+    if (booking.karaoke && booking.karaoke_fee > 0) extras.push({ label: "Karaoke", amount: booking.karaoke_fee });
+    if (booking.kitchen_use && booking.kitchen_use_fee > 0) extras.push({ label: "Kitchen Use", amount: booking.kitchen_use_fee });
+    if (booking.pet_fee > 0) extras.push({ label: "Pet Fee", amount: booking.pet_fee });
+    if (booking.water_jug && booking.water_jug_fee > 0) extras.push({ label: `Water Jug (×${booking.water_jug_qty})`, amount: booking.water_jug_fee });
+    if (booking.towel_rent && booking.towel_rent_fee > 0) extras.push({ label: `Towel Rent (×${booking.towel_rent_qty})`, amount: booking.towel_rent_fee });
+    if (booking.bonfire && booking.bonfire_fee > 0) extras.push({ label: "Bonfire Setup", amount: booking.bonfire_fee });
+    if (booking.early_checkin && booking.early_checkin_fee > 0) extras.push({ label: "Early Check-in", amount: booking.early_checkin_fee });
+    if (booking.extension_fee > 0) extras.push({ label: "Extension Fee", amount: booking.extension_fee });
+    if (booking.other_extras_fee > 0) extras.push({ label: booking.other_extras_note || "Other Extras", amount: booking.other_extras_fee });
+
     generateBookingConfirmationPdf({
       bookingRef: booking.booking_ref,
       guestName: booking.guest_name,
       checkIn: format(parseISO(booking.check_in), "MMMM d, yyyy"),
       checkOut: format(parseISO(booking.check_out), "MMMM d, yyyy"),
+      nights,
       unitName,
       pax: booking.pax,
-      paymentMethod: (booking as any).dp_mode_of_payment || (booking as any).mode_of_payment || null,
+      paymentMethod: booking.dp_mode_of_payment || booking.mode_of_payment || null,
       phone: booking.phone,
       email: booking.email,
+      bookingStatus: booking.booking_status,
+      bookingSource: booking.booking_source,
+      paymentStatus: booking.payment_status,
+      totalAmount: booking.total_amount,
+      depositPaid: booking.deposit_paid,
+      discountGiven: booking.discount_given,
+      discountType: booking.discount_type,
+      discountReason: booking.discount_reason,
+      securityDeposit: booking.security_deposit,
+      extras,
+      notes: booking.notes,
+      hasCar: booking.has_car,
+      isDaytour: booking.is_daytour_booking,
+      lateCheckout: booking.late_checkout,
+      earlyCheckin: booking.early_checkin,
     });
   };
 

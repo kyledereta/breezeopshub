@@ -34,15 +34,15 @@ interface ConfirmationData {
 }
 
 // Color palette
-const NAVY = [20, 50, 75] as const;
-const GOLD = [180, 145, 72] as const;
-const DARK = [30, 41, 59] as const;
-const MUTED = [100, 116, 139] as const;
-const LIGHT_BG = [248, 250, 252] as const;
-const WHITE = [255, 255, 255] as const;
-const GREEN = [22, 101, 52] as const;
-const GREEN_BG = [220, 252, 231] as const;
-const GOLD_BG = [254, 249, 235] as const;
+const NAVY: [number, number, number] = [20, 50, 75];
+const GOLD: [number, number, number] = [180, 145, 72];
+const DARK: [number, number, number] = [30, 41, 59];
+const MUTED: [number, number, number] = [100, 116, 139];
+const LIGHT_BG: [number, number, number] = [248, 250, 252];
+const WHITE: [number, number, number] = [255, 255, 255];
+const GREEN: [number, number, number] = [22, 101, 52];
+const GREEN_BG: [number, number, number] = [220, 252, 231];
+const GOLD_BG: [number, number, number] = [254, 249, 235];
 
 export function generateBookingConfirmationPdf(data: ConfirmationData) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
