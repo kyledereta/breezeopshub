@@ -1211,10 +1211,58 @@ export function BookingModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-card border-border max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl text-foreground">
-            {isEditing ? "Edit Booking" : "New Booking"}
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="font-display text-xl text-foreground">
+              {isEditing ? "Edit Booking" : "New Booking"}
+            </DialogTitle>
+            {!isEditing && !groupContext && (
+              <Button
+                type="button"
+                variant={pasteMode ? "default" : "outline"}
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={() => setPasteMode(!pasteMode)}
+              >
+                <ClipboardPaste className="h-3.5 w-3.5" />
+                {pasteMode ? "Manual" : "Quick Paste"}
+              </Button>
+            )}
+          </div>
         </DialogHeader>
+
+        {/* Quick Paste Mode */}
+        {pasteMode && (
+          <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-4">
+            <p className="text-xs text-muted-foreground">
+              Paste a message, chat conversation, or booking notes below. AI will extract the booking details automatically.
+            </p>
+            <Textarea
+              value={pasteText}
+              onChange={(e) => setPasteText(e.target.value)}
+              placeholder={"e.g.\nHi, I'd like to book Villa 1 for March 15-17.\n2 adults, 1 kid. My name is Juan Dela Cruz.\nContact: 0917-123-4567\nWill send DP of 2000 via GCash."}
+              className="min-h-[150px] bg-background border-border text-sm"
+              disabled={isParsing}
+            />
+            <Button
+              type="button"
+              className="w-full gap-2"
+              onClick={handleParseText}
+              disabled={isParsing || !pasteText.trim()}
+            >
+              {isParsing ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Parsing...
+                </>
+              ) : (
+                <>
+                  <Wand2 className="h-4 w-4" />
+                  Extract Booking Details
+                </>
+              )}
+            </Button>
+          </div>
+        )}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
