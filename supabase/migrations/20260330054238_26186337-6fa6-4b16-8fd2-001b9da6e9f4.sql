@@ -1,0 +1,1 @@
+ALTER TABLE public.bookings ADD COLUMN late_checkout boolean NOT NULL DEFAULT false;

@@ -122,6 +122,7 @@ export type Database = {
           key_deposit: boolean
           kitchen_use: boolean
           kitchen_use_fee: number
+          late_checkout: boolean
           mode_of_payment: string | null
           notes: string | null
           other_extras_fee: number
@@ -189,6 +190,7 @@ export type Database = {
           key_deposit?: boolean
           kitchen_use?: boolean
           kitchen_use_fee?: number
+          late_checkout?: boolean
           mode_of_payment?: string | null
           notes?: string | null
           other_extras_fee?: number
@@ -256,6 +258,7 @@ export type Database = {
           key_deposit?: boolean
           kitchen_use?: boolean
           kitchen_use_fee?: number
+          late_checkout?: boolean
           mode_of_payment?: string | null
           notes?: string | null
           other_extras_fee?: number
