@@ -226,6 +226,33 @@ export function generateTodayReportPdf({ todayStr, report, unitMap, totalUnits }
     y += 3;
   }
 
+  // ─── DEPOSIT DEDUCTIONS ───
+  if (report.depositDeductions.length > 0) {
+    const totalDeducted = report.depositDeductions.reduce((s, d) => s + d.amount, 0);
+    checkPage(20);
+    y = drawSection(doc, "DEPOSIT DEDUCTIONS", `P${totalDeducted.toLocaleString()} from ${report.depositDeductions.length} bookings`, ml, y, cw);
+    for (const { booking: b, amount, reason } of report.depositDeductions) {
+      checkPage(12);
+      doc.setFillColor(254, 242, 242);
+      doc.roundedRect(ml, y, cw, 10, 1, 1, "F");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      doc.setTextColor(...DARK);
+      doc.text(b.guest_name, ml + 3, y + 4.5);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(6.5);
+      doc.setTextColor(...MUTED);
+      const uName = unitMap.get(b.unit_id ?? "") ?? "—";
+      doc.text(`${uName} | ${reason}`, ml + 3, y + 8.5);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      doc.setTextColor(220, 38, 38);
+      doc.text(`P${amount.toLocaleString()}`, ml + cw - 3, y + 6.5, { align: "right" });
+      y += 12;
+    }
+    y += 3;
+  }
+
   // ─── PENDING BALANCES ───
   if (report.pendingBalances.length > 0) {
     checkPage(20);
