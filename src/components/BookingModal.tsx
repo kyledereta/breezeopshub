@@ -2689,6 +2689,7 @@ export function BookingModal({
                 if (watchWaterJug && Number(watchWaterJugFee) > 0) extrasList.push({ name: `Water Jug (×${Number(form.watch("water_jug_qty")) || 0})`, amount: Number(watchWaterJugFee), paid: !!extrasPaidStatus.water_jug });
                 if (watchTowelRent && Number(watchTowelRentFee) > 0) extrasList.push({ name: `Towel Rent (×${Number(form.watch("towel_rent_qty")) || 0})`, amount: Number(watchTowelRentFee), paid: !!extrasPaidStatus.towel_rent });
                 if (watchBonfire && Number(watchBonfireFee) > 0) extrasList.push({ name: "Bonfire Setup", amount: Number(watchBonfireFee), paid: !!extrasPaidStatus.bonfire });
+                if (watchEarlyCheckin && Number(watchEarlyCheckinFee) > 0) extrasList.push({ name: "Early Check-in", amount: Number(watchEarlyCheckinFee), paid: !!extrasPaidStatus.early_checkin });
                 if (Number(watchDaytourFee) > 0) extrasList.push({ name: "Daytour Fee", amount: Number(watchDaytourFee), paid: !!extrasPaidStatus.daytour });
                 if (Number(watchOtherExtrasFee) > 0) extrasList.push({ name: form.watch("other_extras_note") || "Other Extras", amount: Number(watchOtherExtrasFee), paid: !!extrasPaidStatus.other_extras });
                 if (watchDepositStatus === "Deducted" && Number(watchDepositDeductedAmount) > 0) extrasList.push({ name: form.watch("deposit_deducted_reason") || "Damage/Deduction", amount: Number(watchDepositDeductedAmount), paid: !!extrasPaidStatus.deposit_deduction });
