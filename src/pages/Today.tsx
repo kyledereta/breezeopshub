@@ -997,28 +997,30 @@ export default function TodayPage() {
               </div>
             )}
             {/* Turnover / Cleaning Attention */}
-            {turnoverUnits.length > 0 && (
+            {(() => {
+              const pendingTurnover = turnoverUnits.filter(t => !clearedTurnoverIds.includes(t.unitId));
+              return pendingTurnover.length > 0 ? (
               <div className="rounded-lg border border-border bg-card overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
                   <div className="flex items-center gap-2">
                     <SprayCan className="h-4 w-4 text-warning-orange" />
                     <span className="text-sm font-medium text-foreground">Turnover — Needs Cleaning</span>
                     <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
-                      {turnoverUnits.length}
+                      {pendingTurnover.length}
                     </Badge>
-                    {turnoverUnits.some(t => t.urgency === "urgent") && (
+                    {pendingTurnover.some(t => t.urgency === "urgent") && (
                       <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-destructive/20 text-destructive border-destructive/30">
-                        {turnoverUnits.filter(t => t.urgency === "urgent").length} urgent
+                        {pendingTurnover.filter(t => t.urgency === "urgent").length} urgent
                       </Badge>
                     )}
                   </div>
                 </div>
                 <div className="p-2 space-y-1.5">
-                  {turnoverUnits.map((t) => (
-                    <div
+                  {pendingTurnover.map((t) => (
+                    <label
                       key={t.unitId}
                       className={cn(
-                        "flex items-center justify-between rounded-md border px-3 py-2.5 text-xs transition-colors",
+                        "flex items-center gap-3 rounded-md border px-3 py-2.5 text-xs transition-colors cursor-pointer hover:bg-muted/30",
                         t.urgency === "urgent"
                           ? "border-destructive/40 bg-destructive/5"
                           : t.urgency === "tomorrow"
@@ -1026,6 +1028,14 @@ export default function TodayPage() {
                           : "border-border bg-background"
                       )}
                     >
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-border text-primary accent-primary shrink-0"
+                        onChange={() => {
+                          setClearedTurnoverIds(prev => [...prev, t.unitId]);
+                          toast.success(`${unitMap.get(t.unitId) ?? "Unit"} marked as cleaned`);
+                        }}
+                      />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <BedDouble className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
@@ -1063,11 +1073,12 @@ export default function TodayPage() {
                           )}
                         </div>
                       </div>
-                    </div>
+                    </label>
                   ))}
                 </div>
               </div>
-            )}
+              ) : null;
+            })()}
             {upcomingArrivals.length > 0 && (
               <div className="rounded-lg border border-border bg-card overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
