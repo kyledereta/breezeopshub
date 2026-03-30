@@ -511,6 +511,17 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit, onEdit
                   <Trash2 className="h-3.5 w-3.5" />
                   Delete
                 </Button>
+                {isGrouped && onEditGroup && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5 border-primary/30 text-primary hover:bg-primary/10"
+                    onClick={() => onEditGroup(allGroupBookings)}
+                  >
+                    <Users className="h-3.5 w-3.5" />
+                    Edit Group
+                  </Button>
+                )}
                 <Button
                   size="sm"
                   variant="outline"
@@ -518,7 +529,7 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit, onEdit
                   onClick={() => onEdit(booking)}
                 >
                   <Edit className="h-3.5 w-3.5" />
-                  Edit
+                  {isGrouped ? "Edit This Unit" : "Edit"}
                 </Button>
               </div>
             </div>
