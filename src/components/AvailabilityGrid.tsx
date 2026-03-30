@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { DaySummaryDialog } from "@/components/DaySummaryDialog";
 
 import {
@@ -166,6 +166,16 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
     }, 50);
   }, []);
 
+  useEffect(() => {
+    const now = new Date();
+    if (
+      currentMonth.getMonth() === now.getMonth() &&
+      currentMonth.getFullYear() === now.getFullYear()
+    ) {
+      scrollToToday();
+    }
+  }, [currentMonth, scrollToToday]);
+
   const groupedUnits = useMemo(() => groupUnitsByArea(units), [units]);
 
   // Resort capacity summary for legend
@@ -205,7 +215,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
     for (const booking of bookings) {
       const checkIn = parseISO(booking.check_in);
       const checkOut = parseISO(booking.check_out);
-      const isDaytour = (booking as any).is_daytour_booking && isSameDay(checkIn, checkOut);
+      const isDaytour = !!(booking as any).is_daytour_booking;
       for (const day of days) {
         if (isDaytour ? isSameDay(day, checkIn) : (isWithinInterval(day, { start: checkIn, end: checkOut }) && !isSameDay(day, checkOut))) {
           const key = `${booking.unit_id}-${format(day, "yyyy-MM-dd")}`;
@@ -285,7 +295,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
   // Get booking span (number of days visible in current month)
   const getBookingSpan = (booking: Booking, day: Date) => {
     const checkOut = parseISO(booking.check_out);
-    const isDaytour = (booking as any).is_daytour_booking && isSameDay(parseISO(booking.check_in), checkOut);
+    const isDaytour = !!(booking as any).is_daytour_booking;
     if (isDaytour) return 1;
     const end = checkOut > monthEnd ? monthEnd : checkOut;
     return differenceInDays(end, day);
@@ -854,8 +864,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
               const daytourBookings = bookings.filter(
                 (b) =>
                   (b as any).is_daytour_booking &&
-                  b.booking_status !== "Cancelled" &&
-                  !b.unit_id
+                  b.booking_status !== "Cancelled"
               );
               if (daytourBookings.length === 0) return null;
               return (
