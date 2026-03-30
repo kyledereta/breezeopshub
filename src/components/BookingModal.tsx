@@ -45,7 +45,7 @@ import { Constants, type Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { generateGuestRef } from "@/lib/guestRef";
-import { Upload, X, FileImage, PawPrint, AlertTriangle, Music, Plus, Car, Link2 } from "lucide-react";
+import { Upload, X, FileImage, PawPrint, AlertTriangle, Music, Plus, Car, Link2, Clock } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { logBookingChanges } from "@/hooks/useBookingAuditLog";
 
@@ -105,6 +105,7 @@ const bookingSchema = z.object({
   daytour_fee: z.coerce.number().min(0),
   other_extras_fee: z.coerce.number().min(0),
   other_extras_note: z.string().max(300).optional().or(z.literal("")),
+  late_checkout: z.boolean(),
 }).refine((data) => {
   if (data.is_daytour_booking) return true;
   return data.check_out > data.check_in;
@@ -296,6 +297,7 @@ export function BookingModal({
       daytour_fee: 0,
       other_extras_fee: 0,
       other_extras_note: "",
+      late_checkout: false,
     },
   });
 
@@ -687,6 +689,7 @@ export function BookingModal({
         daytour_fee: (booking as any).daytour_fee ?? 0,
         other_extras_fee: (booking as any).other_extras_fee ?? 0,
         other_extras_note: (booking as any).other_extras_note ?? "",
+        late_checkout: (booking as any).late_checkout ?? false,
       };
       form.reset(vals);
       originalValuesRef.current = { ...vals };
@@ -758,6 +761,7 @@ export function BookingModal({
         daytour_fee: 0,
         other_extras_fee: 0,
         other_extras_note: "",
+        late_checkout: false,
       });
       setAdditionalUnitIds([]);
       setAdditionalPet(false);
@@ -882,6 +886,7 @@ export function BookingModal({
         daytour_fee: values.daytour ? values.daytour_fee : 0,
         other_extras_fee: values.other_extras_fee || 0,
         other_extras_note: values.other_extras_note || null,
+        late_checkout: values.late_checkout,
         has_car: hasCar,
         car_details: hasCar && carDetails.length > 0 ? carDetails : [],
         extras_paid_status: extrasPaidStatus,
@@ -1631,6 +1636,31 @@ export function BookingModal({
                         <Input {...field} type="number" min={1} max={50} className="bg-background border-border" />
                       </FormControl>
                       <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              )}
+
+              {/* Late Check-out Approval */}
+              {!watchIsDaytourBooking && (
+              <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-xs text-foreground">Late Check-out Approved</span>
+                </div>
+                <FormField
+                  control={form.control}
+                  name="late_checkout"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center gap-0 space-y-0">
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="scale-75"
+                        />
+                      </FormControl>
                     </FormItem>
                   )}
                 />

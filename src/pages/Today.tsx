@@ -163,7 +163,13 @@ function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, group
             </span>
           )}
         </div>
-        {noLateCheckout && (
+        {(booking as any).late_checkout && (
+          <div className="flex items-center gap-1 mt-1 text-[10px] text-primary font-medium">
+            <Clock className="h-3 w-3" />
+            Late check-out approved
+          </div>
+        )}
+        {noLateCheckout && !(booking as any).late_checkout && (
           <div className="flex items-center gap-1 mt-1 text-[10px] text-warning-orange font-medium">
             <Clock className="h-3 w-3" />
             No late check-out — next guest arriving tomorrow
