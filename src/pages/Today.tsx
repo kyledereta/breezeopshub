@@ -11,6 +11,7 @@ import {
   LogIn, LogOut, Home, Users, BedDouble, GripVertical, Clock,
   AlertCircle, X, Pencil, Tent, TreePalm, Crown, Fan, Snowflake, CalendarDays,
   DollarSign, AlertTriangle, ArrowRight, Link2, ChevronDown, ChevronUp, Sun, RefreshCw,
+  CircleDollarSign,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -70,9 +71,11 @@ interface GuestCardProps {
   unitMap?: Map<string, string>;
   groupTotalAmount?: number;
   groupTotalPax?: number;
+  isDeparture?: boolean;
+  onToggleSettlement?: (bookingId: string, value: boolean) => void;
 }
 
-function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, groupBookingId, groupUnitNames, isContinuedStay, continuedStayInfo, unitMap: cardUnitMap, groupTotalAmount, groupTotalPax }: GuestCardProps) {
+function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, groupBookingId, groupUnitNames, isContinuedStay, continuedStayInfo, unitMap: cardUnitMap, groupTotalAmount, groupTotalPax, isDeparture, onToggleSettlement }: GuestCardProps) {
   const [wasDragged, setWasDragged] = useState(false);
   const isGrouped = !!groupBookingId;
   return (
@@ -136,6 +139,12 @@ function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, group
           <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 shrink-0", getStatusBadgeClass(booking.booking_status))}>
             {booking.booking_status}
           </Badge>
+          {(booking as any).post_checkout_settlement && (
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 bg-warning-orange/20 text-warning-orange border-warning-orange/30">
+              <CircleDollarSign className="h-2.5 w-2.5 mr-1" />
+              Needs Settlement
+            </Badge>
+          )}
         </div>
         <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground flex-wrap">
           <span className="flex items-center gap-1 min-w-0">
@@ -159,9 +168,30 @@ function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, group
           </div>
         )}
       </div>
-      {onEdit && (
-        <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
-      )}
+      <div className="flex items-center gap-1 shrink-0">
+        {isDeparture && onToggleSettlement && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "h-7 w-7",
+              (booking as any).post_checkout_settlement
+                ? "text-warning-orange hover:text-warning-orange/80"
+                : "text-muted-foreground opacity-0 group-hover:opacity-100"
+            )}
+            title={(booking as any).post_checkout_settlement ? "Mark as settled" : "Flag for post-checkout settlement"}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleSettlement(booking.id, !(booking as any).post_checkout_settlement);
+            }}
+          >
+            <CircleDollarSign className="h-3.5 w-3.5" />
+          </Button>
+        )}
+        {onEdit && (
+          <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+        )}
+      </div>
     </div>
   );
 }
@@ -176,9 +206,11 @@ interface GroupedGuestCardProps {
   noLateCheckoutUnitIds?: Set<string>;
   continuedStayIds?: Set<string>;
   continuedStayMap?: Map<string, ContinuedStayInfo>;
+  isDeparture?: boolean;
+  onToggleSettlement?: (bookingId: string, value: boolean) => void;
 }
 
-function GroupedGuestCard({ primaryBooking, siblingBookings, unitMap, groupUnitNames, draggable, onEdit, noLateCheckoutUnitIds, continuedStayIds, continuedStayMap }: GroupedGuestCardProps) {
+function GroupedGuestCard({ primaryBooking, siblingBookings, unitMap, groupUnitNames, draggable, onEdit, noLateCheckoutUnitIds, continuedStayIds, continuedStayMap, isDeparture, onToggleSettlement }: GroupedGuestCardProps) {
   const [expanded, setExpanded] = useState(false);
   const allGroupBookings = [primaryBooking, ...siblingBookings];
   const groupTotalAmount = allGroupBookings.reduce((sum, b) => sum + b.total_amount, 0);
@@ -232,6 +264,12 @@ function GroupedGuestCard({ primaryBooking, siblingBookings, unitMap, groupUnitN
             <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 shrink-0", getStatusBadgeClass(primaryBooking.booking_status))}>
               {primaryBooking.booking_status}
             </Badge>
+            {(primaryBooking as any).post_checkout_settlement && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 bg-warning-orange/20 text-warning-orange border-warning-orange/30">
+                <CircleDollarSign className="h-2.5 w-2.5 mr-1" />
+                Needs Settlement
+              </Badge>
+            )}
           </div>
           <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground flex-wrap">
             <span className="flex items-center gap-1 min-w-0">
@@ -249,14 +287,35 @@ function GroupedGuestCard({ primaryBooking, siblingBookings, unitMap, groupUnitN
             )}
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
-          onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-        >
-          {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-        </Button>
+        <div className="flex items-center gap-0.5 shrink-0">
+          {isDeparture && onToggleSettlement && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "h-7 w-7",
+                (primaryBooking as any).post_checkout_settlement
+                  ? "text-warning-orange hover:text-warning-orange/80"
+                  : "text-muted-foreground opacity-0 group-hover:opacity-100"
+              )}
+              title={(primaryBooking as any).post_checkout_settlement ? "Mark as settled" : "Flag for post-checkout settlement"}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleSettlement(primaryBooking.id, !(primaryBooking as any).post_checkout_settlement);
+              }}
+            >
+              <CircleDollarSign className="h-3.5 w-3.5" />
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+            onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+          >
+            {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+          </Button>
+        </div>
       </div>
       {/* Individual unit cards */}
       {expanded && allGroupBookings.map((b) => (
@@ -523,6 +582,16 @@ export default function TodayPage() {
     [allBookings, updateBooking]
   );
 
+  const handleToggleSettlement = useCallback((bookingId: string, value: boolean) => {
+    updateBooking.mutate(
+      { id: bookingId, post_checkout_settlement: value } as any,
+      {
+        onSuccess: () => toast.success(value ? "Flagged for post-checkout settlement" : "Settlement flag cleared"),
+        onError: (err) => toast.error(`Failed to update: ${err.message}`),
+      }
+    );
+  }, [updateBooking]);
+
   const handleClearDepartures = useCallback(() => {
     setClearedDepartureIds((prev) => Array.from(new Set([...prev, ...visibleDepartures.map((b) => b.id)])));
     setManualDepartureIds([]);
@@ -771,9 +840,9 @@ export default function TodayPage() {
                   <EmptyState text="No departures yet" />
                 ) : (
                   visibleDepartures.map((b) => b.booking_group_id ? (
-                    <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} continuedStayIds={continuedStayIds} continuedStayMap={continuedStayMap} />
+                    <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} continuedStayIds={continuedStayIds} continuedStayMap={continuedStayMap} isDeparture onToggleSettlement={handleToggleSettlement} />
                   ) : (
-                    <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} onEdit={() => setEditingBooking(b)} noLateCheckout={!!b.unit_id && noLateCheckoutUnitIds.has(b.unit_id)} isContinuedStay={continuedStayIds.has(b.id)} continuedStayInfo={continuedStayMap.get(b.id)} unitMap={unitMap} />
+                    <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} onEdit={() => setEditingBooking(b)} noLateCheckout={!!b.unit_id && noLateCheckoutUnitIds.has(b.unit_id)} isContinuedStay={continuedStayIds.has(b.id)} continuedStayInfo={continuedStayMap.get(b.id)} unitMap={unitMap} isDeparture onToggleSettlement={handleToggleSettlement} />
                   ))
                 )}
               </Section>
