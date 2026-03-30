@@ -15,7 +15,7 @@ import { useBookings, type Booking } from "@/hooks/useBookings";
 import { useBookingAuditLog } from "@/hooks/useBookingAuditLog";
 import { useSoftDeleteBooking } from "@/hooks/useBookingMutations";
 import { cn } from "@/lib/utils";
-import { PawPrint, UtensilsCrossed, AlertTriangle, Edit, Users, CalendarDays, StickyNote, Banknote, Trash2, Link2, Car, Download, RefreshCw } from "lucide-react";
+import { PawPrint, UtensilsCrossed, AlertTriangle, Edit, Users, CalendarDays, StickyNote, Banknote, Trash2, Link2, Car, Download, RefreshCw, Copy } from "lucide-react";
 import { useContinuedStayMap } from "@/hooks/useContinuedStay";
 import {
   AlertDialog,
@@ -225,9 +225,22 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
               </div>
             </div>
             {/* Booking Reference */}
-            <div className="mt-2 rounded-md bg-primary/5 border border-primary/20 px-3 py-1.5 text-center">
+            <div className="mt-2 rounded-md bg-primary/5 border border-primary/20 px-3 py-1.5 text-center relative group">
               <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Booking Ref</span>
-              <p className="text-sm font-bold text-primary tracking-wider">{booking.booking_ref}</p>
+              <div className="flex items-center justify-center gap-1.5">
+                <p className="text-sm font-bold text-primary tracking-wider">{booking.booking_ref}</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(booking.booking_ref);
+                    toast.success("Booking ref copied!");
+                  }}
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                  title="Copy booking ref"
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                </button>
+              </div>
             </div>
           </SheetHeader>
 
