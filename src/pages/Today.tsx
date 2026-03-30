@@ -888,7 +888,7 @@ export default function TodayPage() {
                 alert={pendingBalances.length > 0}
                 onClick={() => navigate("/balances")}
               />
-              <StatCard icon={Users} label="Guests" value={String(checkIns.length + inHouse.length + visibleDepartures.length)} sub="Today's bookings" onClick={() => navigate("/guests")} />
+              <StatCard icon={CalendarDays} label="Bookings" value={String(checkIns.length + inHouse.length + visibleDepartures.length)} sub="Today's bookings" onClick={() => navigate("/bookings")} />
             </div>
 
             {/* Form Submissions */}
