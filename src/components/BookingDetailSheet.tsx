@@ -420,6 +420,7 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
                       {lines.map((line, i) => {
                         const isTotal = line.label === "Total Amount";
                         const isDiscount = line.amount < 0;
+                        const isPaid = line.paidKey ? !!eps[line.paidKey] : undefined;
                         return (
                           <div key={i} className="flex justify-between items-center">
                             <span className={cn("text-muted-foreground flex items-center gap-1", isTotal && "text-foreground")}>
