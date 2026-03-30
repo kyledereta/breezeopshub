@@ -58,6 +58,10 @@ const Index = () => {
         onOpenChange={setSheetOpen}
         booking={selectedBooking}
         onEdit={openEditBooking}
+        onEditGroup={(groupBookings) => {
+          const primary = groupBookings.find((b) => (b as any).is_primary) || groupBookings[0];
+          if (primary) openEditBooking(primary);
+        }}
       />
 
       <UnitDetailSheet

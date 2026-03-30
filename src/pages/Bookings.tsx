@@ -388,6 +388,10 @@ export default function BookingsPage() {
         onOpenChange={setSheetOpen}
         booking={selectedBooking}
         onEdit={openEdit}
+        onEditGroup={(groupBookings) => {
+          const primary = groupBookings.find((b) => (b as any).is_primary) || groupBookings[0];
+          if (primary) openEdit(primary);
+        }}
       />
 
       <BookingModal
