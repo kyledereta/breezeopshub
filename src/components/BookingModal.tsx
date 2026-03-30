@@ -1143,6 +1143,51 @@ export function BookingModal({
 
   const isPending = createBooking.isPending || updateBooking.isPending;
 
+  // Quick Paste: parse text via edge function
+  const handleParseText = async () => {
+    if (!pasteText.trim()) {
+      toast.error("Paste some text first");
+      return;
+    }
+    setIsParsing(true);
+    try {
+      const { data: fnData, error: fnError } = await supabase.functions.invoke("parse-booking-text", {
+        body: {
+          text: pasteText,
+          units: units.map((u) => ({ id: u.id, name: u.name, max_pax: u.max_pax })),
+        },
+      });
+      if (fnError) throw fnError;
+      if (!fnData?.success || !fnData?.data) throw new Error("Failed to parse");
+
+      const p = fnData.data;
+      // Prefill form fields
+      if (p.guest_name) form.setValue("guest_name", p.guest_name);
+      if (p.phone) form.setValue("phone", p.phone);
+      if (p.email) form.setValue("email", p.email);
+      if (p.check_in) form.setValue("check_in", p.check_in);
+      if (p.check_out) form.setValue("check_out", p.check_out);
+      if (p.pax != null) form.setValue("pax", p.pax);
+      if (p.unit_id) form.setValue("unit_id", p.unit_id);
+      if (p.booking_source) form.setValue("booking_source", p.booking_source);
+      if (p.booking_status) form.setValue("booking_status", p.booking_status);
+      if (p.notes) form.setValue("notes", p.notes);
+      if (p.pets) form.setValue("pets", true);
+      if (p.has_car) setHasCar(true);
+      if (p.deposit_paid != null && p.deposit_paid > 0) form.setValue("deposit_paid", p.deposit_paid);
+      if (p.total_amount != null && p.total_amount > 0) form.setValue("total_amount", p.total_amount);
+      if (p.payment_status) form.setValue("payment_status", p.payment_status);
+
+      setPasteMode(false);
+      toast.success("Booking details extracted! Review and save.");
+    } catch (err: any) {
+      console.error("Parse error:", err);
+      toast.error("Could not parse text. Try editing manually.");
+    } finally {
+      setIsParsing(false);
+    }
+  };
+
   // Available units for additional selection (exclude already selected)
   const availableUnitsForAdd = useMemo(() => {
     const selectedIds = new Set([watchUnitId, ...additionalUnitIds, ...groupSiblings.map((s) => s.unit_id)]);
