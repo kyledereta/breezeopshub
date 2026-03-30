@@ -2275,31 +2275,44 @@ export function BookingModal({
                 />
               </div>
               {watchDepositStatus === "Deducted" && (
-                <div className="grid grid-cols-2 gap-3">
-                  <FormField
-                    control={form.control}
-                    name="deposit_deducted_amount"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs text-muted-foreground">Amount Deducted (₱)</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="deposit_deducted_reason"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs text-muted-foreground">Deduction Reason</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="e.g. Damaged linens..." className="bg-background border-border" />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormField
+                      control={form.control}
+                      name="deposit_deducted_amount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs text-muted-foreground">Amount Deducted (₱)</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="number" min={0} step="any" className="bg-background border-border" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="deposit_deducted_reason"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs text-muted-foreground">Deduction Reason</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="e.g. Damaged linens..." className="bg-background border-border" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  {Number(form.watch("deposit_deducted_amount")) > 0 && (
+                    <div className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-3 py-2">
+                      <span className="text-xs text-muted-foreground">
+                        Damage/Deduction Charge: ₱{Number(form.watch("deposit_deducted_amount")).toLocaleString()}
+                      </span>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="text-[9px] text-muted-foreground">{extrasPaidStatus.deposit_deduction ? "Paid" : "Unpaid"}</span>
+                        <Switch checked={!!extrasPaidStatus.deposit_deduction} onCheckedChange={() => toggleExtraPaid("deposit_deduction")} className="scale-75" />
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
