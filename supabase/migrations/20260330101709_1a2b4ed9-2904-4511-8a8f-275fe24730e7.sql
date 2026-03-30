@@ -1,0 +1,1 @@
+UPDATE bookings SET deleted_at = now(), deletion_reason = 'Duplicate booking (double-submit)' WHERE id = 'feae1725-1d30-4561-a7fc-85c2c77d8685'
