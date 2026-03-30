@@ -569,6 +569,16 @@ export default function TodayPage() {
 
   const groupedUnits = useMemo(() => groupUnitsByArea(units), [units]);
 
+  // Show checkout reminder popup when there are due departures
+  useEffect(() => {
+    if (dueDepartures.length > 0 && !isLoading) {
+      const dismissed = sessionStorage.getItem("checkout_reminder_dismissed_" + todayStr);
+      if (!dismissed) {
+        setShowCheckoutReminder(true);
+      }
+    }
+  }, [dueDepartures.length, isLoading, todayStr]);
+
   // Compute available units for today and each day this week
   const weekDays = useMemo(() => {
     const today = new Date();
