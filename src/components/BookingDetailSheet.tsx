@@ -247,12 +247,34 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
                     <span className="text-[10px] text-primary font-medium">Combined Booking (Multi-Unit)</span>
                   </div>
                 )}
-                {continuedStayIds.has(booking.id) && (
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <RefreshCw className="h-3.5 w-3.5 text-ocean" />
-                    <span className="text-[10px] text-ocean font-medium">Continued Stay — same guest, consecutive booking</span>
-                  </div>
-                )}
+                {(() => {
+                  const csInfo = continuedStayMap.get(booking.id);
+                  if (!csInfo) return null;
+                  const fromName = csInfo.fromUnitId ? unitNameMap[csInfo.fromUnitId] : null;
+                  const toName = csInfo.toUnitId ? unitNameMap[csInfo.toUnitId] : null;
+                  return (
+                    <div className="flex flex-col gap-0.5 mt-1">
+                      {fromName && (
+                        <div className="flex items-center gap-1.5">
+                          <RefreshCw className="h-3.5 w-3.5 text-ocean" />
+                          <span className="text-[10px] text-ocean font-medium">Continued from {fromName}</span>
+                        </div>
+                      )}
+                      {toName && (
+                        <div className="flex items-center gap-1.5">
+                          <RefreshCw className="h-3.5 w-3.5 text-ocean" />
+                          <span className="text-[10px] text-ocean font-medium">Continues to {toName}</span>
+                        </div>
+                      )}
+                      {!fromName && !toName && (
+                        <div className="flex items-center gap-1.5">
+                          <RefreshCw className="h-3.5 w-3.5 text-ocean" />
+                          <span className="text-[10px] text-ocean font-medium">Continued Stay</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
                 <div className="flex items-center gap-2 mt-2">
                   <Badge variant="outline" className={cn("text-xs", getStatusBadgeStyle(booking.booking_status))}>
                     {booking.booking_status}
