@@ -2741,7 +2741,7 @@ export function BookingModal({
                 const remaining = Math.max(0, total - depositPaid - paidExtrasTotal);
                 const effectiveRemaining = remainingPaid ? 0 : remaining;
 
-                return (
+                // MARKER_START_REPLACE
                   <div key={JSON.stringify(extrasPaidStatus) + String(remainingPaid)} className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-1.5">
                     <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">
                       Computation Summary
