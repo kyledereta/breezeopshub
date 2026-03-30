@@ -1046,27 +1046,44 @@ export default function TodayPage() {
                     <span className="text-[10px] text-muted-foreground">{areaBookings.length} bookings · {areaBookings.reduce((s, b) => s + b.pax, 0)} pax</span>
                   </div>
                   <div className="space-y-1">
-                    {areaBookings.map((b) => (
-                      <div
-                        key={b.id}
-                        onClick={() => { setShowArrivalsSummary(false); setEditingBooking(b); }}
-                        className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-xs cursor-pointer hover:border-primary/30 transition-colors"
-                      >
-                        <div className="min-w-0">
-                          <div className="font-medium text-foreground truncate">{b.guest_name}</div>
-                          <div className="text-muted-foreground text-[10px] flex items-center gap-1">
-                            <BedDouble className="h-2.5 w-2.5" />
-                            {unitMap.get(b.unit_id ?? "") ?? "—"}
-                            <span className="mx-0.5">·</span>
-                            {b.pax} pax
+                    {areaBookings.map((b) => {
+                      const gid = b.booking_group_id;
+                      const groupUnits = gid ? groupUnitNamesMap.get(gid) : null;
+                      const siblings = gid ? groupSiblingsMap.get(gid) : null;
+                      const groupTotal = gid ? [b, ...(siblings ?? [])].reduce((s, x) => s + x.total_amount, 0) : b.total_amount;
+                      return (
+                        <div
+                          key={b.id}
+                          onClick={() => { setShowArrivalsSummary(false); setEditingBooking(b); }}
+                          className={cn(
+                            "flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-xs cursor-pointer hover:border-primary/30 transition-colors",
+                            gid && "border-l-2 border-l-primary"
+                          )}
+                        >
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-medium text-foreground truncate">{b.guest_name}</span>
+                              {gid && (
+                                <Badge variant="outline" className="text-[9px] px-1 py-0 bg-primary/10 text-primary border-primary/30">
+                                  <Link2 className="h-2 w-2 mr-0.5" />Group
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="text-muted-foreground text-[10px] flex items-center gap-1 flex-wrap">
+                              <BedDouble className="h-2.5 w-2.5" />
+                              {groupUnits && groupUnits.length > 1 ? groupUnits.join(" + ") : (unitMap.get(b.unit_id ?? "") ?? "—")}
+                              <span className="mx-0.5">·</span>
+                              {b.pax} pax
+                              {gid && <span className="mx-0.5">· ₱{groupTotal.toLocaleString()}</span>}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0 ml-2">
+                            <Badge variant="outline" className={cn("text-[9px]", getPaymentBadgeClass(b.payment_status))}>{b.payment_status}</Badge>
+                            <Badge variant="outline" className={cn("text-[9px]", getStatusBadgeClass(b.booking_status))}>{b.booking_status}</Badge>
                           </div>
                         </div>
-                        <div className="flex items-center gap-1 shrink-0 ml-2">
-                          <Badge variant="outline" className={cn("text-[9px]", getPaymentBadgeClass(b.payment_status))}>{b.payment_status}</Badge>
-                          <Badge variant="outline" className={cn("text-[9px]", getStatusBadgeClass(b.booking_status))}>{b.booking_status}</Badge>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               ))}
@@ -1107,31 +1124,48 @@ export default function TodayPage() {
                     <span className="text-[10px] text-muted-foreground">{areaBookings.length} bookings · {areaBookings.reduce((s, b) => s + b.pax, 0)} pax</span>
                   </div>
                   <div className="space-y-1">
-                    {areaBookings.map((b) => (
-                      <div
-                        key={b.id}
-                        onClick={() => { setShowInHouseSummary(false); setEditingBooking(b); }}
-                        className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-xs cursor-pointer hover:border-primary/30 transition-colors"
-                      >
-                        <div className="min-w-0">
-                          <div className="font-medium text-foreground truncate">{b.guest_name}</div>
-                          <div className="text-muted-foreground text-[10px] flex items-center gap-1">
-                            <BedDouble className="h-2.5 w-2.5" />
-                            {unitMap.get(b.unit_id ?? "") ?? "—"}
-                            <span className="mx-0.5">·</span>
-                            {b.pax} pax
-                            <span className="mx-0.5">·</span>
-                            {format(parseISO(b.check_in), "MMM d")} → {format(parseISO(b.check_out), "MMM d")}
+                    {areaBookings.map((b) => {
+                      const gid = b.booking_group_id;
+                      const groupUnits = gid ? groupUnitNamesMap.get(gid) : null;
+                      const siblings = gid ? groupSiblingsMap.get(gid) : null;
+                      const groupTotal = gid ? [b, ...(siblings ?? [])].reduce((s, x) => s + x.total_amount, 0) : b.total_amount;
+                      return (
+                        <div
+                          key={b.id}
+                          onClick={() => { setShowInHouseSummary(false); setEditingBooking(b); }}
+                          className={cn(
+                            "flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-xs cursor-pointer hover:border-primary/30 transition-colors",
+                            gid && "border-l-2 border-l-primary"
+                          )}
+                        >
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-medium text-foreground truncate">{b.guest_name}</span>
+                              {gid && (
+                                <Badge variant="outline" className="text-[9px] px-1 py-0 bg-primary/10 text-primary border-primary/30">
+                                  <Link2 className="h-2 w-2 mr-0.5" />Group
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="text-muted-foreground text-[10px] flex items-center gap-1 flex-wrap">
+                              <BedDouble className="h-2.5 w-2.5" />
+                              {groupUnits && groupUnits.length > 1 ? groupUnits.join(" + ") : (unitMap.get(b.unit_id ?? "") ?? "—")}
+                              <span className="mx-0.5">·</span>
+                              {b.pax} pax
+                              <span className="mx-0.5">·</span>
+                              {format(parseISO(b.check_in), "MMM d")} → {format(parseISO(b.check_out), "MMM d")}
+                              {gid && <span className="mx-0.5">· ₱{groupTotal.toLocaleString()}</span>}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0 ml-2">
+                            <Badge variant="outline" className={cn("text-[9px]", getPaymentBadgeClass(b.payment_status))}>{b.payment_status}</Badge>
+                            {!!b.unit_id && noLateCheckoutUnitIds.has(b.unit_id) && (
+                              <Badge variant="outline" className="text-[9px] bg-warning-orange/20 text-warning-orange border-warning-orange/30">No late CO</Badge>
+                            )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-1 shrink-0 ml-2">
-                          <Badge variant="outline" className={cn("text-[9px]", getPaymentBadgeClass(b.payment_status))}>{b.payment_status}</Badge>
-                          {!!b.unit_id && noLateCheckoutUnitIds.has(b.unit_id) && (
-                            <Badge variant="outline" className="text-[9px] bg-warning-orange/20 text-warning-orange border-warning-orange/30">No late CO</Badge>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               ))}
