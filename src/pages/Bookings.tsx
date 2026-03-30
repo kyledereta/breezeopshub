@@ -5,6 +5,7 @@ import { useBookings, useDeletedBookings, type Booking } from "@/hooks/useBookin
 import { useUnits } from "@/hooks/useUnits";
 import { BookingModal } from "@/components/BookingModal";
 import { BookingDetailSheet } from "@/components/BookingDetailSheet";
+import { GroupBookingEditor } from "@/components/GroupBookingEditor";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -61,6 +62,8 @@ export default function BookingsPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [showDeleted, setShowDeleted] = useState(false);
+  const [groupEditorOpen, setGroupEditorOpen] = useState(false);
+  const [groupEditorBookings, setGroupEditorBookings] = useState<Booking[]>([]);
 
   const unitMap = useMemo(() => {
     const m = new Map<string, string>();
@@ -389,8 +392,9 @@ export default function BookingsPage() {
         booking={selectedBooking}
         onEdit={openEdit}
         onEditGroup={(groupBookings) => {
-          const primary = groupBookings.find((b) => (b as any).is_primary) || groupBookings[0];
-          if (primary) openEdit(primary);
+          setSheetOpen(false);
+          setGroupEditorBookings(groupBookings);
+          setGroupEditorOpen(true);
         }}
       />
 
@@ -398,6 +402,12 @@ export default function BookingsPage() {
         open={modalOpen}
         onOpenChange={setModalOpen}
         booking={selectedBooking}
+      />
+
+      <GroupBookingEditor
+        open={groupEditorOpen}
+        onOpenChange={setGroupEditorOpen}
+        groupBookings={groupEditorBookings}
       />
     </AppLayout>
   );
