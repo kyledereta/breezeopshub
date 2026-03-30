@@ -2321,6 +2321,7 @@ export function BookingModal({
 
               {/* Remaining Balance Row */}
               {(() => {
+                // Use auto-computed total_amount from the form (synced by the auto-calc effect)
                 const totalAmt = Number(form.watch("total_amount")) || 0;
                 const dpAmt = Number(form.watch("deposit_paid")) || 0;
                 const remaining = totalAmt - dpAmt;
@@ -2887,6 +2888,9 @@ export function BookingModal({
                               </div>
                               <div className="flex items-center gap-3">
                                 <span className="text-muted-foreground">₱{entry.total.toLocaleString()}</span>
+                                {entry.deposit > 0 && (
+                                  <span className="text-[10px] text-primary font-medium">DP ₱{entry.deposit.toLocaleString()}</span>
+                                )}
                                 <span className={cn(
                                   "text-[10px] font-medium px-1.5 py-0.5 rounded",
                                   entry.paymentStatus === "Fully Paid" || entry.paymentStatus === "Airbnb Paid"
