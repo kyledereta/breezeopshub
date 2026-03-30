@@ -553,6 +553,16 @@ export default function TodayPage() {
     [allBookings, updateBooking]
   );
 
+  const handleToggleSettlement = useCallback((bookingId: string, value: boolean) => {
+    updateBooking.mutate(
+      { id: bookingId, post_checkout_settlement: value } as any,
+      {
+        onSuccess: () => toast.success(value ? "Flagged for post-checkout settlement" : "Settlement flag cleared"),
+        onError: (err) => toast.error(`Failed to update: ${err.message}`),
+      }
+    );
+  }, [updateBooking]);
+
   const handleClearDepartures = useCallback(() => {
     setClearedDepartureIds((prev) => Array.from(new Set([...prev, ...visibleDepartures.map((b) => b.id)])));
     setManualDepartureIds([]);
@@ -801,9 +811,9 @@ export default function TodayPage() {
                   <EmptyState text="No departures yet" />
                 ) : (
                   visibleDepartures.map((b) => b.booking_group_id ? (
-                    <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} continuedStayIds={continuedStayIds} continuedStayMap={continuedStayMap} />
+                    <GroupedGuestCard key={b.id} primaryBooking={b} siblingBookings={groupSiblingsMap.get(b.booking_group_id) ?? []} unitMap={unitMap} groupUnitNames={groupUnitNamesMap.get(b.booking_group_id) ?? []} onEdit={setEditingBooking} noLateCheckoutUnitIds={noLateCheckoutUnitIds} continuedStayIds={continuedStayIds} continuedStayMap={continuedStayMap} isDeparture onToggleSettlement={handleToggleSettlement} />
                   ) : (
-                    <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} onEdit={() => setEditingBooking(b)} noLateCheckout={!!b.unit_id && noLateCheckoutUnitIds.has(b.unit_id)} isContinuedStay={continuedStayIds.has(b.id)} continuedStayInfo={continuedStayMap.get(b.id)} unitMap={unitMap} />
+                    <GuestCard key={b.id} booking={b} unitName={unitMap.get(b.unit_id ?? "") ?? "—"} onEdit={() => setEditingBooking(b)} noLateCheckout={!!b.unit_id && noLateCheckoutUnitIds.has(b.unit_id)} isContinuedStay={continuedStayIds.has(b.id)} continuedStayInfo={continuedStayMap.get(b.id)} unitMap={unitMap} isDeparture onToggleSettlement={handleToggleSettlement} />
                   ))
                 )}
               </Section>
