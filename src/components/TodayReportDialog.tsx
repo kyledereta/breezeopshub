@@ -123,12 +123,22 @@ export function TodayReportDialog({
         revenueToday += b.total_amount;
       }
 
-      // Pending balances
-      if (b.payment_status === "Unpaid" || b.payment_status === "Partial DP" || hasUnpaidExtras(b)) {
+      // Pending balances — only for today's bookings (in-house, arriving, or departing today)
+      const isTodayRelevant = (b.check_in <= todayStr && b.check_out >= todayStr) || b.check_in === todayStr || b.check_out === todayStr;
+      if (isTodayRelevant && (b.payment_status === "Unpaid" || b.payment_status === "Partial DP" || hasUnpaidExtras(b))) {
         const balance = b.total_amount - b.deposit_paid;
         const extras = getUnpaidExtrasTotal(b);
         const amt = balance <= 0 && extras > 0 ? extras : Math.max(balance, 0);
         if (amt > 0) pendingBalances.push({ booking: b, amount: amt });
+      }
+
+      // Security deposit deductions
+      if (isTodayRelevant && b.deposit_status === "Deducted" && b.deposit_deducted_amount > 0) {
+        depositDeductions.push({
+          booking: b,
+          amount: b.deposit_deducted_amount,
+          reason: b.deposit_deducted_reason || "No reason specified",
+        });
       }
 
       // Extras on in-house / today's bookings
