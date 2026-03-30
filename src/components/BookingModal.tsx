@@ -200,7 +200,7 @@ export function BookingModal({
   const [birthMonthFilter, setBirthMonthFilter] = useState(0);
   // Car details
   const [hasCar, setHasCar] = useState(false);
-  const [carDetails, setCarDetails] = useState<{ type: string; color: string; plate: string }[]>([]);
+  const [carDetails, setCarDetails] = useState<{ type: string; color: string; plate: string; parking?: string }[]>([]);
   // Extras paid status tracking
   const [extrasPaidStatus, setExtrasPaidStatus] = useState<Record<string, boolean>>({});
   // Payment restructure: DP mode, remaining mode, remaining paid toggle
@@ -2379,7 +2379,7 @@ export function BookingModal({
                 <Checkbox checked={hasCar} onCheckedChange={(v) => {
                   setHasCar(!!v);
                   if (v && carDetails.length === 0) {
-                    setCarDetails([{ type: "", color: "", plate: "" }]);
+                    setCarDetails([{ type: "", color: "", plate: "", parking: "" }]);
                   }
                   if (!v) setCarDetails([]);
                 }} />
@@ -2440,6 +2440,25 @@ export function BookingModal({
                           className="h-8 text-xs bg-background border-border"
                         />
                       </div>
+                      <Select
+                        value={car.parking || ""}
+                        onValueChange={(val) => {
+                          const updated = [...carDetails];
+                          updated[idx] = { ...updated[idx], parking: val };
+                          setCarDetails(updated);
+                        }}
+                      >
+                        <SelectTrigger className="h-8 text-xs bg-background border-border">
+                          <SelectValue placeholder="Parking location" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Beach Villas Front">Beach Villas Front</SelectItem>
+                          <SelectItem value="Pool Villas Front">Pool Villas Front</SelectItem>
+                          <SelectItem value="Main Parking">Main Parking</SelectItem>
+                          <SelectItem value="Owner's Villa Parking">Owner's Villa Parking</SelectItem>
+                          <SelectItem value="Front Desk Parking">Front Desk Parking</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   ))}
                   <Button
@@ -2447,7 +2466,7 @@ export function BookingModal({
                     variant="outline"
                     size="sm"
                     className="text-xs w-full"
-                    onClick={() => setCarDetails((prev) => [...prev, { type: "", color: "", plate: "" }])}
+                    onClick={() => setCarDetails((prev) => [...prev, { type: "", color: "", plate: "", parking: "" }])}
                   >
                     <Plus className="h-3 w-3 mr-1" /> Add Another Car
                   </Button>
