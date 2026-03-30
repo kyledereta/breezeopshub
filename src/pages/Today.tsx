@@ -419,6 +419,7 @@ export default function TodayPage() {
   const [showCheckoutReminder, setShowCheckoutReminder] = useState(false);
   const [showArrivalsSummary, setShowArrivalsSummary] = useState(false);
   const [showInHouseSummary, setShowInHouseSummary] = useState(false);
+  const [turnoverExpanded, setTurnoverExpanded] = useState(true);
 
    const unitMap = useMemo(() => {
     const m = new Map<string, string>();
