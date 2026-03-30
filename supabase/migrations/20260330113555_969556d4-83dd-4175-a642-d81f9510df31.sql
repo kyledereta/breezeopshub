@@ -1,0 +1,1 @@
+UPDATE bookings SET total_amount = 24000 WHERE id = 'fc772f78-16f2-49cf-a858-9c2afc444584';
