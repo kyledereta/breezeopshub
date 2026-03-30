@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import {
   LogIn, LogOut, Home, Users, BedDouble, DollarSign,
   Sun, AlertTriangle, CircleDollarSign, ArrowRightLeft,
-  Layers, Download, Package,
+  Layers, Download, Package, ShieldAlert,
 } from "lucide-react";
 import type { Booking } from "@/hooks/useBookings";
 import type { Unit } from "@/hooks/useUnits";
@@ -68,6 +68,9 @@ export function TodayReportDialog({
     // Extras collected
     const extrasCollected: { booking: Booking; extras: { name: string; amount: number }[] }[] = [];
 
+    // Security deposit deductions
+    const depositDeductions: { booking: Booking; amount: number; reason: string }[] = [];
+
     for (const b of bookings) {
       if (b.booking_status === "Cancelled" || b.deleted_at) continue;
       const isSecondary = b.booking_group_id && !b.is_primary;
@@ -120,12 +123,22 @@ export function TodayReportDialog({
         revenueToday += b.total_amount;
       }
 
-      // Pending balances
-      if (b.payment_status === "Unpaid" || b.payment_status === "Partial DP" || hasUnpaidExtras(b)) {
+      // Pending balances — only for today's bookings (in-house, arriving, or departing today)
+      const isTodayRelevant = (b.check_in <= todayStr && b.check_out >= todayStr) || b.check_in === todayStr || b.check_out === todayStr;
+      if (isTodayRelevant && (b.payment_status === "Unpaid" || b.payment_status === "Partial DP" || hasUnpaidExtras(b))) {
         const balance = b.total_amount - b.deposit_paid;
         const extras = getUnpaidExtrasTotal(b);
         const amt = balance <= 0 && extras > 0 ? extras : Math.max(balance, 0);
         if (amt > 0) pendingBalances.push({ booking: b, amount: amt });
+      }
+
+      // Security deposit deductions
+      if (isTodayRelevant && b.deposit_status === "Deducted" && b.deposit_deducted_amount > 0) {
+        depositDeductions.push({
+          booking: b,
+          amount: b.deposit_deducted_amount,
+          reason: b.deposit_deducted_reason || "No reason specified",
+        });
       }
 
       // Extras on in-house / today's bookings
@@ -177,6 +190,10 @@ export function TodayReportDialog({
     if (activeGroups.length > 0) takeaways.push(`${activeGroups.length} active group booking${activeGroups.length > 1 ? "s" : ""}`);
     const unpaidArrivals = arrivals.filter((b) => b.payment_status === "Unpaid").length;
     if (unpaidArrivals > 0) takeaways.push(`⚠ ${unpaidArrivals} unpaid arrival${unpaidArrivals > 1 ? "s" : ""} — collect payment on check-in`);
+    if (depositDeductions.length > 0) {
+      const totalDeducted = depositDeductions.reduce((s, d) => s + d.amount, 0);
+      takeaways.push(`₱${totalDeducted.toLocaleString()} in security deposit deductions from ${depositDeductions.length} booking${depositDeductions.length > 1 ? "s" : ""}`);
+    }
 
     return {
       arrivals, checkedIn, inHouse, departures, checkedOut, daytours,
@@ -184,6 +201,7 @@ export function TodayReportDialog({
       pendingBalances, totalPendingAmount,
       continuedBookings, activeGroups,
       extrasCollected, totalExtrasAmount,
+      depositDeductions,
       takeaways,
     };
   }, [bookings, units, todayStr]);
@@ -362,6 +380,30 @@ export function TodayReportDialog({
                     </div>
                   ))}
                 </div>
+              </div>
+            ))}
+          </ReportSection>
+        )}
+
+        {/* Security Deposit Deductions */}
+        {report.depositDeductions.length > 0 && (
+          <ReportSection
+            icon={<ShieldAlert className="h-3.5 w-3.5 text-destructive" />}
+            title="Deposit Deductions"
+            summary={`₱${report.depositDeductions.reduce((s, d) => s + d.amount, 0).toLocaleString()} from ${report.depositDeductions.length} booking${report.depositDeductions.length > 1 ? "s" : ""}`}
+          >
+            {report.depositDeductions.map(({ booking: b, amount, reason }) => (
+              <div
+                key={b.id}
+                className="flex items-center justify-between rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-xs"
+              >
+                <div className="min-w-0">
+                  <div className="font-medium text-foreground truncate">{b.guest_name}</div>
+                  <div className="text-muted-foreground text-[10px]">
+                    {unitMap.get(b.unit_id ?? "") ?? "—"} · {reason}
+                  </div>
+                </div>
+                <span className="font-semibold text-destructive shrink-0 ml-2">₱{amount.toLocaleString()}</span>
               </div>
             ))}
           </ReportSection>
