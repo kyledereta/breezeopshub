@@ -139,6 +139,12 @@ function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, group
           <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 shrink-0", getStatusBadgeClass(booking.booking_status))}>
             {booking.booking_status}
           </Badge>
+          {(booking as any).post_checkout_settlement && (
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 bg-warning-orange/20 text-warning-orange border-warning-orange/30">
+              <CircleDollarSign className="h-2.5 w-2.5 mr-1" />
+              Needs Settlement
+            </Badge>
+          )}
         </div>
         <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground flex-wrap">
           <span className="flex items-center gap-1 min-w-0">
