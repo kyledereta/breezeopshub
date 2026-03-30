@@ -274,7 +274,7 @@ export function BookingModal({
       discount_reason: "",
       payment_status: "Unpaid",
       booking_status: "Inquiry",
-      booking_source: "Other",
+      booking_source: "Facebook Direct",
       mode_of_payment: "",
       email: "",
       phone: "",
