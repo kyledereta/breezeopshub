@@ -1007,6 +1007,132 @@ export default function TodayPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Arrivals Summary Dialog */}
+        <Dialog open={showArrivalsSummary} onOpenChange={setShowArrivalsSummary}>
+          <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 font-display text-lg">
+                <LogIn className="h-5 w-5 text-primary" />
+                Arrivals Summary
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-2 mt-2">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-lg border border-border bg-card p-3 text-center">
+                  <div className="text-lg font-bold text-foreground">{checkIns.length}</div>
+                  <div className="text-[10px] text-muted-foreground">Total Arrivals</div>
+                </div>
+                <div className="rounded-lg border border-border bg-card p-3 text-center">
+                  <div className="text-lg font-bold text-foreground">{checkIns.reduce((s, b) => s + b.pax, 0)}</div>
+                  <div className="text-[10px] text-muted-foreground">Total Pax</div>
+                </div>
+                <div className="rounded-lg border border-border bg-card p-3 text-center">
+                  <div className="text-lg font-bold text-foreground">₱{checkIns.reduce((s, b) => s + b.total_amount, 0).toLocaleString()}</div>
+                  <div className="text-[10px] text-muted-foreground">Total Revenue</div>
+                </div>
+              </div>
+              {arrivalsGrouped.map(({ area, bookings: areaBookings }) => (
+                <div key={area}>
+                  <div className="flex items-center gap-2 px-1 py-1.5">
+                    <span className="text-[10px] uppercase tracking-wider text-primary font-semibold">{area}</span>
+                    <div className="flex-1 h-px bg-border" />
+                    <span className="text-[10px] text-muted-foreground">{areaBookings.length} bookings · {areaBookings.reduce((s, b) => s + b.pax, 0)} pax</span>
+                  </div>
+                  <div className="space-y-1">
+                    {areaBookings.map((b) => (
+                      <div
+                        key={b.id}
+                        onClick={() => { setShowArrivalsSummary(false); setEditingBooking(b); }}
+                        className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-xs cursor-pointer hover:border-primary/30 transition-colors"
+                      >
+                        <div className="min-w-0">
+                          <div className="font-medium text-foreground truncate">{b.guest_name}</div>
+                          <div className="text-muted-foreground text-[10px] flex items-center gap-1">
+                            <BedDouble className="h-2.5 w-2.5" />
+                            {unitMap.get(b.unit_id ?? "") ?? "—"}
+                            <span className="mx-0.5">·</span>
+                            {b.pax} pax
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0 ml-2">
+                          <Badge variant="outline" className={cn("text-[9px]", getPaymentBadgeClass(b.payment_status))}>{b.payment_status}</Badge>
+                          <Badge variant="outline" className={cn("text-[9px]", getStatusBadgeClass(b.booking_status))}>{b.booking_status}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {checkIns.length === 0 && <p className="text-xs text-muted-foreground text-center py-4">No arrivals today</p>}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* In-House Summary Dialog */}
+        <Dialog open={showInHouseSummary} onOpenChange={setShowInHouseSummary}>
+          <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 font-display text-lg">
+                <Home className="h-5 w-5 text-ocean" />
+                In-House Summary
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-2 mt-2">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-lg border border-border bg-card p-3 text-center">
+                  <div className="text-lg font-bold text-foreground">{occupiedUnitCount}/{availableUnitCount}</div>
+                  <div className="text-[10px] text-muted-foreground">Units Occupied</div>
+                </div>
+                <div className="rounded-lg border border-border bg-card p-3 text-center">
+                  <div className="text-lg font-bold text-foreground">{totalPaxInHouse}</div>
+                  <div className="text-[10px] text-muted-foreground">Total Pax</div>
+                </div>
+                <div className="rounded-lg border border-border bg-card p-3 text-center">
+                  <div className="text-lg font-bold text-foreground">{dueDepartures.length}</div>
+                  <div className="text-[10px] text-muted-foreground">Due Out Today</div>
+                </div>
+              </div>
+              {inHouseGrouped.map(({ area, bookings: areaBookings }) => (
+                <div key={area}>
+                  <div className="flex items-center gap-2 px-1 py-1.5">
+                    <span className="text-[10px] uppercase tracking-wider text-ocean font-semibold">{area}</span>
+                    <div className="flex-1 h-px bg-border" />
+                    <span className="text-[10px] text-muted-foreground">{areaBookings.length} bookings · {areaBookings.reduce((s, b) => s + b.pax, 0)} pax</span>
+                  </div>
+                  <div className="space-y-1">
+                    {areaBookings.map((b) => (
+                      <div
+                        key={b.id}
+                        onClick={() => { setShowInHouseSummary(false); setEditingBooking(b); }}
+                        className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-xs cursor-pointer hover:border-primary/30 transition-colors"
+                      >
+                        <div className="min-w-0">
+                          <div className="font-medium text-foreground truncate">{b.guest_name}</div>
+                          <div className="text-muted-foreground text-[10px] flex items-center gap-1">
+                            <BedDouble className="h-2.5 w-2.5" />
+                            {unitMap.get(b.unit_id ?? "") ?? "—"}
+                            <span className="mx-0.5">·</span>
+                            {b.pax} pax
+                            <span className="mx-0.5">·</span>
+                            {format(parseISO(b.check_in), "MMM d")} → {format(parseISO(b.check_out), "MMM d")}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0 ml-2">
+                          <Badge variant="outline" className={cn("text-[9px]", getPaymentBadgeClass(b.payment_status))}>{b.payment_status}</Badge>
+                          {!!b.unit_id && noLateCheckoutUnitIds.has(b.unit_id) && (
+                            <Badge variant="outline" className="text-[9px] bg-warning-orange/20 text-warning-orange border-warning-orange/30">No late CO</Badge>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {inHouseDisplay.length === 0 && <p className="text-xs text-muted-foreground text-center py-4">No guests in-house</p>}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
