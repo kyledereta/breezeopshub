@@ -205,8 +205,9 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
     for (const booking of bookings) {
       const checkIn = parseISO(booking.check_in);
       const checkOut = parseISO(booking.check_out);
+      const isDaytour = (booking as any).is_daytour_booking && isSameDay(checkIn, checkOut);
       for (const day of days) {
-        if (isWithinInterval(day, { start: checkIn, end: checkOut }) && !isSameDay(day, checkOut)) {
+        if (isDaytour ? isSameDay(day, checkIn) : (isWithinInterval(day, { start: checkIn, end: checkOut }) && !isSameDay(day, checkOut))) {
           const key = `${booking.unit_id}-${format(day, "yyyy-MM-dd")}`;
           map.set(key, booking);
         }
