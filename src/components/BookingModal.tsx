@@ -592,6 +592,7 @@ export function BookingModal({
     if (watchPets && additionalPet && extrasPaidStatus.pet_fee) paidExtrasTotal += Number(watchPetFee) || 0;
     if (watchDaytour && extrasPaidStatus.daytour) paidExtrasTotal += Number(watchDaytourFee) || 0;
     if (extrasPaidStatus.other_extras) paidExtrasTotal += Number(watchOtherExtrasFee) || 0;
+    if (watchDepositStatus === "Deducted" && extrasPaidStatus.deposit_deduction) paidExtrasTotal += Number(watchDepositDeductedAmount) || 0;
 
     const remaining = total - deposit - paidExtrasTotal;
     const fullySettled = remaining <= 0 || remainingPaid;
@@ -620,7 +621,7 @@ export function BookingModal({
     watchTowelRent, watchTowelRentFee, watchBonfire, watchBonfireFee,
     watchEarlyCheckin, watchEarlyCheckinFee,
     watchPets, watchPetFee, additionalPet, watchDaytour, watchDaytourFee,
-    watchOtherExtrasFee, watchPaymentStatus, form,
+    watchOtherExtrasFee, watchPaymentStatus, watchDepositStatus, watchDepositDeductedAmount, form,
   ]);
 
   // Auto-set source to Airbnb and remaining paid when "Airbnb Paid" is selected
@@ -2558,6 +2559,7 @@ export function BookingModal({
                 if (watchBonfire && Number(watchBonfireFee) > 0) extrasList.push({ name: "Bonfire Setup", amount: Number(watchBonfireFee), paid: !!extrasPaidStatus.bonfire });
                 if (Number(watchDaytourFee) > 0) extrasList.push({ name: "Daytour Fee", amount: Number(watchDaytourFee), paid: !!extrasPaidStatus.daytour });
                 if (Number(watchOtherExtrasFee) > 0) extrasList.push({ name: form.watch("other_extras_note") || "Other Extras", amount: Number(watchOtherExtrasFee), paid: !!extrasPaidStatus.other_extras });
+                if (watchDepositStatus === "Deducted" && Number(watchDepositDeductedAmount) > 0) extrasList.push({ name: form.watch("deposit_deducted_reason") || "Damage/Deduction", amount: Number(watchDepositDeductedAmount), paid: !!extrasPaidStatus.deposit_deduction });
 
                 const paidExtrasTotal = extrasList.filter(e => e.paid).reduce((s, e) => s + e.amount, 0);
                 const unpaidExtras = extrasList.filter(e => !e.paid);

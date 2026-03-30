@@ -43,6 +43,9 @@ export function getUnpaidExtras(booking: any): UnpaidExtra[] {
   if (!paid.other_extras && booking.other_extras_fee > 0) {
     extras.push({ name: booking.other_extras_note || "Other Extras", amount: booking.other_extras_fee });
   }
+  if (booking.deposit_status === "Deducted" && !paid.deposit_deduction && booking.deposit_deducted_amount > 0) {
+    extras.push({ name: booking.deposit_deducted_reason || "Damage/Deduction", amount: booking.deposit_deducted_amount });
+  }
 
   return extras;
 }
