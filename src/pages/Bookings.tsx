@@ -392,8 +392,9 @@ export default function BookingsPage() {
         booking={selectedBooking}
         onEdit={openEdit}
         onEditGroup={(groupBookings) => {
-          const primary = groupBookings.find((b) => (b as any).is_primary) || groupBookings[0];
-          if (primary) openEdit(primary);
+          setSheetOpen(false);
+          setGroupEditorBookings(groupBookings);
+          setGroupEditorOpen(true);
         }}
       />
 
@@ -401,6 +402,12 @@ export default function BookingsPage() {
         open={modalOpen}
         onOpenChange={setModalOpen}
         booking={selectedBooking}
+      />
+
+      <GroupBookingEditor
+        open={groupEditorOpen}
+        onOpenChange={setGroupEditorOpen}
+        groupBookings={groupEditorBookings}
       />
     </AppLayout>
   );
