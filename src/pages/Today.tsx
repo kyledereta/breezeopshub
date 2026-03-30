@@ -206,6 +206,8 @@ interface GroupedGuestCardProps {
   noLateCheckoutUnitIds?: Set<string>;
   continuedStayIds?: Set<string>;
   continuedStayMap?: Map<string, ContinuedStayInfo>;
+  isDeparture?: boolean;
+  onToggleSettlement?: (bookingId: string, value: boolean) => void;
 }
 
 function GroupedGuestCard({ primaryBooking, siblingBookings, unitMap, groupUnitNames, draggable, onEdit, noLateCheckoutUnitIds, continuedStayIds, continuedStayMap }: GroupedGuestCardProps) {
