@@ -361,7 +361,25 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit, onEdit
 
   /** Render consolidated financials for grouped bookings */
   const renderGroupFinancials = () => {
-    const grandTotal = allGroupBookings.reduce((s, b) => s + b.total_amount, 0);
+    // Compute per-unit totals from fee lines (NOT total_amount which may contain group total on primary)
+    const unitTotals: { gb: Booking; computedTotal: number; lines: { label: string; amount: number; paidKey?: string }[] }[] = [];
+
+    allGroupBookings.forEach((gb) => {
+      const unit = units.find((u) => u.id === gb.unit_id);
+      const uName = unit?.name || "Unassigned";
+      const uRate = unit?.nightly_rate || 0;
+      const n = differenceInDays(parseISO(gb.check_out), parseISO(gb.check_in));
+      const { lines } = buildFeeLines(gb, uName, n, uRate);
+      let computedTotal = lines.reduce((s, l) => s + l.amount, 0);
+      if (gb.discount_given > 0) {
+        computedTotal -= gb.discount_type === "percentage"
+          ? computedTotal * (gb.discount_given / 100)
+          : gb.discount_given;
+      }
+      unitTotals.push({ gb, computedTotal: Math.max(0, computedTotal), lines });
+    });
+
+    const grandTotal = unitTotals.reduce((s, ut) => s + ut.computedTotal, 0);
     const grandDeposit = allGroupBookings.reduce((s, b) => s + b.deposit_paid, 0);
     const grandSecurity = allGroupBookings.reduce((s, b) => s + (b.security_deposit || 0), 0);
     const grandBalance = Math.max(0, grandTotal - grandDeposit);
@@ -371,14 +389,9 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit, onEdit
 
     return (
       <div className="space-y-3 text-sm">
-        {/* Per-unit breakdown */}
-        {allGroupBookings.map((gb) => {
+        {unitTotals.map(({ gb, computedTotal, lines }) => {
           const unit = units.find((u) => u.id === gb.unit_id);
           const uName = unit?.name || "Unassigned";
-          const uRate = unit?.nightly_rate || 0;
-          const n = differenceInDays(parseISO(gb.check_out), parseISO(gb.check_in));
-          const { lines } = buildFeeLines(gb, uName, n, uRate);
-          const unitTotal = gb.total_amount;
 
           return (
             <div key={gb.id} className="rounded-lg border border-border bg-muted/20 p-3 space-y-1.5">
@@ -415,7 +428,7 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit, onEdit
               <Separator className="bg-border/30" />
               <div className="flex justify-between text-xs font-medium">
                 <span className="text-foreground">Unit Total</span>
-                <span className="text-foreground">₱{unitTotal.toLocaleString()}</span>
+                <span className="text-foreground">₱{computedTotal.toLocaleString()}</span>
               </div>
               {gb.deposit_paid > 0 && (
                 <div className="flex justify-between text-xs">
