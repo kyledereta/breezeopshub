@@ -385,6 +385,30 @@ export function TodayReportDialog({
           </ReportSection>
         )}
 
+        {/* Security Deposit Deductions */}
+        {report.depositDeductions.length > 0 && (
+          <ReportSection
+            icon={<ShieldAlert className="h-3.5 w-3.5 text-destructive" />}
+            title="Deposit Deductions"
+            summary={`₱${report.depositDeductions.reduce((s, d) => s + d.amount, 0).toLocaleString()} from ${report.depositDeductions.length} booking${report.depositDeductions.length > 1 ? "s" : ""}`}
+          >
+            {report.depositDeductions.map(({ booking: b, amount, reason }) => (
+              <div
+                key={b.id}
+                className="flex items-center justify-between rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-xs"
+              >
+                <div className="min-w-0">
+                  <div className="font-medium text-foreground truncate">{b.guest_name}</div>
+                  <div className="text-muted-foreground text-[10px]">
+                    {unitMap.get(b.unit_id ?? "") ?? "—"} · {reason}
+                  </div>
+                </div>
+                <span className="font-semibold text-destructive shrink-0 ml-2">₱{amount.toLocaleString()}</span>
+              </div>
+            ))}
+          </ReportSection>
+        )}
+
         {/* Pending Balances */}
         {report.pendingBalances.length > 0 && (
           <ReportSection
