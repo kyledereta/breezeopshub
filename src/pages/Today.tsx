@@ -73,6 +73,7 @@ interface GuestCardProps {
   groupTotalPax?: number;
   isDeparture?: boolean;
   onToggleSettlement?: (bookingId: string, value: boolean) => void;
+  onClearDeparture?: (bookingId: string) => void;
 }
 
 function GuestCard({ booking, unitName, draggable, onEdit, noLateCheckout, groupBookingId, groupUnitNames, isContinuedStay, continuedStayInfo, unitMap: cardUnitMap, groupTotalAmount, groupTotalPax, isDeparture, onToggleSettlement }: GuestCardProps) {
