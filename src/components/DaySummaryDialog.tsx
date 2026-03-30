@@ -120,6 +120,38 @@ export function DaySummaryDialog({
           </div>
         </div>
 
+        {/* Available Units - grouped by area, moved to top */}
+        {availableUnits.length > 0 && (() => {
+          const byArea = new Map<string, Unit[]>();
+          for (const u of availableUnits) {
+            const area = u.area || "Other";
+            if (!byArea.has(area)) byArea.set(area, []);
+            byArea.get(area)!.push(u);
+          }
+          return (
+            <Section
+              icon={<BedDouble className="h-3.5 w-3.5 text-muted-foreground" />}
+              title="Available Units"
+              count={availableUnits.length}
+            >
+              <div className="space-y-2">
+                {Array.from(byArea.entries()).map(([area, areaUnits]) => (
+                  <div key={area}>
+                    <div className="text-[10px] uppercase tracking-wider text-primary font-semibold mb-1">{area}</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {areaUnits.map((u) => (
+                        <Badge key={u.id} variant="outline" className="text-[10px] font-normal">
+                          {u.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Section>
+          );
+        })()}
+
         {/* Arrivals */}
         <Section
           icon={<LogIn className="h-3.5 w-3.5 text-primary" />}
@@ -152,23 +184,6 @@ export function DaySummaryDialog({
             <BookingRow key={b.id} booking={b} onClick={() => onBookingClick?.(b)} />
           ))}
         </Section>
-
-        {/* Available Units */}
-        {availableUnits.length > 0 && (
-          <Section
-            icon={<BedDouble className="h-3.5 w-3.5 text-muted-foreground" />}
-            title="Available Units"
-            count={availableUnits.length}
-          >
-            <div className="flex flex-wrap gap-1.5">
-              {availableUnits.map((u) => (
-                <Badge key={u.id} variant="outline" className="text-[10px] font-normal">
-                  {u.name}
-                </Badge>
-              ))}
-            </div>
-          </Section>
-        )}
       </DialogContent>
     </Dialog>
   );
