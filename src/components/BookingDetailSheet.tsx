@@ -345,126 +345,138 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-primary flex items-center gap-1.5">
                   <Banknote className="h-3.5 w-3.5" /> Financials
                 </h3>
-                <div className="space-y-1.5 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Total Amount</span>
-                    <span className="font-medium text-foreground">₱{booking.total_amount.toLocaleString()}</span>
-                  </div>
-                  {booking.deposit_paid > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Downpayment</span>
-                      <span className="text-foreground">₱{booking.deposit_paid.toLocaleString()}</span>
+                {(() => {
+                  const eps = (booking as any).extras_paid_status && typeof (booking as any).extras_paid_status === "object"
+                    ? (booking as any).extras_paid_status as Record<string, boolean>
+                    : {} as Record<string, boolean>;
+
+                  // Gather all fee line items
+                  const lines: { label: string; amount: number; paidKey?: string }[] = [];
+
+                  lines.push({ label: "Total Amount", amount: booking.total_amount });
+
+                  if (booking.deposit_paid > 0) {
+                    lines.push({ label: "Downpayment", amount: booking.deposit_paid });
+                  }
+
+                  if (booking.extra_pax_fee > 0) {
+                    const epLabel = extraPax > 0
+                      ? `Extra PAX Fee (+${extraPax} guest${extraPax > 1 ? "s" : ""})`
+                      : "Extra PAX Fee";
+                    lines.push({ label: epLabel, amount: booking.extra_pax_fee });
+                  }
+
+                  if ((booking as any).daytour_fee > 0) {
+                    lines.push({ label: "Daytour Fee", amount: (booking as any).daytour_fee, paidKey: "daytour" });
+                  }
+
+                  if (booking.utensil_rental && booking.utensil_rental_fee > 0) {
+                    lines.push({ label: "Utensil Rental", amount: booking.utensil_rental_fee, paidKey: "utensil_rental" });
+                  }
+                  if (booking.karaoke && booking.karaoke_fee > 0) {
+                    lines.push({ label: "Karaoke", amount: booking.karaoke_fee, paidKey: "karaoke" });
+                  }
+                  if (booking.kitchen_use && booking.kitchen_use_fee > 0) {
+                    lines.push({ label: "Kitchen Use", amount: booking.kitchen_use_fee, paidKey: "kitchen_use" });
+                  }
+                  if (booking.pet_fee > 0) {
+                    lines.push({ label: "Pet Fee", amount: booking.pet_fee, paidKey: "pet_fee" });
+                  }
+                  if ((booking as any).water_jug && (booking as any).water_jug_fee > 0) {
+                    lines.push({ label: `Water Jug (×${(booking as any).water_jug_qty})`, amount: (booking as any).water_jug_fee, paidKey: "water_jug" });
+                  }
+                  if ((booking as any).towel_rent && (booking as any).towel_rent_fee > 0) {
+                    lines.push({ label: `Towel Rent (×${(booking as any).towel_rent_qty})`, amount: (booking as any).towel_rent_fee, paidKey: "towel_rent" });
+                  }
+                  if ((booking as any).bonfire && (booking as any).bonfire_fee > 0) {
+                    lines.push({ label: "Bonfire Setup", amount: (booking as any).bonfire_fee, paidKey: "bonfire" });
+                  }
+                  if ((booking as any).early_checkin && (booking as any).early_checkin_fee > 0) {
+                    lines.push({ label: "Early Check-in", amount: (booking as any).early_checkin_fee, paidKey: "early_checkin" });
+                  }
+                  if ((booking as any).other_extras_fee > 0) {
+                    lines.push({ label: (booking as any).other_extras_note ? `Other (${(booking as any).other_extras_note})` : "Other Extras", amount: (booking as any).other_extras_fee, paidKey: "other_extras" });
+                  }
+                  if ((booking as any).extension_fee > 0) {
+                    lines.push({ label: "Extension Fee", amount: (booking as any).extension_fee });
+                  }
+                  if ((booking as any).security_deposit > 0) {
+                    lines.push({ label: "Security Deposit", amount: (booking as any).security_deposit });
+                  }
+
+                  if (booking.discount_given > 0) {
+                    lines.push({ label: `Discount (${booking.discount_type})${booking.discount_reason ? ` — ${booking.discount_reason}` : ""}`, amount: -(booking.discount_type === "percentage" ? booking.discount_given : booking.discount_given) });
+                  }
+
+                  // Balance due
+                  const balanceDue = Math.max(0, booking.total_amount - booking.deposit_paid);
+                  const isFullySettled = booking.payment_status === "Fully Paid" || booking.payment_status === "Airbnb Paid" || (booking as any).remaining_paid === true;
+
+                  return (
+                    <div className="space-y-1.5 text-sm">
+                      {lines.map((line, i) => {
+                        const isTotal = line.label === "Total Amount";
+                        const isDiscount = line.amount < 0;
+                        return (
+                          <div key={i} className="flex justify-between items-center">
+                            <span className={cn("text-muted-foreground flex items-center gap-1", isTotal && "text-foreground")}>
+                              {line.label === "Extra PAX Fee" || line.label.startsWith("Extra PAX Fee") ? <Users className="h-3 w-3" /> : null}
+                              {line.label === "Utensil Rental" ? <UtensilsCrossed className="h-3 w-3" /> : null}
+                              {line.label}
+                            </span>
+                            <span className={cn("text-foreground", isTotal && "font-medium", isDiscount && "text-primary")}>
+                              {isDiscount
+                                ? (booking.discount_type === "percentage" ? `-${Math.abs(line.amount)}%` : `-₱${Math.abs(line.amount).toLocaleString()}`)
+                                : `₱${line.amount.toLocaleString()}`
+                              }
+                            </span>
+                          </div>
+                        );
+                      })}
+
+                      {/* Balance Due */}
+                      {balanceDue > 0 && (
+                        <>
+                          <Separator className="bg-border/50 my-1" />
+                          <div className="flex justify-between font-medium">
+                            <span className={isFullySettled ? "text-primary" : "text-warning-orange"}>
+                              Balance Due
+                            </span>
+                            <span className={isFullySettled ? "text-primary" : "text-warning-orange"}>
+                              ₱{balanceDue.toLocaleString()}
+                            </span>
+                          </div>
+                          {isFullySettled && (
+                            <p className="text-[10px] text-primary font-medium">✓ Fully Settled</p>
+                          )}
+                        </>
+                      )}
+                      {balanceDue === 0 && booking.total_amount > 0 && (
+                        <>
+                          <Separator className="bg-border/50 my-1" />
+                          <div className="flex justify-between font-medium">
+                            <span className="text-primary">Balance Due</span>
+                            <span className="text-primary">₱0</span>
+                          </div>
+                          <p className="text-[10px] text-primary font-medium">✓ Fully Settled</p>
+                        </>
+                      )}
+
+                      {/* Deposit deduction badge */}
+                      {booking.deposit_status === "Deducted" && booking.deposit_deducted_amount > 0 && (
+                        <Badge variant="outline" className={cn("text-[10px] mt-1",
+                          eps.deposit_deduction ? "border-primary/30 text-primary" : "border-warning-orange/30 text-warning-orange"
+                        )}>
+                          {eps.deposit_deduction ? "✓ " : ""}
+                          {booking.deposit_deducted_reason || "Damage/Deduction"}: ₱{booking.deposit_deducted_amount.toLocaleString()}
+                          {eps.deposit_deduction ? " Paid" : " Unpaid"}
+                        </Badge>
+                      )}
                     </div>
-                  )}
-                  {extraPax > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground flex items-center gap-1">
-                        <Users className="h-3 w-3" /> Extra PAX Fee (+{extraPax} guest{extraPax > 1 ? "s" : ""})
-                      </span>
-                      <span className="text-foreground">₱{booking.extra_pax_fee.toLocaleString()}</span>
-                    </div>
-                  )}
-                  {booking.extra_pax_fee > 0 && extraPax === 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Extra PAX Fee</span>
-                      <span className="text-foreground">₱{booking.extra_pax_fee.toLocaleString()}</span>
-                    </div>
-                  )}
-                  {booking.utensil_rental && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground flex items-center gap-1">
-                        <UtensilsCrossed className="h-3 w-3" /> Utensil Rental
-                      </span>
-                      <span className="text-foreground">₱{booking.utensil_rental_fee.toLocaleString()}</span>
-                    </div>
-                  )}
-                  {booking.karaoke && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Karaoke</span>
-                      <span className="text-foreground">₱{booking.karaoke_fee.toLocaleString()}</span>
-                    </div>
-                  )}
-                  {booking.kitchen_use && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Kitchen Use</span>
-                      <span className="text-foreground">₱{booking.kitchen_use_fee.toLocaleString()}</span>
-                    </div>
-                  )}
-                  {booking.pet_fee > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Pet Fee</span>
-                      <span className="text-foreground">₱{booking.pet_fee.toLocaleString()}</span>
-                    </div>
-                  )}
-                  {(booking as any).water_jug && (booking as any).water_jug_fee > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Water Jug (×{(booking as any).water_jug_qty})</span>
-                      <span className="text-foreground">₱{(booking as any).water_jug_fee.toLocaleString()}</span>
-                    </div>
-                  )}
-                  {(booking as any).towel_rent && (booking as any).towel_rent_fee > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Towel Rent (×{(booking as any).towel_rent_qty})</span>
-                      <span className="text-foreground">₱{(booking as any).towel_rent_fee.toLocaleString()}</span>
-                    </div>
-                  )}
-                  {(booking as any).bonfire && (booking as any).bonfire_fee > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Bonfire Setup</span>
-                      <span className="text-foreground">₱{(booking as any).bonfire_fee.toLocaleString()}</span>
-                    </div>
-                  )}
-                  {(booking as any).early_checkin && (booking as any).early_checkin_fee > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Early Check-in</span>
-                      <span className="text-foreground">₱{(booking as any).early_checkin_fee.toLocaleString()}</span>
-                    </div>
-                  )}
-                  {(booking as any).daytour_fee > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Daytour Fee</span>
-                      <span className="text-foreground">₱{(booking as any).daytour_fee.toLocaleString()}</span>
-                    </div>
-                  )}
-                  {(booking as any).other_extras_fee > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Other Extras{(booking as any).other_extras_note ? ` (${(booking as any).other_extras_note})` : ""}</span>
-                      <span className="text-foreground">₱{(booking as any).other_extras_fee.toLocaleString()}</span>
-                    </div>
-                  )}
-                  {(booking as any).extension_fee > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Extension Fee</span>
-                      <span className="text-foreground">₱{(booking as any).extension_fee.toLocaleString()}</span>
-                    </div>
-                  )}
-                  {(booking as any).security_deposit > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Security Deposit</span>
-                      <span className="text-foreground">₱{(booking as any).security_deposit.toLocaleString()}</span>
-                    </div>
-                  )}
-                  {booking.discount_given > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Discount ({booking.discount_type})</span>
-                      <span className="text-foreground">
-                        -{booking.discount_type === "percentage" ? `${booking.discount_given}%` : `₱${booking.discount_given.toLocaleString()}`}
-                        {booking.discount_reason && <span className="text-[10px] text-muted-foreground ml-1">({booking.discount_reason})</span>}
-                      </span>
-                    </div>
-                  )}
-                  {/* Balance Due */}
-                  {booking.deposit_paid > 0 && booking.total_amount - booking.deposit_paid > 0 && (
-                    <>
-                      <Separator className="bg-border/50 my-1" />
-                      <div className="flex justify-between font-medium">
-                        <span className="text-destructive">Balance Due</span>
-                        <span className="text-destructive">₱{(booking.total_amount - booking.deposit_paid).toLocaleString()}</span>
-                      </div>
-                    </>
-                  )}
-                </div>
-                {/* Extras */}
+                  );
+                })()}
+
+                {/* Extras badges */}
                 <div className="flex items-center gap-2 flex-wrap mt-2">
                   {booking.pets && (
                     <Badge variant="outline" className="text-[10px] gap-1 border-warning-orange/30 text-warning-orange">
@@ -473,19 +485,17 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit }: Book
                   )}
                   {booking.deposit_status !== "Pending" && (
                     <Badge variant="outline" className={cn("text-[10px]",
-                      booking.deposit_status === "Returned" ? "border-ocean/30 text-ocean" : "border-destructive/30 text-destructive"
+                      booking.deposit_status === "Returned" ? "border-ocean/30 text-ocean" :
+                      booking.deposit_status === "Collected" ? "border-primary/30 text-primary" :
+                      "border-destructive/30 text-destructive"
                     )}>
                       Deposit {booking.deposit_status}
                       {booking.deposit_status === "Deducted" && booking.deposit_deducted_amount > 0 && ` (₱${booking.deposit_deducted_amount.toLocaleString()})`}
                     </Badge>
                   )}
-                  {booking.deposit_status === "Deducted" && booking.deposit_deducted_amount > 0 && (
-                    <Badge variant="outline" className={cn("text-[10px]",
-                      (booking as any).extras_paid_status?.deposit_deduction ? "border-primary/30 text-primary" : "border-warning-orange/30 text-warning-orange"
-                    )}>
-                      {(booking as any).extras_paid_status?.deposit_deduction ? "✓ " : ""}
-                      {booking.deposit_deducted_reason || "Damage"}: ₱{booking.deposit_deducted_amount.toLocaleString()}
-                      {(booking as any).extras_paid_status?.deposit_deduction ? " Paid" : " Unpaid"}
+                  {(booking as any).post_checkout_settlement && (
+                    <Badge variant="outline" className="text-[10px] border-warning-orange/30 text-warning-orange">
+                      Post-Checkout Settlement
                     </Badge>
                   )}
                 </div>
