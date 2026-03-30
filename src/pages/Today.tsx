@@ -566,6 +566,8 @@ export default function TodayPage() {
   const arrivalsGrouped = useMemo(() => groupByArea(checkIns), [checkIns, groupByArea]);
   const inHouseGrouped = useMemo(() => groupByArea(inHouseDisplay), [inHouseDisplay, groupByArea]);
 
+  const groupedUnits = useMemo(() => groupUnitsByArea(units), [units]);
+
   // Compute available units for today and each day this week
   const weekDays = useMemo(() => {
     const today = new Date();
