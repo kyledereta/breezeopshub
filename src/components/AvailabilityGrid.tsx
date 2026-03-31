@@ -154,12 +154,26 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
   const { data: blockedDates = [] } = useBlockedDates(startStr, endStr);
   const blockDate = useBlockDate();
   const unblockDate = useUnblockDate();
+  const updateBooking = useUpdateBooking();
   const todayRef = useRef<HTMLTableCellElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [blockPopover, setBlockPopover] = useState<{ unitId: string; date: Date } | null>(null);
   const [blockReason, setBlockReason] = useState("");
   const [legendOpen, setLegendOpen] = useState(true);
   const [summaryDate, setSummaryDate] = useState<Date | null>(null);
+
+  // Booking relocation drag state
+  const [relocDrag, setRelocDrag] = useState<{
+    booking: Booking;
+    fromUnitId: string;
+    toUnitId: string | null;
+  } | null>(null);
+  const [relocConfirm, setRelocConfirm] = useState<{
+    booking: Booking;
+    fromUnitName: string;
+    toUnitId: string;
+    toUnitName: string;
+  } | null>(null);
 
   // Drag-to-select state for blocking
   const [dragState, setDragState] = useState<{
