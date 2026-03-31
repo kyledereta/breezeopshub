@@ -306,6 +306,8 @@ function UnitEditModal({ open, onOpenChange, unit }: { open: boolean; onOpenChan
   const [hasAc, setHasAc] = useState(false);
   const [notes, setNotes] = useState("");
   const [unitStatus, setUnitStatus] = useState("Available");
+  const [lastDeepCleaned, setLastDeepCleaned] = useState("");
+  const [damageItems, setDamageItems] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   // Reset on open
@@ -318,6 +320,8 @@ function UnitEditModal({ open, onOpenChange, unit }: { open: boolean; onOpenChan
       setHasAc(unit.has_ac);
       setNotes(unit.notes || "");
       setUnitStatus((unit as any).unit_status || "Available");
+      setLastDeepCleaned((unit as any).last_deep_cleaned || "");
+      setDamageItems((unit as any).damage_items || []);
     }
   };
 
@@ -325,7 +329,7 @@ function UnitEditModal({ open, onOpenChange, unit }: { open: boolean; onOpenChan
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (o) handleOpen(); onOpenChange(o); }}>
-      <DialogContent className="bg-card border-border max-w-md">
+      <DialogContent className="bg-card border-border max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display text-foreground">Edit {unit.name}</DialogTitle>
         </DialogHeader>
