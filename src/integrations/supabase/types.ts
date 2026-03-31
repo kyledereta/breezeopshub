@@ -152,7 +152,10 @@ export type Database = {
           water_jug: boolean
           water_jug_fee: number
           water_jug_qty: number
+          wristband_collected: boolean
           wristband_deposit: boolean
+          wristband_qty: number
+          wristband_returned_qty: number
         }
         Insert: {
           atv?: boolean
@@ -224,7 +227,10 @@ export type Database = {
           water_jug?: boolean
           water_jug_fee?: number
           water_jug_qty?: number
+          wristband_collected?: boolean
           wristband_deposit?: boolean
+          wristband_qty?: number
+          wristband_returned_qty?: number
         }
         Update: {
           atv?: boolean
@@ -296,7 +302,10 @@ export type Database = {
           water_jug?: boolean
           water_jug_fee?: number
           water_jug_qty?: number
+          wristband_collected?: boolean
           wristband_deposit?: boolean
+          wristband_qty?: number
+          wristband_returned_qty?: number
         }
         Relationships: [
           {
