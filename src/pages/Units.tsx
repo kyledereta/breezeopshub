@@ -201,6 +201,56 @@ export default function UnitsPage() {
                           </div>
                         </div>
 
+                        {/* Deep Cleaning */}
+                        <div className="pt-1 border-t border-border space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <SprayCan className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Deep Cleaned</span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 text-[10px] px-2 text-primary hover:text-primary"
+                              onClick={async () => {
+                                try {
+                                  await updateUnit.mutateAsync({ id: unit.id, last_deep_cleaned: format(new Date(), "yyyy-MM-dd") });
+                                  toast.success(`${unit.name} marked as deep cleaned today`);
+                                } catch (err: any) {
+                                  toast.error(err.message ?? "Failed to update");
+                                }
+                              }}
+                            >
+                              Mark Today
+                            </Button>
+                          </div>
+                          <p className="text-[11px] text-foreground">
+                            {(unit as any).last_deep_cleaned
+                              ? `${format(parseISO((unit as any).last_deep_cleaned), "MMM d, yyyy")} (${formatDistanceToNow(parseISO((unit as any).last_deep_cleaned), { addSuffix: true })})`
+                              : "Never recorded"}
+                          </p>
+                        </div>
+
+                        {/* Damage Items */}
+                        {(() => {
+                          const damages: string[] = (unit as any).damage_items || [];
+                          return damages.length > 0 ? (
+                            <div className="pt-1 border-t border-border space-y-1.5">
+                              <div className="flex items-center gap-1.5">
+                                <Wrench className="h-3 w-3 text-destructive" />
+                                <span className="text-[10px] text-destructive uppercase tracking-wider font-medium">Needs Attention</span>
+                              </div>
+                              <div className="flex flex-wrap gap-1">
+                                {damages.map((d) => (
+                                  <Badge key={d} variant="outline" className="text-[9px] border-destructive/30 text-destructive bg-destructive/10">
+                                    {d}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          ) : null;
+                        })()}
+
                         {/* Quick Status Toggle */}
                         <div className="pt-1 border-t border-border space-y-2">
                           <div className="flex items-center justify-between">
