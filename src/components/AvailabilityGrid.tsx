@@ -15,7 +15,7 @@ import {
   isWeekend,
   getDay,
 } from "date-fns";
-import { Home, Tent, TreePalm, Crown, Fan, PawPrint, Users, Facebook, Instagram, Globe, MapPin, Share2, UtensilsCrossed, TrendingUp, Link2, Ban, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
+import { Home, Tent, TreePalm, Crown, Fan, PawPrint, Users, Facebook, Instagram, Globe, MapPin, Share2, UtensilsCrossed, TrendingUp, Link2, Ban, ChevronDown, ChevronUp, RefreshCw, ArrowRightLeft } from "lucide-react";
 import { useContinuedStayMap, type ContinuedStayInfo } from "@/hooks/useContinuedStay";
 import { getPHHolidaysForMonth } from "@/lib/phHolidays";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,18 @@ import { Input } from "@/components/ui/input";
 import { useUnits, groupUnitsByArea } from "@/hooks/useUnits";
 import { useBookings, type Booking } from "@/hooks/useBookings";
 import { useBlockedDates, useBlockDate, useUnblockDate } from "@/hooks/useBlockedDates";
+import { useUpdateBooking } from "@/hooks/useBookingMutations";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
