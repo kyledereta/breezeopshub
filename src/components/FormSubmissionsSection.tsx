@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { format, parseISO } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
 import { FileText, Check, X, Users, BedDouble, Calendar, ImageIcon, CreditCard, PawPrint, IdCard, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
