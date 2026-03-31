@@ -24,6 +24,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Input } from "@/components/ui/input";
 import { useUnits, groupUnitsByArea } from "@/hooks/useUnits";
 import { useBookings, type Booking } from "@/hooks/useBookings";
+import { useRealtimeBookings } from "@/hooks/useRealtimeBookings";
 import { useBlockedDates, useBlockDate, useUnblockDate } from "@/hooks/useBlockedDates";
 import { useUpdateBooking } from "@/hooks/useBookingMutations";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";

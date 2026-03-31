@@ -4,6 +4,7 @@ import { format, parseISO, addDays, eachDayOfInterval, isWithinInterval, isSameD
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import { useBookings, type Booking } from "@/hooks/useBookings";
+import { useRealtimeBookings } from "@/hooks/useRealtimeBookings";
 import { useUpdateBooking } from "@/hooks/useBookingMutations";
 import { useUnits, groupUnitsByArea } from "@/hooks/useUnits";
 import { useGuests } from "@/hooks/useGuests";
