@@ -839,6 +839,9 @@ export function BookingModal({
         other_extras_fee: 0,
         other_extras_note: "",
         late_checkout: false,
+        wristband_qty: 0,
+        wristband_returned_qty: 0,
+        wristband_collected: false,
       });
       setAdditionalUnitIds([]);
       setAdditionalPet(false);
