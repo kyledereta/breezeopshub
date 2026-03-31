@@ -498,10 +498,12 @@ export default function TodayPage() {
       if (ci <= todayStr && co >= todayStr && b.booking_status !== "Checked In" && b.booking_status !== "Checked Out") {
         checkIns.push(b);
       }
-      if (co === todayStr && b.booking_status === "Checked Out") {
+      // Day tours belong to their check-in date only; skip them on the check-out date
+      const isDaytourYesterday = b.is_daytour_booking && ci < todayStr;
+      if (co === todayStr && b.booking_status === "Checked Out" && !isDaytourYesterday) {
         baseCheckOuts.push(b);
       }
-      if (co === todayStr && b.booking_status === "Checked In") {
+      if (co === todayStr && b.booking_status === "Checked In" && !isDaytourYesterday) {
         dueDepartures.push(b);
       }
       if (b.payment_status === "Unpaid" || b.payment_status === "Partial DP" || hasUnpaidExtras(b)) {
