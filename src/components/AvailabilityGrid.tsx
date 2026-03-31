@@ -24,6 +24,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Input } from "@/components/ui/input";
 import { useUnits, groupUnitsByArea } from "@/hooks/useUnits";
 import { useBookings, type Booking } from "@/hooks/useBookings";
+import { useRealtimeBookings } from "@/hooks/useRealtimeBookings";
 import { useBlockedDates, useBlockDate, useUnblockDate } from "@/hooks/useBlockedDates";
 import { useUpdateBooking } from "@/hooks/useBookingMutations";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -146,6 +147,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
 
   const { data: units = [], isLoading: unitsLoading } = useUnits();
   const { data: bookings = [], isLoading: bookingsLoading } = useBookings(startStr, endStr);
+  useRealtimeBookings();
   const continuedStayMap = useContinuedStayMap(bookings);
   const unitNameMap = useMemo(() => {
     const m = new Map<string, string>();
