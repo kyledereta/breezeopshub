@@ -310,6 +310,8 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit, onEdit
     if ((booking as any).water_jug && (booking as any).water_jug_fee > 0) lines.push({ label: `Water Jug (×${(booking as any).water_jug_qty})`, amount: (booking as any).water_jug_fee, paidKey: "water_jug" });
     if ((booking as any).towel_rent && (booking as any).towel_rent_fee > 0) lines.push({ label: `Towel Rent (×${(booking as any).towel_rent_qty})`, amount: (booking as any).towel_rent_fee, paidKey: "towel_rent" });
     if ((booking as any).bonfire && (booking as any).bonfire_fee > 0) lines.push({ label: "Bonfire Setup", amount: (booking as any).bonfire_fee, paidKey: "bonfire" });
+    if ((booking as any).atv && (booking as any).atv_fee > 0) lines.push({ label: "ATV Ride", amount: (booking as any).atv_fee, paidKey: "atv" });
+    if ((booking as any).banana_boat && (booking as any).banana_boat_fee > 0) lines.push({ label: "Banana Boat", amount: (booking as any).banana_boat_fee, paidKey: "banana_boat" });
     if ((booking as any).early_checkin && (booking as any).early_checkin_fee > 0) lines.push({ label: "Early Check-in", amount: (booking as any).early_checkin_fee, paidKey: "early_checkin" });
     if ((booking as any).other_extras_fee > 0) lines.push({ label: (booking as any).other_extras_note ? `Other (${(booking as any).other_extras_note})` : "Other Extras", amount: (booking as any).other_extras_fee, paidKey: "other_extras" });
     if ((booking as any).extension_fee > 0) lines.push({ label: "Extension Fee", amount: (booking as any).extension_fee });

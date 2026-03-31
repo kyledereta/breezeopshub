@@ -149,6 +149,8 @@ export function TodayReportDialog({
       if (b.water_jug && b.water_jug_fee > 0) extrasList.push({ name: `Water Jug (×${b.water_jug_qty})`, amount: b.water_jug_fee });
       if (b.towel_rent && b.towel_rent_fee > 0) extrasList.push({ name: `Towel Rent (×${b.towel_rent_qty})`, amount: b.towel_rent_fee });
       if (b.bonfire && b.bonfire_fee > 0) extrasList.push({ name: "Bonfire", amount: b.bonfire_fee });
+      if ((b as any).atv && (b as any).atv_fee > 0) extrasList.push({ name: "ATV Ride", amount: (b as any).atv_fee });
+      if ((b as any).banana_boat && (b as any).banana_boat_fee > 0) extrasList.push({ name: "Banana Boat", amount: (b as any).banana_boat_fee });
       if (b.early_checkin && b.early_checkin_fee > 0) extrasList.push({ name: "Early Check-in", amount: b.early_checkin_fee });
       if (b.pets && b.pet_fee > 0) extrasList.push({ name: "Pet Fee", amount: b.pet_fee });
       if (b.other_extras_fee > 0) extrasList.push({ name: b.other_extras_note || "Other", amount: b.other_extras_fee });

@@ -122,7 +122,9 @@ export default function RevenuePage() {
       const waterJug = (b as any).water_jug_fee ?? 0;
       const towelRent = (b as any).towel_rent_fee ?? 0;
       const bonfire = (b as any).bonfire_fee ?? 0;
-      const ancillaries = utensil + (b.karaoke_fee ?? 0) + pet + kitchen + extraPax + extension + waterJug + towelRent + bonfire;
+      const atv = (b as any).atv_fee ?? 0;
+      const bananaBoat = (b as any).banana_boat_fee ?? 0;
+      const ancillaries = utensil + (b.karaoke_fee ?? 0) + pet + kitchen + extraPax + extension + waterJug + towelRent + bonfire + atv + bananaBoat;
       const room = Math.max(0, b.total_amount - ancillaries);
 
       utensilTotal += utensil;
