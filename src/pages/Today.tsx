@@ -565,7 +565,8 @@ export default function TodayPage() {
     // Turnover units: units departing today that need cleaning
     const departuresToday = allBookings.filter(b =>
       b.booking_status !== "Cancelled" && !b.deleted_at && b.unit_id &&
-      b.check_out === todayStr
+      b.check_out === todayStr &&
+      !(b.is_daytour_booking && b.check_in < todayStr)
     );
     const departingUnitIds = new Set(departuresToday.map(b => b.unit_id!));
     const turnoverUnits: { unitId: string; departingGuest: string; nextBooking: Booking | null; urgency: "urgent" | "tomorrow" | "none" }[] = [];
