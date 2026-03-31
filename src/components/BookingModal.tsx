@@ -1947,6 +1947,8 @@ export function BookingModal({
                         watchWaterJug && "Water Jug",
                         watchTowelRent && "Towel",
                         watchBonfire && "Bonfire",
+                        watchAtv && "ATV",
+                        watchBananaBoat && "Banana Boat",
                         watchEarlyCheckin && "Early Check-in",
                         watchDaytour && "Day Tour",
                         Number(watchOtherExtrasFee) > 0 && "Others",
