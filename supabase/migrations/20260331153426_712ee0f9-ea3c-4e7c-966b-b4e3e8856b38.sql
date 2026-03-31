@@ -1,0 +1,1 @@
+DELETE FROM bookings WHERE booking_group_id = '97ec0286-8233-4e56-95d9-117c20ee7976';
