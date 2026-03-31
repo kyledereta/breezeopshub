@@ -20,9 +20,17 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Home, Tent, TreePalm, Crown, Fan, Snowflake, Search, Pencil, Construction, CheckCircle, AlertTriangle, XCircle, Download } from "lucide-react";
+import { Home, Tent, TreePalm, Crown, Fan, Snowflake, Search, Pencil, Construction, CheckCircle, AlertTriangle, XCircle, Download, SprayCan, Wrench, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { downloadCsv } from "@/lib/csvExport";
+import { format, parseISO, formatDistanceToNow } from "date-fns";
+
+const DAMAGE_OPTIONS = [
+  "Faucet", "Toilet", "Shower Head", "Door Lock", "Window", "Light Fixture",
+  "Ceiling Fan", "Air Conditioner", "Mattress", "Bed Frame", "Cabinet",
+  "Flooring", "Wall Damage", "Roof Leak", "Electrical Outlet", "Plumbing",
+  "Screen Door", "Water Heater", "Towel Rack", "Mirror", "Other",
+];
 
 function getUnitIcon(name: string) {
   if (name.includes("Villa") && name.includes("Owner")) return Crown;
