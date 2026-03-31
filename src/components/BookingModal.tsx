@@ -2958,9 +2958,33 @@ export function BookingModal({
                         },
                         ...groupSiblings.map((sib) => {
                           const u = units.find((x) => x.id === sib.unit_id);
+                          const sibNights = differenceInCalendarDays(
+                            parse(sib.check_out, "yyyy-MM-dd", new Date()),
+                            parse(sib.check_in, "yyyy-MM-dd", new Date())
+                          );
+                          const sibBase = sib.is_daytour_booking ? 0 : (u?.nightly_rate || 0) * sibNights;
+                          const sibExtras =
+                            (sib.utensil_rental ? sib.utensil_rental_fee : 0) +
+                            (sib.karaoke ? sib.karaoke_fee : 0) +
+                            (sib.kitchen_use ? sib.kitchen_use_fee : 0) +
+                            (sib.pets ? sib.pet_fee : 0) +
+                            (sib.extra_pax_fee || 0) +
+                            (sib.water_jug ? sib.water_jug_fee : 0) +
+                            (sib.towel_rent ? sib.towel_rent_fee : 0) +
+                            (sib.bonfire ? sib.bonfire_fee : 0) +
+                            (sib.atv ? sib.atv_fee : 0) +
+                            (sib.banana_boat ? sib.banana_boat_fee : 0) +
+                            (sib.daytour ? sib.daytour_fee : 0) +
+                            (sib.early_checkin ? sib.early_checkin_fee : 0) +
+                            (sib.other_extras_fee || 0) +
+                            (sib.extension_fee || 0);
+                          const sibDiscountAmt = sib.discount_type === "percentage"
+                            ? Math.round((sibBase + sibExtras) * (sib.discount_given / 100))
+                            : (sib.discount_given || 0);
+                          const sibComputedTotal = Math.max(0, sibBase + sibExtras - sibDiscountAmt);
                           return {
                             unitName: u?.name || "Unit",
-                            total: sib.total_amount,
+                            total: sibComputedTotal > 0 ? sibComputedTotal : sib.total_amount,
                             deposit: sib.deposit_paid,
                             paymentStatus: sib.payment_status,
                             isCurrent: false,
