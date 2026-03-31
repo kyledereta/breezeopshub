@@ -670,6 +670,7 @@ export function BookingModal({
     watchUtensilRental, watchUtensilFee, watchKaraoke, watchKaraokeFee,
     watchKitchenUse, watchKitchenFee, watchWaterJug, watchWaterJugFee,
     watchTowelRent, watchTowelRentFee, watchBonfire, watchBonfireFee,
+    watchAtv, watchAtvFee, watchBananaBoat, watchBananaBoatFee,
     watchEarlyCheckin, watchEarlyCheckinFee,
     watchPets, watchPetFee, additionalPet, watchDaytour, watchDaytourFee,
     watchOtherExtrasFee, watchPaymentStatus, watchDepositStatus, watchDepositDeductedAmount, form,
