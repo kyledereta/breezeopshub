@@ -2725,6 +2725,8 @@ export function BookingModal({
                   (watchWaterJug ? Number(watchWaterJugFee) || 0 : 0) +
                   (watchTowelRent ? Number(watchTowelRentFee) || 0 : 0) +
                   (watchBonfire ? Number(watchBonfireFee) || 0 : 0) +
+                  (watchAtv ? Number(watchAtvFee) || 0 : 0) +
+                  (watchBananaBoat ? Number(watchBananaBoatFee) || 0 : 0) +
                   (watchDaytour ? Number(watchDaytourFee) || 0 : 0) +
                   (Number(watchOtherExtrasFee) || 0);
                 const discountAmount =
