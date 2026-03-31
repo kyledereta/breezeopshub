@@ -83,6 +83,10 @@ interface UnitState {
   towel_rent_fee: number;
   bonfire: boolean;
   bonfire_fee: number;
+  atv: boolean;
+  atv_fee: number;
+  banana_boat: boolean;
+  banana_boat_fee: number;
   early_checkin: boolean;
   early_checkin_fee: number;
   daytour_fee: number;
