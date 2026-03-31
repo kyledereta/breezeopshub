@@ -1,4 +1,4 @@
-import { Calendar, ClipboardList, Wallet, BarChart3, Users, Settings, LayoutDashboard, Home, LogOut } from "lucide-react";
+import { Calendar, ClipboardList, Wallet, BarChart3, Users, Settings, LayoutDashboard, Home, LogOut, Map } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -22,6 +22,7 @@ const navItems = [
   { title: "Revenue", url: "/revenue", icon: BarChart3 },
   { title: "Guests", url: "/guests", icon: Users },
   { title: "Units", url: "/units", icon: Home },
+  { title: "Resort Map", url: "/map", icon: Map },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
