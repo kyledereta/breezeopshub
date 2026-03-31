@@ -202,9 +202,14 @@ export function GroupBookingEditor({ open, onOpenChange, groupBookings }: GroupB
 
   const [unitStates, setUnitStates] = useState<UnitState[]>([]);
   const [expandedUnits, setExpandedUnits] = useState<Set<string>>(new Set());
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    if (!open || groupBookings.length === 0) return;
+    if (!open) {
+      setInitialized(false);
+      return;
+    }
+    if (initialized || groupBookings.length === 0) return;
     const p = groupBookings.find((b) => b.is_primary) || groupBookings[0];
     setGuestName(p.guest_name);
     setCheckIn(p.check_in);
@@ -216,7 +221,8 @@ export function GroupBookingEditor({ open, onOpenChange, groupBookings }: GroupB
     setNotes(p.notes || "");
     setUnitStates(groupBookings.map(bookingToUnitState));
     setExpandedUnits(new Set());
-  }, [open, groupBookings]);
+    setInitialized(true);
+  }, [open, groupBookings, initialized]);
 
   const nights = useMemo(() => {
     if (!checkIn || !checkOut) return 0;
