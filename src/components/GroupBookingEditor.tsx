@@ -169,6 +169,8 @@ function computeUnitTotal(us: UnitState, nightlyRate: number, nights: number): n
     (us.water_jug ? us.water_jug_fee : 0) +
     (us.towel_rent ? us.towel_rent_fee : 0) +
     (us.bonfire ? us.bonfire_fee : 0) +
+    (us.atv ? us.atv_fee : 0) +
+    (us.banana_boat ? us.banana_boat_fee : 0) +
     (us.early_checkin ? us.early_checkin_fee : 0) +
     us.daytour_fee +
     us.other_extras_fee +
