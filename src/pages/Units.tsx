@@ -372,6 +372,63 @@ function UnitEditModal({ open, onOpenChange, unit }: { open: boolean; onOpenChan
             <Switch checked={hasAc} onCheckedChange={setHasAc} />
             <Label className="text-xs text-foreground">Air Conditioned</Label>
           </div>
+
+          {/* Deep Cleaning */}
+          <div>
+            <Label className="text-xs text-muted-foreground">Last Deep Cleaned</Label>
+            <div className="flex gap-2">
+              <Input
+                type="date"
+                value={lastDeepCleaned}
+                onChange={(e) => setLastDeepCleaned(e.target.value)}
+                className="bg-background border-border flex-1"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs shrink-0"
+                type="button"
+                onClick={() => setLastDeepCleaned(format(new Date(), "yyyy-MM-dd"))}
+              >
+                Today
+              </Button>
+            </div>
+          </div>
+
+          {/* Damage Items */}
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Damage / Needs Attention</Label>
+            <Select
+              value=""
+              onValueChange={(val) => {
+                if (val && !damageItems.includes(val)) {
+                  setDamageItems([...damageItems, val]);
+                }
+              }}
+            >
+              <SelectTrigger className="bg-background border-border">
+                <SelectValue placeholder="Add damage item..." />
+              </SelectTrigger>
+              <SelectContent className="bg-popover border-border">
+                {DAMAGE_OPTIONS.filter((d) => !damageItems.includes(d)).map((d) => (
+                  <SelectItem key={d} value={d}>{d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {damageItems.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {damageItems.map((d) => (
+                  <Badge key={d} variant="outline" className="text-xs gap-1 border-destructive/30 text-destructive bg-destructive/10">
+                    {d}
+                    <button type="button" onClick={() => setDamageItems(damageItems.filter((x) => x !== d))} className="ml-0.5 hover:text-destructive">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div>
             <Label className="text-xs text-muted-foreground">Notes</Label>
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="bg-background border-border resize-none h-20" />
@@ -391,6 +448,8 @@ function UnitEditModal({ open, onOpenChange, unit }: { open: boolean; onOpenChan
                   has_ac: hasAc,
                   notes: notes || null,
                   unit_status: unitStatus,
+                  last_deep_cleaned: lastDeepCleaned || null,
+                  damage_items: damageItems,
                 });
                 toast.success("Unit updated");
                 onOpenChange(false);
