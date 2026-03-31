@@ -430,6 +430,15 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
           <Button
             variant="outline"
             size="sm"
+            onClick={() => exportAvailabilityGrid(units, bookings, currentMonth)}
+            className="text-xs border-border text-muted-foreground hover:text-foreground"
+          >
+            <Download className="h-3.5 w-3.5 mr-1" />
+            Export
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => { setCurrentMonth(new Date()); scrollToToday(); }}
             className="text-xs border-border text-muted-foreground hover:text-foreground"
           >
