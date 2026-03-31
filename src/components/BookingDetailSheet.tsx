@@ -256,6 +256,8 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit, onEdit
     if (booking.water_jug && booking.water_jug_fee > 0) extras.push({ label: `Water Jug (×${booking.water_jug_qty})`, amount: booking.water_jug_fee });
     if (booking.towel_rent && booking.towel_rent_fee > 0) extras.push({ label: `Towel Rent (×${booking.towel_rent_qty})`, amount: booking.towel_rent_fee });
     if (booking.bonfire && booking.bonfire_fee > 0) extras.push({ label: "Bonfire Setup", amount: booking.bonfire_fee });
+    if ((booking as any).atv && (booking as any).atv_fee > 0) extras.push({ label: "ATV Ride", amount: (booking as any).atv_fee });
+    if ((booking as any).banana_boat && (booking as any).banana_boat_fee > 0) extras.push({ label: "Banana Boat", amount: (booking as any).banana_boat_fee });
     if (booking.early_checkin && booking.early_checkin_fee > 0) extras.push({ label: "Early Check-in", amount: booking.early_checkin_fee });
     if (booking.extension_fee > 0) extras.push({ label: "Extension Fee", amount: booking.extension_fee });
     if (booking.other_extras_fee > 0) extras.push({ label: booking.other_extras_note || "Other Extras", amount: booking.other_extras_fee });
