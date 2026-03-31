@@ -226,7 +226,7 @@ export function FormSubmissionsSection({ unitMap }: FormSubmissionsSectionProps)
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7"
-                      onClick={() => setViewImage({ url: s.payment_screenshot_url!, title: "Payment Receipt" })}
+                      onClick={() => openImage(s.payment_screenshot_url!, "Payment Receipt")}
                       title="View payment receipt"
                     >
                       <ImageIcon className="h-3.5 w-3.5 text-muted-foreground" />
