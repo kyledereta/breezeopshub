@@ -39,6 +39,23 @@ export function FormSubmissionsSection({ unitMap }: FormSubmissionsSectionProps)
   const [approvedBooking, setApprovedBooking] = useState<ApprovedBooking | null>(null);
   // New: open booking modal pre-filled from submission
   const [prefillSubmission, setPrefillSubmission] = useState<SubmissionPrefill | null>(null);
+
+  // Resolve a stored path or URL into a viewable signed URL
+  const openImage = useCallback(async (rawUrl: string, title: string) => {
+    // If it's already a full URL (legacy data), show directly
+    if (rawUrl.startsWith("http")) {
+      setViewImage({ url: rawUrl, title });
+      return;
+    }
+    // Otherwise it's a storage path – determine bucket from context
+    const bucket = title.toLowerCase().includes("id") ? "guest-ids" : "payment-screenshots";
+    const { data, error } = await supabase.storage.from(bucket).createSignedUrl(rawUrl, 300);
+    if (error || !data?.signedUrl) {
+      toast.error("Failed to load image");
+      return;
+    }
+    setViewImage({ url: data.signedUrl, title });
+  }, []);
   const [activeSubmission, setActiveSubmission] = useState<FormSubmission | null>(null);
 
   if (isLoading || (submissions.length === 0 && !approvedBooking)) return null;
