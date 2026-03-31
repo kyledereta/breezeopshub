@@ -639,6 +639,8 @@ export function BookingModal({
     if (watchWaterJug && extrasPaidStatus.water_jug) paidExtrasTotal += Number(watchWaterJugFee) || 0;
     if (watchTowelRent && extrasPaidStatus.towel_rent) paidExtrasTotal += Number(watchTowelRentFee) || 0;
     if (watchBonfire && extrasPaidStatus.bonfire) paidExtrasTotal += Number(watchBonfireFee) || 0;
+    if (watchAtv && extrasPaidStatus.atv) paidExtrasTotal += Number(watchAtvFee) || 0;
+    if (watchBananaBoat && extrasPaidStatus.banana_boat) paidExtrasTotal += Number(watchBananaBoatFee) || 0;
     if (watchEarlyCheckin && extrasPaidStatus.early_checkin) paidExtrasTotal += Number(watchEarlyCheckinFee) || 0;
     if (watchPets && additionalPet && extrasPaidStatus.pet_fee) paidExtrasTotal += Number(watchPetFee) || 0;
     if (watchDaytour && extrasPaidStatus.daytour) paidExtrasTotal += Number(watchDaytourFee) || 0;
