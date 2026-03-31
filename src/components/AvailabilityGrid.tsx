@@ -147,6 +147,7 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
 
   const { data: units = [], isLoading: unitsLoading } = useUnits();
   const { data: bookings = [], isLoading: bookingsLoading } = useBookings(startStr, endStr);
+  useRealtimeBookings();
   const continuedStayMap = useContinuedStayMap(bookings);
   const unitNameMap = useMemo(() => {
     const m = new Map<string, string>();
