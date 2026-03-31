@@ -2642,6 +2642,59 @@ export function BookingModal({
               )}
             </div>
 
+              {/* Wristband Tracking */}
+              <Separator className="bg-border/50" />
+              <div className="space-y-3">
+                <p className="text-xs font-medium text-foreground">Wristband Tracking</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="wristband_qty"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Wristbands Given</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" min={0} className="bg-background border-border" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  {(watchBookingStatus === "Checked Out" || watchBookingStatus === "Checked In") && (
+                    <FormField
+                      control={form.control}
+                      name="wristband_returned_qty"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs text-muted-foreground">Wristbands Returned</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="number" min={0} className="bg-background border-border" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </div>
+                {watchBookingStatus === "Checked Out" && (
+                  <div className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-3 py-2">
+                    <span className="text-xs text-muted-foreground">All Wristbands Collected?</span>
+                    <FormField
+                      control={form.control}
+                      name="wristband_collected"
+                      render={({ field }) => (
+                        <Switch checked={field.value} onCheckedChange={field.onChange} className="scale-75" />
+                      )}
+                    />
+                  </div>
+                )}
+                {Number(form.watch("wristband_qty")) > 0 && Number(form.watch("wristband_returned_qty")) > 0 && Number(form.watch("wristband_returned_qty")) < Number(form.watch("wristband_qty")) && (
+                  <p className="text-[10px] text-warning-orange flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    {Number(form.watch("wristband_qty")) - Number(form.watch("wristband_returned_qty"))} wristband(s) not yet returned
+                  </p>
+                )}
+              </div>
+            </div>
+
             <Separator className="bg-border" />
 
             {/* Guest ID Upload */}
