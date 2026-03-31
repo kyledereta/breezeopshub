@@ -1069,6 +1069,54 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
           onBookingClick={(b) => { setSummaryDate(null); onBookingClick?.(b); }}
         />
       )}
+
+      {/* Relocation confirmation dialog */}
+      <AlertDialog open={!!relocConfirm} onOpenChange={(open) => { if (!open) setRelocConfirm(null); }}>
+        <AlertDialogContent className="bg-card border-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <ArrowRightLeft className="h-5 w-5 text-primary" />
+              Confirm Unit Relocation
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>
+                Move <span className="font-semibold text-foreground">{relocConfirm?.booking.guest_name}</span>'s booking?
+              </p>
+              <div className="flex items-center gap-2 text-sm">
+                <span className="bg-muted px-2 py-1 rounded text-foreground font-medium">{relocConfirm?.fromUnitName}</span>
+                <span className="text-muted-foreground">→</span>
+                <span className="bg-primary/20 px-2 py-1 rounded text-primary font-medium">{relocConfirm?.toUnitName}</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {format(parseISO(relocConfirm?.booking.check_in || "2024-01-01"), "MMM d")} — {format(parseISO(relocConfirm?.booking.check_out || "2024-01-01"), "MMM d, yyyy")} · {relocConfirm?.booking.pax} PAX
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (!relocConfirm) return;
+                updateBooking.mutate(
+                  { id: relocConfirm.booking.id, unit_id: relocConfirm.toUnitId },
+                  {
+                    onSuccess: () => {
+                      toast.success(`Moved ${relocConfirm.booking.guest_name} to ${relocConfirm.toUnitName}`);
+                      setRelocConfirm(null);
+                    },
+                    onError: () => {
+                      toast.error("Failed to relocate booking");
+                      setRelocConfirm(null);
+                    },
+                  }
+                );
+              }}
+            >
+              Confirm Relocation
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
