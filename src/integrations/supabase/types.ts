@@ -83,6 +83,10 @@ export type Database = {
       }
       bookings: {
         Row: {
+          atv: boolean
+          atv_fee: number
+          banana_boat: boolean
+          banana_boat_fee: number
           bonfire: boolean
           bonfire_fee: number
           booking_group_id: string | null
@@ -151,6 +155,10 @@ export type Database = {
           wristband_deposit: boolean
         }
         Insert: {
+          atv?: boolean
+          atv_fee?: number
+          banana_boat?: boolean
+          banana_boat_fee?: number
           bonfire?: boolean
           bonfire_fee?: number
           booking_group_id?: string | null
@@ -219,6 +227,10 @@ export type Database = {
           wristband_deposit?: boolean
         }
         Update: {
+          atv?: boolean
+          atv_fee?: number
+          banana_boat?: boolean
+          banana_boat_fee?: number
           bonfire?: boolean
           bonfire_fee?: number
           booking_group_id?: string | null
