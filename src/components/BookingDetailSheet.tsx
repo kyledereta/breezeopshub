@@ -229,7 +229,7 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit, onEdit
       kitchen_use: "Kitchen Use", kitchen_use_fee: "Kitchen Use Fee",
       water_jug: "Water Jug", water_jug_qty: "Water Jug Qty", water_jug_fee: "Water Jug Fee",
       towel_rent: "Towel Rent", towel_rent_qty: "Towel Rent Qty", towel_rent_fee: "Towel Rent Fee",
-      bonfire: "Bonfire", bonfire_fee: "Bonfire Fee", early_checkin: "Early Check-in", early_checkin_fee: "Early Check-in Fee", extension_fee: "Extension Fee",
+      bonfire: "Bonfire", bonfire_fee: "Bonfire Fee", atv: "ATV Ride", atv_fee: "ATV Fee", banana_boat: "Banana Boat", banana_boat_fee: "Banana Boat Fee", early_checkin: "Early Check-in", early_checkin_fee: "Early Check-in Fee", extension_fee: "Extension Fee",
       security_deposit: "Security Deposit Amount", daytour_fee: "Daytour Fee",
       other_extras_fee: "Other Extras Fee", other_extras_note: "Other Extras Note",
       mode_of_payment: "Mode of Payment",
