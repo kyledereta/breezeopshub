@@ -86,6 +86,8 @@ function buildFeeLines(b: Booking, unitName: string, nights: number, unitRate: n
   if ((b as any).water_jug && (b as any).water_jug_fee > 0) lines.push({ label: `Water Jug (×${(b as any).water_jug_qty})`, amount: (b as any).water_jug_fee, paidKey: "water_jug" });
   if ((b as any).towel_rent && (b as any).towel_rent_fee > 0) lines.push({ label: `Towel Rent (×${(b as any).towel_rent_qty})`, amount: (b as any).towel_rent_fee, paidKey: "towel_rent" });
   if ((b as any).bonfire && (b as any).bonfire_fee > 0) lines.push({ label: "Bonfire Setup", amount: (b as any).bonfire_fee, paidKey: "bonfire" });
+  if ((b as any).atv && (b as any).atv_fee > 0) lines.push({ label: "ATV Ride", amount: (b as any).atv_fee, paidKey: "atv" });
+  if ((b as any).banana_boat && (b as any).banana_boat_fee > 0) lines.push({ label: "Banana Boat", amount: (b as any).banana_boat_fee, paidKey: "banana_boat" });
   if ((b as any).early_checkin && (b as any).early_checkin_fee > 0) lines.push({ label: "Early Check-in", amount: (b as any).early_checkin_fee, paidKey: "early_checkin" });
   if ((b as any).other_extras_fee > 0) lines.push({ label: (b as any).other_extras_note ? `Other (${(b as any).other_extras_note})` : "Other Extras", amount: (b as any).other_extras_fee, paidKey: "other_extras" });
   if ((b as any).extension_fee > 0) lines.push({ label: "Extension Fee", amount: (b as any).extension_fee });
@@ -227,7 +229,7 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit, onEdit
       kitchen_use: "Kitchen Use", kitchen_use_fee: "Kitchen Use Fee",
       water_jug: "Water Jug", water_jug_qty: "Water Jug Qty", water_jug_fee: "Water Jug Fee",
       towel_rent: "Towel Rent", towel_rent_qty: "Towel Rent Qty", towel_rent_fee: "Towel Rent Fee",
-      bonfire: "Bonfire", bonfire_fee: "Bonfire Fee", early_checkin: "Early Check-in", early_checkin_fee: "Early Check-in Fee", extension_fee: "Extension Fee",
+      bonfire: "Bonfire", bonfire_fee: "Bonfire Fee", atv: "ATV Ride", atv_fee: "ATV Fee", banana_boat: "Banana Boat", banana_boat_fee: "Banana Boat Fee", early_checkin: "Early Check-in", early_checkin_fee: "Early Check-in Fee", extension_fee: "Extension Fee",
       security_deposit: "Security Deposit Amount", daytour_fee: "Daytour Fee",
       other_extras_fee: "Other Extras Fee", other_extras_note: "Other Extras Note",
       mode_of_payment: "Mode of Payment",
@@ -254,6 +256,8 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit, onEdit
     if (booking.water_jug && booking.water_jug_fee > 0) extras.push({ label: `Water Jug (×${booking.water_jug_qty})`, amount: booking.water_jug_fee });
     if (booking.towel_rent && booking.towel_rent_fee > 0) extras.push({ label: `Towel Rent (×${booking.towel_rent_qty})`, amount: booking.towel_rent_fee });
     if (booking.bonfire && booking.bonfire_fee > 0) extras.push({ label: "Bonfire Setup", amount: booking.bonfire_fee });
+    if ((booking as any).atv && (booking as any).atv_fee > 0) extras.push({ label: "ATV Ride", amount: (booking as any).atv_fee });
+    if ((booking as any).banana_boat && (booking as any).banana_boat_fee > 0) extras.push({ label: "Banana Boat", amount: (booking as any).banana_boat_fee });
     if (booking.early_checkin && booking.early_checkin_fee > 0) extras.push({ label: "Early Check-in", amount: booking.early_checkin_fee });
     if (booking.extension_fee > 0) extras.push({ label: "Extension Fee", amount: booking.extension_fee });
     if (booking.other_extras_fee > 0) extras.push({ label: booking.other_extras_note || "Other Extras", amount: booking.other_extras_fee });
@@ -306,6 +310,8 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit, onEdit
     if ((booking as any).water_jug && (booking as any).water_jug_fee > 0) lines.push({ label: `Water Jug (×${(booking as any).water_jug_qty})`, amount: (booking as any).water_jug_fee, paidKey: "water_jug" });
     if ((booking as any).towel_rent && (booking as any).towel_rent_fee > 0) lines.push({ label: `Towel Rent (×${(booking as any).towel_rent_qty})`, amount: (booking as any).towel_rent_fee, paidKey: "towel_rent" });
     if ((booking as any).bonfire && (booking as any).bonfire_fee > 0) lines.push({ label: "Bonfire Setup", amount: (booking as any).bonfire_fee, paidKey: "bonfire" });
+    if ((booking as any).atv && (booking as any).atv_fee > 0) lines.push({ label: "ATV Ride", amount: (booking as any).atv_fee, paidKey: "atv" });
+    if ((booking as any).banana_boat && (booking as any).banana_boat_fee > 0) lines.push({ label: "Banana Boat", amount: (booking as any).banana_boat_fee, paidKey: "banana_boat" });
     if ((booking as any).early_checkin && (booking as any).early_checkin_fee > 0) lines.push({ label: "Early Check-in", amount: (booking as any).early_checkin_fee, paidKey: "early_checkin" });
     if ((booking as any).other_extras_fee > 0) lines.push({ label: (booking as any).other_extras_note ? `Other (${(booking as any).other_extras_note})` : "Other Extras", amount: (booking as any).other_extras_fee, paidKey: "other_extras" });
     if ((booking as any).extension_fee > 0) lines.push({ label: "Extension Fee", amount: (booking as any).extension_fee });

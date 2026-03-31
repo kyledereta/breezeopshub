@@ -45,7 +45,7 @@ import { Constants, type Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { generateGuestRef } from "@/lib/guestRef";
-import { Upload, X, FileImage, PawPrint, AlertTriangle, Music, Plus, Car, Link2, Clock, ClipboardPaste, Loader2, Wand2 } from "lucide-react";
+import { Upload, X, FileImage, PawPrint, AlertTriangle, Music, Plus, Car, Link2, Clock, ClipboardPaste, Loader2, Wand2, Bike, Ship, Flame, UtensilsCrossed, CookingPot, Droplets, Bath, Sun } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { logBookingChanges } from "@/hooks/useBookingAuditLog";
 
@@ -98,6 +98,10 @@ const bookingSchema = z.object({
   towel_rent_fee: z.coerce.number().min(0),
   bonfire: z.boolean(),
   bonfire_fee: z.coerce.number().min(0),
+  atv: z.boolean(),
+  atv_fee: z.coerce.number().min(0),
+  banana_boat: z.boolean(),
+  banana_boat_fee: z.coerce.number().min(0),
   early_checkin: z.boolean(),
   early_checkin_fee: z.coerce.number().min(0),
   daytour: z.boolean(),
@@ -296,6 +300,10 @@ export function BookingModal({
       towel_rent_fee: 0,
       bonfire: false,
       bonfire_fee: 0,
+      atv: false,
+      atv_fee: 0,
+      banana_boat: false,
+      banana_boat_fee: 0,
       early_checkin: false,
       early_checkin_fee: 0,
       daytour: false,
@@ -322,6 +330,8 @@ export function BookingModal({
   const watchWaterJug = form.watch("water_jug");
   const watchTowelRent = form.watch("towel_rent");
   const watchBonfire = form.watch("bonfire");
+  const watchAtv = form.watch("atv");
+  const watchBananaBoat = form.watch("banana_boat");
   const watchEarlyCheckin = form.watch("early_checkin");
   const watchDaytour = form.watch("daytour");
   const watchIsDaytourBooking = form.watch("is_daytour_booking");
@@ -493,6 +503,28 @@ export function BookingModal({
     }
   }, [watchBonfire, form]);
 
+  // Auto-set ATV fee when toggled
+  useEffect(() => {
+    if (watchAtv) {
+      if (form.getValues("atv_fee") === 0) {
+        form.setValue("atv_fee", 600);
+      }
+    } else {
+      form.setValue("atv_fee", 0);
+    }
+  }, [watchAtv, form]);
+
+  // Auto-set banana boat fee when toggled
+  useEffect(() => {
+    if (watchBananaBoat) {
+      if (form.getValues("banana_boat_fee") === 0) {
+        form.setValue("banana_boat_fee", 150);
+      }
+    } else {
+      form.setValue("banana_boat_fee", 0);
+    }
+  }, [watchBananaBoat, form]);
+
   // Auto-set early check-in fee when toggled
   useEffect(() => {
     if (watchEarlyCheckin) {
@@ -545,6 +577,8 @@ export function BookingModal({
   const watchWaterJugFee = form.watch("water_jug_fee");
   const watchTowelRentFee = form.watch("towel_rent_fee");
   const watchBonfireFee = form.watch("bonfire_fee");
+  const watchAtvFee = form.watch("atv_fee");
+  const watchBananaBoatFee = form.watch("banana_boat_fee");
   const watchEarlyCheckinFee = form.watch("early_checkin_fee");
 
   // Auto-calculate total amount based on nightly rate × nights + all extras - discount
@@ -570,6 +604,8 @@ export function BookingModal({
         (watchWaterJug ? Number(watchWaterJugFee) || 0 : 0) +
         (watchTowelRent ? Number(watchTowelRentFee) || 0 : 0) +
         (watchBonfire ? Number(watchBonfireFee) || 0 : 0) +
+        (watchAtv ? Number(watchAtvFee) || 0 : 0) +
+        (watchBananaBoat ? Number(watchBananaBoatFee) || 0 : 0) +
         (watchEarlyCheckin ? Number(watchEarlyCheckinFee) || 0 : 0) +
         (watchDaytour ? Number(watchDaytourFee) || 0 : 0) +
         (Number(watchOtherExtrasFee) || 0);
@@ -599,6 +635,8 @@ export function BookingModal({
     watchWaterJug, watchWaterJugFee,
     watchTowelRent, watchTowelRentFee,
     watchBonfire, watchBonfireFee,
+    watchAtv, watchAtvFee,
+    watchBananaBoat, watchBananaBoatFee,
     watchEarlyCheckin, watchEarlyCheckinFee,
     watchDaytour, watchDaytourFee, watchOtherExtrasFee,
     watchIsDaytourBooking,
@@ -623,6 +661,8 @@ export function BookingModal({
     if (watchWaterJug && extrasPaidStatus.water_jug) paidExtrasTotal += Number(watchWaterJugFee) || 0;
     if (watchTowelRent && extrasPaidStatus.towel_rent) paidExtrasTotal += Number(watchTowelRentFee) || 0;
     if (watchBonfire && extrasPaidStatus.bonfire) paidExtrasTotal += Number(watchBonfireFee) || 0;
+    if (watchAtv && extrasPaidStatus.atv) paidExtrasTotal += Number(watchAtvFee) || 0;
+    if (watchBananaBoat && extrasPaidStatus.banana_boat) paidExtrasTotal += Number(watchBananaBoatFee) || 0;
     if (watchEarlyCheckin && extrasPaidStatus.early_checkin) paidExtrasTotal += Number(watchEarlyCheckinFee) || 0;
     if (watchPets && additionalPet && extrasPaidStatus.pet_fee) paidExtrasTotal += Number(watchPetFee) || 0;
     if (watchDaytour && extrasPaidStatus.daytour) paidExtrasTotal += Number(watchDaytourFee) || 0;
@@ -654,6 +694,7 @@ export function BookingModal({
     watchUtensilRental, watchUtensilFee, watchKaraoke, watchKaraokeFee,
     watchKitchenUse, watchKitchenFee, watchWaterJug, watchWaterJugFee,
     watchTowelRent, watchTowelRentFee, watchBonfire, watchBonfireFee,
+    watchAtv, watchAtvFee, watchBananaBoat, watchBananaBoatFee,
     watchEarlyCheckin, watchEarlyCheckinFee,
     watchPets, watchPetFee, additionalPet, watchDaytour, watchDaytourFee,
     watchOtherExtrasFee, watchPaymentStatus, watchDepositStatus, watchDepositDeductedAmount, form,
@@ -710,6 +751,10 @@ export function BookingModal({
         towel_rent_fee: (booking as any).towel_rent_fee ?? 0,
         bonfire: (booking as any).bonfire ?? false,
         bonfire_fee: (booking as any).bonfire_fee ?? 0,
+        atv: (booking as any).atv ?? false,
+        atv_fee: (booking as any).atv_fee ?? 0,
+        banana_boat: (booking as any).banana_boat ?? false,
+        banana_boat_fee: (booking as any).banana_boat_fee ?? 0,
         early_checkin: (booking as any).early_checkin ?? false,
         early_checkin_fee: (booking as any).early_checkin_fee ?? 0,
         daytour: (booking as any).daytour ?? false,
@@ -782,6 +827,10 @@ export function BookingModal({
         towel_rent_fee: 0,
         bonfire: false,
         bonfire_fee: 0,
+        atv: false,
+        atv_fee: 0,
+        banana_boat: false,
+        banana_boat_fee: 0,
         early_checkin: false,
         early_checkin_fee: 0,
         daytour: false,
@@ -907,6 +956,10 @@ export function BookingModal({
         towel_rent_fee: values.towel_rent ? values.towel_rent_fee : 0,
         bonfire: values.bonfire,
         bonfire_fee: values.bonfire ? values.bonfire_fee : 0,
+        atv: values.atv,
+        atv_fee: values.atv ? values.atv_fee : 0,
+        banana_boat: values.banana_boat,
+        banana_boat_fee: values.banana_boat ? values.banana_boat_fee : 0,
         early_checkin: values.early_checkin,
         early_checkin_fee: values.early_checkin ? values.early_checkin_fee : 0,
         daytour: values.daytour,
@@ -1036,6 +1089,8 @@ export function BookingModal({
               water_jug_fee: 0,
               towel_rent_fee: 0,
                bonfire_fee: 0,
+               atv_fee: 0,
+               banana_boat_fee: 0,
                early_checkin_fee: 0,
                extension_fee: 0,
                daytour_fee: 0,
@@ -1114,6 +1169,8 @@ export function BookingModal({
                 water_jug_fee: 0,
                 towel_rent_fee: 0,
                  bonfire_fee: 0,
+                 atv_fee: 0,
+                 banana_boat_fee: 0,
                  early_checkin_fee: 0,
                  extension_fee: 0,
                  daytour_fee: 0,
@@ -1912,6 +1969,8 @@ export function BookingModal({
                         watchWaterJug && "Water Jug",
                         watchTowelRent && "Towel",
                         watchBonfire && "Bonfire",
+                        watchAtv && "ATV",
+                        watchBananaBoat && "Banana Boat",
                         watchEarlyCheckin && "Early Check-in",
                         watchDaytour && "Day Tour",
                         Number(watchOtherExtrasFee) > 0 && "Others",
@@ -1922,14 +1981,16 @@ export function BookingModal({
                 </PopoverTrigger>
                 <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2 space-y-1" align="start">
                   {[
-                    { key: "utensil_rental" as const, label: "Utensil Rental", desc: "₱500/set" },
-                    { key: "karaoke" as const, label: "Karaoke", desc: "₱1,500" },
-                    { key: "kitchen_use" as const, label: "Kitchen Use", desc: "₱500" },
-                    { key: "water_jug" as const, label: "Water Jug", desc: "₱100/jug" },
-                    { key: "towel_rent" as const, label: "Towel Rent", desc: "₱100/pc" },
-                    { key: "bonfire" as const, label: "Bonfire Setup", desc: "₱300" },
-                    { key: "early_checkin" as const, label: "Early Check-in", desc: "₱500" },
-                    { key: "daytour" as const, label: "Day Tour", desc: "Manual fee" },
+                    { key: "utensil_rental" as const, label: "Utensil Rental", desc: "₱500/set", icon: UtensilsCrossed },
+                    { key: "karaoke" as const, label: "Karaoke", desc: "₱1,500", icon: Music },
+                    { key: "kitchen_use" as const, label: "Kitchen Use", desc: "₱500", icon: CookingPot },
+                    { key: "water_jug" as const, label: "Water Jug", desc: "₱100/jug", icon: Droplets },
+                    { key: "towel_rent" as const, label: "Towel Rent", desc: "₱100/pc", icon: Bath },
+                    { key: "bonfire" as const, label: "Bonfire Setup", desc: "₱300", icon: Flame },
+                    { key: "atv" as const, label: "ATV Ride", desc: "₱600/30min", icon: Bike },
+                    { key: "banana_boat" as const, label: "Banana Boat", desc: "₱150/head", icon: Ship },
+                    { key: "early_checkin" as const, label: "Early Check-in", desc: "₱500", icon: Clock },
+                    { key: "daytour" as const, label: "Day Tour", desc: "Manual fee", icon: Sun },
                   ].map((item) => (
                     <label
                       key={item.key}
@@ -1939,9 +2000,10 @@ export function BookingModal({
                         checked={form.watch(item.key)}
                         onCheckedChange={(v) => form.setValue(item.key, !!v)}
                       />
-                      <div className="flex-1">
+                      <div className="flex-1 flex items-center gap-1.5">
+                        <item.icon className="h-3.5 w-3.5 text-muted-foreground" />
                         <span className="text-xs text-foreground">{item.label}</span>
-                        <span className="text-[10px] text-muted-foreground ml-1.5">{item.desc}</span>
+                        <span className="text-[10px] text-muted-foreground ml-1">{item.desc}</span>
                       </div>
                     </label>
                   ))}
@@ -2066,6 +2128,46 @@ export function BookingModal({
                           <div className="flex items-center gap-1.5 shrink-0">
                             <span className="text-[9px] text-muted-foreground">{extrasPaidStatus.bonfire ? "Paid" : "Unpaid"}</span>
                             <Switch checked={!!extrasPaidStatus.bonfire} onCheckedChange={() => toggleExtraPaid("bonfire")} className="scale-75" />
+                          </div>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                )}
+                {watchAtv && (
+                  <FormField
+                    control={form.control}
+                    name="atv_fee"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">ATV Ride Fee (₱)</FormLabel>
+                        <div className="flex items-center gap-2">
+                          <FormControl>
+                            <Input {...field} type="number" min={0} step="any" className="bg-background border-border flex-1" />
+                          </FormControl>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="text-[9px] text-muted-foreground">{extrasPaidStatus.atv ? "Paid" : "Unpaid"}</span>
+                            <Switch checked={!!extrasPaidStatus.atv} onCheckedChange={() => toggleExtraPaid("atv")} className="scale-75" />
+                          </div>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                )}
+                {watchBananaBoat && (
+                  <FormField
+                    control={form.control}
+                    name="banana_boat_fee"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Banana Boat Fee (₱)</FormLabel>
+                        <div className="flex items-center gap-2">
+                          <FormControl>
+                            <Input {...field} type="number" min={0} step="any" className="bg-background border-border flex-1" />
+                          </FormControl>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="text-[9px] text-muted-foreground">{extrasPaidStatus.banana_boat ? "Paid" : "Unpaid"}</span>
+                            <Switch checked={!!extrasPaidStatus.banana_boat} onCheckedChange={() => toggleExtraPaid("banana_boat")} className="scale-75" />
                           </div>
                         </div>
                       </FormItem>
@@ -2711,6 +2813,8 @@ export function BookingModal({
                   (watchWaterJug ? Number(watchWaterJugFee) || 0 : 0) +
                   (watchTowelRent ? Number(watchTowelRentFee) || 0 : 0) +
                   (watchBonfire ? Number(watchBonfireFee) || 0 : 0) +
+                  (watchAtv ? Number(watchAtvFee) || 0 : 0) +
+                  (watchBananaBoat ? Number(watchBananaBoatFee) || 0 : 0) +
                   (watchDaytour ? Number(watchDaytourFee) || 0 : 0) +
                   (Number(watchOtherExtrasFee) || 0);
                 const discountAmount =

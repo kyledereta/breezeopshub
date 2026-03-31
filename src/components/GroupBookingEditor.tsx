@@ -83,6 +83,10 @@ interface UnitState {
   towel_rent_fee: number;
   bonfire: boolean;
   bonfire_fee: number;
+  atv: boolean;
+  atv_fee: number;
+  banana_boat: boolean;
+  banana_boat_fee: number;
   early_checkin: boolean;
   early_checkin_fee: number;
   daytour_fee: number;
@@ -130,6 +134,10 @@ function bookingToUnitState(b: Booking): UnitState {
     towel_rent_fee: b.towel_rent_fee || 0,
     bonfire: b.bonfire || false,
     bonfire_fee: b.bonfire_fee || 0,
+    atv: (b as any).atv || false,
+    atv_fee: (b as any).atv_fee || 0,
+    banana_boat: (b as any).banana_boat || false,
+    banana_boat_fee: (b as any).banana_boat_fee || 0,
     early_checkin: b.early_checkin || false,
     early_checkin_fee: b.early_checkin_fee || 0,
     daytour_fee: b.daytour_fee || 0,
@@ -161,6 +169,8 @@ function computeUnitTotal(us: UnitState, nightlyRate: number, nights: number): n
     (us.water_jug ? us.water_jug_fee : 0) +
     (us.towel_rent ? us.towel_rent_fee : 0) +
     (us.bonfire ? us.bonfire_fee : 0) +
+    (us.atv ? us.atv_fee : 0) +
+    (us.banana_boat ? us.banana_boat_fee : 0) +
     (us.early_checkin ? us.early_checkin_fee : 0) +
     us.daytour_fee +
     us.other_extras_fee +
@@ -291,6 +301,10 @@ export function GroupBookingEditor({ open, onOpenChange, groupBookings }: GroupB
           towel_rent_fee: us.towel_rent ? us.towel_rent_fee : 0,
           bonfire: us.bonfire,
           bonfire_fee: us.bonfire ? us.bonfire_fee : 0,
+          atv: us.atv,
+          atv_fee: us.atv ? us.atv_fee : 0,
+          banana_boat: us.banana_boat,
+          banana_boat_fee: us.banana_boat ? us.banana_boat_fee : 0,
           early_checkin: us.early_checkin,
           early_checkin_fee: us.early_checkin ? us.early_checkin_fee : 0,
           daytour_fee: us.daytour_fee,
