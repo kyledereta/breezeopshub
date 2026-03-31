@@ -1981,16 +1981,16 @@ export function BookingModal({
                 </PopoverTrigger>
                 <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2 space-y-1" align="start">
                   {[
-                    { key: "utensil_rental" as const, label: "Utensil Rental", desc: "₱500/set" },
-                    { key: "karaoke" as const, label: "Karaoke", desc: "₱1,500" },
-                    { key: "kitchen_use" as const, label: "Kitchen Use", desc: "₱500" },
-                    { key: "water_jug" as const, label: "Water Jug", desc: "₱100/jug" },
-                    { key: "towel_rent" as const, label: "Towel Rent", desc: "₱100/pc" },
-                    { key: "bonfire" as const, label: "Bonfire Setup", desc: "₱300" },
-                    { key: "atv" as const, label: "ATV Ride", desc: "₱600/30min" },
-                    { key: "banana_boat" as const, label: "Banana Boat", desc: "₱150/head" },
-                    { key: "early_checkin" as const, label: "Early Check-in", desc: "₱500" },
-                    { key: "daytour" as const, label: "Day Tour", desc: "Manual fee" },
+                    { key: "utensil_rental" as const, label: "Utensil Rental", desc: "₱500/set", icon: UtensilsCrossed },
+                    { key: "karaoke" as const, label: "Karaoke", desc: "₱1,500", icon: Music },
+                    { key: "kitchen_use" as const, label: "Kitchen Use", desc: "₱500", icon: CookingPot },
+                    { key: "water_jug" as const, label: "Water Jug", desc: "₱100/jug", icon: Droplets },
+                    { key: "towel_rent" as const, label: "Towel Rent", desc: "₱100/pc", icon: Bath },
+                    { key: "bonfire" as const, label: "Bonfire Setup", desc: "₱300", icon: Flame },
+                    { key: "atv" as const, label: "ATV Ride", desc: "₱600/30min", icon: Bike },
+                    { key: "banana_boat" as const, label: "Banana Boat", desc: "₱150/head", icon: Ship },
+                    { key: "early_checkin" as const, label: "Early Check-in", desc: "₱500", icon: Clock },
+                    { key: "daytour" as const, label: "Day Tour", desc: "Manual fee", icon: Sun },
                   ].map((item) => (
                     <label
                       key={item.key}
