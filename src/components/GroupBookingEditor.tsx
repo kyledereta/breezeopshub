@@ -46,6 +46,7 @@ import {
   Link2,
   Banknote,
   Copy,
+  ArrowRightLeft,
 } from "lucide-react";
 
 interface GroupBookingEditorProps {
@@ -268,6 +269,7 @@ export function GroupBookingEditor({ open, onOpenChange, groupBookings }: GroupB
         const computedTotal = computeUnitTotal(us, rate, nights);
 
         const payload: any = {
+          unit_id: us.unit_id || null,
           guest_name: guestName,
           check_in: checkIn,
           check_out: checkOut,
@@ -450,6 +452,24 @@ export function GroupBookingEditor({ open, onOpenChange, groupBookings }: GroupB
 
                     <CollapsibleContent>
                       <div className={cn("rounded-b-lg border border-border bg-muted/10 p-4 space-y-3", editMode === "group" && "rounded-lg border-t")}>
+                        {/* Unit selector */}
+                        <div>
+                          <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                            <ArrowRightLeft className="h-3 w-3" /> Unit Assignment
+                          </Label>
+                          <Select value={ut.unit_id} onValueChange={(v) => updateUnit(ut.id, { unit_id: v })}>
+                            <SelectTrigger className="bg-background border-border">
+                              <SelectValue placeholder="Select unit" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {units.map((u) => (
+                                <SelectItem key={u.id} value={u.id}>
+                                  {u.name} — ₱{u.nightly_rate.toLocaleString()}/night
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
                             <Label className="text-xs text-muted-foreground">PAX</Label>

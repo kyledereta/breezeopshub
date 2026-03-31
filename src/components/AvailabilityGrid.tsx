@@ -15,7 +15,7 @@ import {
   isWeekend,
   getDay,
 } from "date-fns";
-import { Home, Tent, TreePalm, Crown, Fan, PawPrint, Users, Facebook, Instagram, Globe, MapPin, Share2, UtensilsCrossed, TrendingUp, Link2, Ban, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
+import { Home, Tent, TreePalm, Crown, Fan, PawPrint, Users, Facebook, Instagram, Globe, MapPin, Share2, UtensilsCrossed, TrendingUp, Link2, Ban, ChevronDown, ChevronUp, RefreshCw, ArrowRightLeft } from "lucide-react";
 import { useContinuedStayMap, type ContinuedStayInfo } from "@/hooks/useContinuedStay";
 import { getPHHolidaysForMonth } from "@/lib/phHolidays";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,18 @@ import { Input } from "@/components/ui/input";
 import { useUnits, groupUnitsByArea } from "@/hooks/useUnits";
 import { useBookings, type Booking } from "@/hooks/useBookings";
 import { useBlockedDates, useBlockDate, useUnblockDate } from "@/hooks/useBlockedDates";
+import { useUpdateBooking } from "@/hooks/useBookingMutations";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -143,12 +154,26 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
   const { data: blockedDates = [] } = useBlockedDates(startStr, endStr);
   const blockDate = useBlockDate();
   const unblockDate = useUnblockDate();
+  const updateBooking = useUpdateBooking();
   const todayRef = useRef<HTMLTableCellElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [blockPopover, setBlockPopover] = useState<{ unitId: string; date: Date } | null>(null);
   const [blockReason, setBlockReason] = useState("");
   const [legendOpen, setLegendOpen] = useState(true);
   const [summaryDate, setSummaryDate] = useState<Date | null>(null);
+
+  // Booking relocation drag state
+  const [relocDrag, setRelocDrag] = useState<{
+    booking: Booking;
+    fromUnitId: string;
+    toUnitId: string | null;
+  } | null>(null);
+  const [relocConfirm, setRelocConfirm] = useState<{
+    booking: Booking;
+    fromUnitName: string;
+    toUnitId: string;
+    toUnitName: string;
+  } | null>(null);
 
   // Drag-to-select state for blocking
   const [dragState, setDragState] = useState<{
@@ -585,7 +610,32 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                   const unitStatus = unit.unit_status || "Available";
                   const isUnavailable = unitStatus !== "Available";
                   return (
-                  <tr key={unit.id} className={cn("hover:bg-muted/20 transition-colors h-[30px]", isUnavailable && "opacity-50")}>
+                  <tr
+                    key={unit.id}
+                    className={cn(
+                      "hover:bg-muted/20 transition-colors h-[30px]",
+                      isUnavailable && "opacity-50",
+                      relocDrag && relocDrag.fromUnitId !== unit.id && "bg-primary/5"
+                    )}
+                    onDragOver={(e) => {
+                      if (relocDrag && relocDrag.fromUnitId !== unit.id) {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = "move";
+                      }
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      if (relocDrag && relocDrag.fromUnitId !== unit.id) {
+                        setRelocConfirm({
+                          booking: relocDrag.booking,
+                          fromUnitName: unitNameMap.get(relocDrag.fromUnitId) || "Unknown",
+                          toUnitId: unit.id,
+                          toUnitName: unit.name,
+                        });
+                        setRelocDrag(null);
+                      }
+                    }}
+                  >
                     <td
                       className="sticky left-0 z-10 bg-card border-b border-r border-border px-3 py-1 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)] cursor-pointer hover:bg-muted/30 transition-colors"
                       onClick={() => onUnitClick?.(unit)}
@@ -649,7 +699,17 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                               <TooltipTrigger asChild>
                                 <td
                                   colSpan={Math.min(span, days.length - days.indexOf(day))}
-                                  className="cursor-pointer relative py-[4px] border-b border-r border-border"
+                                  className={cn(
+                                    "cursor-pointer relative py-[4px] border-b border-r border-border",
+                                    relocDrag?.booking.id === booking.id && "opacity-50"
+                                  )}
+                                  draggable
+                                  onDragStart={(e) => {
+                                    e.dataTransfer.effectAllowed = "move";
+                                    e.dataTransfer.setData("text/plain", booking.id);
+                                    setRelocDrag({ booking, fromUnitId: unit.id, toUnitId: null });
+                                  }}
+                                  onDragEnd={() => setRelocDrag(null)}
                                   onClick={() => onBookingClick?.(booking)}
                                 >
                                   {connectorAbove && (
@@ -675,7 +735,17 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                             <TooltipTrigger asChild>
                               <td
                                 colSpan={Math.min(span, days.length - days.indexOf(day))}
-                                className="cursor-pointer relative py-[4px] border-b border-r border-border"
+                                className={cn(
+                                  "cursor-grab relative py-[4px] border-b border-r border-border",
+                                  relocDrag?.booking.id === booking.id && "opacity-50"
+                                )}
+                                draggable
+                                onDragStart={(e) => {
+                                  e.dataTransfer.effectAllowed = "move";
+                                  e.dataTransfer.setData("text/plain", booking.id);
+                                  setRelocDrag({ booking, fromUnitId: unit.id, toUnitId: null });
+                                }}
+                                onDragEnd={() => setRelocDrag(null)}
                                 onClick={() => onBookingClick?.(booking)}
                               >
                                 {connectorAbove && (
@@ -999,6 +1069,54 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
           onBookingClick={(b) => { setSummaryDate(null); onBookingClick?.(b); }}
         />
       )}
+
+      {/* Relocation confirmation dialog */}
+      <AlertDialog open={!!relocConfirm} onOpenChange={(open) => { if (!open) setRelocConfirm(null); }}>
+        <AlertDialogContent className="bg-card border-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <ArrowRightLeft className="h-5 w-5 text-primary" />
+              Confirm Unit Relocation
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>
+                Move <span className="font-semibold text-foreground">{relocConfirm?.booking.guest_name}</span>'s booking?
+              </p>
+              <div className="flex items-center gap-2 text-sm">
+                <span className="bg-muted px-2 py-1 rounded text-foreground font-medium">{relocConfirm?.fromUnitName}</span>
+                <span className="text-muted-foreground">→</span>
+                <span className="bg-primary/20 px-2 py-1 rounded text-primary font-medium">{relocConfirm?.toUnitName}</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {format(parseISO(relocConfirm?.booking.check_in || "2024-01-01"), "MMM d")} — {format(parseISO(relocConfirm?.booking.check_out || "2024-01-01"), "MMM d, yyyy")} · {relocConfirm?.booking.pax} PAX
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (!relocConfirm) return;
+                updateBooking.mutate(
+                  { id: relocConfirm.booking.id, unit_id: relocConfirm.toUnitId },
+                  {
+                    onSuccess: () => {
+                      toast.success(`Moved ${relocConfirm.booking.guest_name} to ${relocConfirm.toUnitName}`);
+                      setRelocConfirm(null);
+                    },
+                    onError: () => {
+                      toast.error("Failed to relocate booking");
+                      setRelocConfirm(null);
+                    },
+                  }
+                );
+              }}
+            >
+              Confirm Relocation
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
