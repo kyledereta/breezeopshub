@@ -22,6 +22,7 @@ const navItems = [
   { title: "Revenue", url: "/revenue", icon: BarChart3 },
   { title: "Guests", url: "/guests", icon: Users },
   { title: "Units", url: "/units", icon: Home },
+  { title: "Resort Map", url: "/map", icon: Map },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 

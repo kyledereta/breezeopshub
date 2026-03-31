@@ -43,6 +43,7 @@ function ProtectedRoutes() {
       <Route path="/revenue" element={<RevenuePage />} />
       <Route path="/guests" element={<GuestsPage />} />
       <Route path="/units" element={<UnitsPage />} />
+      <Route path="/map" element={<ResortMapPage />} />
       <Route path="/settings" element={<SettingsPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
