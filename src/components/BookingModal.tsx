@@ -326,6 +326,8 @@ export function BookingModal({
   const watchWaterJug = form.watch("water_jug");
   const watchTowelRent = form.watch("towel_rent");
   const watchBonfire = form.watch("bonfire");
+  const watchAtv = form.watch("atv");
+  const watchBananaBoat = form.watch("banana_boat");
   const watchEarlyCheckin = form.watch("early_checkin");
   const watchDaytour = form.watch("daytour");
   const watchIsDaytourBooking = form.watch("is_daytour_booking");
