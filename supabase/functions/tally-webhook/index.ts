@@ -144,8 +144,8 @@ Deno.serve(async (req) => {
           .from(bucket)
           .upload(fileName, imgBlob, { contentType: imgBlob.type || `image/${ext}` });
         if (!uploadError && uploadData) {
-          const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(uploadData.path);
-          return urlData.publicUrl;
+          // Store the path, not a public URL – the bucket is private
+          return uploadData.path;
         }
       } catch (err) {
         console.error(`Failed to store file from ${url}:`, err);

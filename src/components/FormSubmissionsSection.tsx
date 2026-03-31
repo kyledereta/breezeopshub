@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { format, parseISO } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
 import { FileText, Check, X, Users, BedDouble, Calendar, ImageIcon, CreditCard, PawPrint, IdCard, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,23 @@ export function FormSubmissionsSection({ unitMap }: FormSubmissionsSectionProps)
   const [approvedBooking, setApprovedBooking] = useState<ApprovedBooking | null>(null);
   // New: open booking modal pre-filled from submission
   const [prefillSubmission, setPrefillSubmission] = useState<SubmissionPrefill | null>(null);
+
+  // Resolve a stored path or URL into a viewable signed URL
+  const openImage = useCallback(async (rawUrl: string, title: string) => {
+    // If it's already a full URL (legacy data), show directly
+    if (rawUrl.startsWith("http")) {
+      setViewImage({ url: rawUrl, title });
+      return;
+    }
+    // Otherwise it's a storage path – determine bucket from context
+    const bucket = title.toLowerCase().includes("id") ? "guest-ids" : "payment-screenshots";
+    const { data, error } = await supabase.storage.from(bucket).createSignedUrl(rawUrl, 300);
+    if (error || !data?.signedUrl) {
+      toast.error("Failed to load image");
+      return;
+    }
+    setViewImage({ url: data.signedUrl, title });
+  }, []);
   const [activeSubmission, setActiveSubmission] = useState<FormSubmission | null>(null);
 
   if (isLoading || (submissions.length === 0 && !approvedBooking)) return null;
@@ -197,7 +215,7 @@ export function FormSubmissionsSection({ unitMap }: FormSubmissionsSectionProps)
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7"
-                      onClick={() => setViewImage({ url: s.gov_id_url!, title: "Government ID" })}
+                      onClick={() => openImage(s.gov_id_url!, "Government ID")}
                       title="View government ID"
                     >
                       <IdCard className="h-3.5 w-3.5 text-muted-foreground" />
@@ -208,7 +226,7 @@ export function FormSubmissionsSection({ unitMap }: FormSubmissionsSectionProps)
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7"
-                      onClick={() => setViewImage({ url: s.payment_screenshot_url!, title: "Payment Receipt" })}
+                      onClick={() => openImage(s.payment_screenshot_url!, "Payment Receipt")}
                       title="View payment receipt"
                     >
                       <ImageIcon className="h-3.5 w-3.5 text-muted-foreground" />
