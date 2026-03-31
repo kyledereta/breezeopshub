@@ -198,7 +198,7 @@ export function BookingModal({
   const [addUnitPopoverOpen, setAddUnitPopoverOpen] = useState(false);
   const [addUnitSearch, setAddUnitSearch] = useState("");
   // Group sibling bookings (when editing a group booking)
-  const [groupSiblings, setGroupSiblings] = useState<{ id: string; unit_id: string; is_primary: boolean; total_amount: number; deposit_paid: number; payment_status: string; extras_paid_status: Record<string, boolean>; booking_ref: string }[]>([]);
+  const [groupSiblings, setGroupSiblings] = useState<Booking[]>([]);
   // Pet additional fee
   const [additionalPet, setAdditionalPet] = useState(false);
   // Birthday month for guest verification
