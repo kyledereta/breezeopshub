@@ -561,9 +561,11 @@ export type Database = {
         Row: {
           area: string
           created_at: string
+          damage_items: Json
           extension_fee: number
           has_ac: boolean
           id: string
+          last_deep_cleaned: string | null
           max_pax: number
           name: string
           nightly_rate: number
@@ -575,9 +577,11 @@ export type Database = {
         Insert: {
           area: string
           created_at?: string
+          damage_items?: Json
           extension_fee?: number
           has_ac?: boolean
           id?: string
+          last_deep_cleaned?: string | null
           max_pax: number
           name: string
           nightly_rate: number
@@ -589,9 +593,11 @@ export type Database = {
         Update: {
           area?: string
           created_at?: string
+          damage_items?: Json
           extension_fee?: number
           has_ac?: boolean
           id?: string
+          last_deep_cleaned?: string | null
           max_pax?: number
           name?: string
           nightly_rate?: number
