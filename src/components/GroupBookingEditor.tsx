@@ -370,7 +370,7 @@ export function GroupBookingEditor({ open, onOpenChange, groupBookings }: GroupB
           </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-6 py-4">
+        <ScrollArea className="flex-1 min-h-0 px-6 py-4 overflow-y-auto">
           <div className="space-y-5">
             <div className="space-y-3">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-primary">
