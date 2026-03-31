@@ -15,7 +15,8 @@ import {
   isWeekend,
   getDay,
 } from "date-fns";
-import { Home, Tent, TreePalm, Crown, Fan, PawPrint, Users, Facebook, Instagram, Globe, MapPin, Share2, UtensilsCrossed, TrendingUp, Link2, Ban, ChevronDown, ChevronUp, RefreshCw, ArrowRightLeft } from "lucide-react";
+import { Home, Tent, TreePalm, Crown, Fan, PawPrint, Users, Facebook, Instagram, Globe, MapPin, Share2, UtensilsCrossed, TrendingUp, Link2, Ban, ChevronDown, ChevronUp, RefreshCw, ArrowRightLeft, Download } from "lucide-react";
+import { exportAvailabilityGrid } from "@/lib/gridExport";
 import { useContinuedStayMap, type ContinuedStayInfo } from "@/hooks/useContinuedStay";
 import { getPHHolidaysForMonth } from "@/lib/phHolidays";
 import { Button } from "@/components/ui/button";
