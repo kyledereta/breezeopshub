@@ -674,7 +674,17 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                               <TooltipTrigger asChild>
                                 <td
                                   colSpan={Math.min(span, days.length - days.indexOf(day))}
-                                  className="cursor-pointer relative py-[4px] border-b border-r border-border"
+                                  className={cn(
+                                    "cursor-pointer relative py-[4px] border-b border-r border-border",
+                                    relocDrag?.booking.id === booking.id && "opacity-50"
+                                  )}
+                                  draggable
+                                  onDragStart={(e) => {
+                                    e.dataTransfer.effectAllowed = "move";
+                                    e.dataTransfer.setData("text/plain", booking.id);
+                                    setRelocDrag({ booking, fromUnitId: unit.id, toUnitId: null });
+                                  }}
+                                  onDragEnd={() => setRelocDrag(null)}
                                   onClick={() => onBookingClick?.(booking)}
                                 >
                                   {connectorAbove && (
