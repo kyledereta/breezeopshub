@@ -215,7 +215,7 @@ export function FormSubmissionsSection({ unitMap }: FormSubmissionsSectionProps)
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7"
-                      onClick={() => setViewImage({ url: s.gov_id_url!, title: "Government ID" })}
+                      onClick={() => openImage(s.gov_id_url!, "Government ID")}
                       title="View government ID"
                     >
                       <IdCard className="h-3.5 w-3.5 text-muted-foreground" />
