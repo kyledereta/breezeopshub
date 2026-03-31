@@ -13,6 +13,7 @@ import RevenuePage from "./pages/Revenue";
 import GuestsPage from "./pages/Guests";
 import SettingsPage from "./pages/Settings";
 import UnitsPage from "./pages/Units";
+import ResortMapPage from "./pages/ResortMap";
 import LoginPage from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
