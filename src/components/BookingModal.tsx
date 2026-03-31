@@ -2693,7 +2693,6 @@ export function BookingModal({
                   </p>
                 )}
               </div>
-            </div>
 
             <Separator className="bg-border" />
 
