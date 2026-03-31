@@ -198,7 +198,7 @@ export function BookingModal({
   const [addUnitPopoverOpen, setAddUnitPopoverOpen] = useState(false);
   const [addUnitSearch, setAddUnitSearch] = useState("");
   // Group sibling bookings (when editing a group booking)
-  const [groupSiblings, setGroupSiblings] = useState<{ id: string; unit_id: string; is_primary: boolean; total_amount: number; deposit_paid: number; payment_status: string; extras_paid_status: Record<string, boolean>; booking_ref: string }[]>([]);
+  const [groupSiblings, setGroupSiblings] = useState<Booking[]>([]);
   // Pet additional fee
   const [additionalPet, setAdditionalPet] = useState(false);
   // Birthday month for guest verification
@@ -238,21 +238,12 @@ export function BookingModal({
       if ((booking as any).booking_group_id) {
         supabase
           .from("bookings")
-          .select("id, unit_id, is_primary, total_amount, deposit_paid, payment_status, extras_paid_status, booking_ref")
+          .select("*")
           .eq("booking_group_id", (booking as any).booking_group_id)
           .is("deleted_at", null)
           .then(({ data }) => {
             if (data) {
-              setGroupSiblings(data.filter((b) => b.id !== booking.id).map((b) => ({
-                id: b.id,
-                unit_id: b.unit_id || "",
-                is_primary: b.is_primary,
-                total_amount: b.total_amount ?? 0,
-                deposit_paid: b.deposit_paid ?? 0,
-                payment_status: b.payment_status ?? "Unpaid",
-                extras_paid_status: (b.extras_paid_status && typeof b.extras_paid_status === 'object' ? b.extras_paid_status : {}) as Record<string, boolean>,
-                booking_ref: b.booking_ref ?? "",
-              })));
+              setGroupSiblings((data as Booking[]).filter((b) => b.id !== booking.id));
             }
           });
       }
@@ -2958,9 +2949,33 @@ export function BookingModal({
                         },
                         ...groupSiblings.map((sib) => {
                           const u = units.find((x) => x.id === sib.unit_id);
+                          const sibNights = differenceInCalendarDays(
+                            parse(sib.check_out, "yyyy-MM-dd", new Date()),
+                            parse(sib.check_in, "yyyy-MM-dd", new Date())
+                          );
+                          const sibBase = sib.is_daytour_booking ? 0 : (u?.nightly_rate || 0) * sibNights;
+                          const sibExtras =
+                            (sib.utensil_rental ? sib.utensil_rental_fee : 0) +
+                            (sib.karaoke ? sib.karaoke_fee : 0) +
+                            (sib.kitchen_use ? sib.kitchen_use_fee : 0) +
+                            (sib.pets ? sib.pet_fee : 0) +
+                            (sib.extra_pax_fee || 0) +
+                            (sib.water_jug ? sib.water_jug_fee : 0) +
+                            (sib.towel_rent ? sib.towel_rent_fee : 0) +
+                            (sib.bonfire ? sib.bonfire_fee : 0) +
+                            (sib.atv ? sib.atv_fee : 0) +
+                            (sib.banana_boat ? sib.banana_boat_fee : 0) +
+                            (sib.daytour ? sib.daytour_fee : 0) +
+                            (sib.early_checkin ? sib.early_checkin_fee : 0) +
+                            (sib.other_extras_fee || 0) +
+                            (sib.extension_fee || 0);
+                          const sibDiscountAmt = sib.discount_type === "percentage"
+                            ? Math.round((sibBase + sibExtras) * (sib.discount_given / 100))
+                            : (sib.discount_given || 0);
+                          const sibComputedTotal = Math.max(0, sibBase + sibExtras - sibDiscountAmt);
                           return {
                             unitName: u?.name || "Unit",
-                            total: sib.total_amount,
+                            total: sibComputedTotal > 0 ? sibComputedTotal : sib.total_amount,
                             deposit: sib.deposit_paid,
                             paymentStatus: sib.payment_status,
                             isCurrent: false,
@@ -3175,21 +3190,12 @@ export function BookingModal({
             // Refresh group siblings after closing
             supabase
               .from("bookings")
-              .select("id, unit_id, is_primary, total_amount, deposit_paid, payment_status, extras_paid_status, booking_ref")
+              .select("*")
               .eq("booking_group_id", (booking as any).booking_group_id)
               .is("deleted_at", null)
               .then(({ data }) => {
                 if (data) {
-                  setGroupSiblings(data.filter((b) => b.id !== booking.id).map((b) => ({
-                    id: b.id,
-                    unit_id: b.unit_id || "",
-                    is_primary: b.is_primary,
-                    total_amount: b.total_amount ?? 0,
-                    deposit_paid: b.deposit_paid ?? 0,
-                    payment_status: b.payment_status ?? "Unpaid",
-                    extras_paid_status: (b.extras_paid_status && typeof b.extras_paid_status === 'object' ? b.extras_paid_status : {}) as Record<string, boolean>,
-                    booking_ref: b.booking_ref ?? "",
-                  })));
+                  setGroupSiblings((data as Booking[]).filter((b) => b.id !== booking.id));
                 }
               });
             queryClient.invalidateQueries({ queryKey: ["bookings"] });
