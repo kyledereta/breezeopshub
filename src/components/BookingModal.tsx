@@ -110,6 +110,9 @@ const bookingSchema = z.object({
   other_extras_fee: z.coerce.number().min(0),
   other_extras_note: z.string().max(300).optional().or(z.literal("")),
   late_checkout: z.boolean(),
+  wristband_qty: z.coerce.number().min(0),
+  wristband_returned_qty: z.coerce.number().min(0),
+  wristband_collected: z.boolean(),
 }).refine((data) => {
   if (data.is_daytour_booking) return true;
   return data.check_out > data.check_in;
