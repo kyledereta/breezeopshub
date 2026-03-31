@@ -610,7 +610,32 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
                   const unitStatus = unit.unit_status || "Available";
                   const isUnavailable = unitStatus !== "Available";
                   return (
-                  <tr key={unit.id} className={cn("hover:bg-muted/20 transition-colors h-[30px]", isUnavailable && "opacity-50")}>
+                  <tr
+                    key={unit.id}
+                    className={cn(
+                      "hover:bg-muted/20 transition-colors h-[30px]",
+                      isUnavailable && "opacity-50",
+                      relocDrag && relocDrag.fromUnitId !== unit.id && "bg-primary/5"
+                    )}
+                    onDragOver={(e) => {
+                      if (relocDrag && relocDrag.fromUnitId !== unit.id) {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = "move";
+                      }
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      if (relocDrag && relocDrag.fromUnitId !== unit.id) {
+                        setRelocConfirm({
+                          booking: relocDrag.booking,
+                          fromUnitName: unitNameMap.get(relocDrag.fromUnitId) || "Unknown",
+                          toUnitId: unit.id,
+                          toUnitName: unit.name,
+                        });
+                        setRelocDrag(null);
+                      }
+                    }}
+                  >
                     <td
                       className="sticky left-0 z-10 bg-card border-b border-r border-border px-3 py-1 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)] cursor-pointer hover:bg-muted/30 transition-colors"
                       onClick={() => onUnitClick?.(unit)}
