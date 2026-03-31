@@ -46,6 +46,7 @@ import {
   Link2,
   Banknote,
   Copy,
+  ArrowRightLeft,
 } from "lucide-react";
 
 interface GroupBookingEditorProps {
