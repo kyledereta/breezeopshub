@@ -2000,9 +2000,10 @@ export function BookingModal({
                         checked={form.watch(item.key)}
                         onCheckedChange={(v) => form.setValue(item.key, !!v)}
                       />
-                      <div className="flex-1">
+                      <div className="flex-1 flex items-center gap-1.5">
+                        <item.icon className="h-3.5 w-3.5 text-muted-foreground" />
                         <span className="text-xs text-foreground">{item.label}</span>
-                        <span className="text-[10px] text-muted-foreground ml-1.5">{item.desc}</span>
+                        <span className="text-[10px] text-muted-foreground ml-1">{item.desc}</span>
                       </div>
                     </label>
                   ))}
