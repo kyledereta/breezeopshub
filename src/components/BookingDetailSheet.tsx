@@ -694,11 +694,11 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit, onEdit
                       {(booking as any).wristband_collected && " ✓"}
                     </Badge>
                   )}
+                  {(booking as any).post_checkout_settlement && (
                     <Badge variant="outline" className="text-[10px] border-warning-orange/30 text-warning-orange">
                       Post-Checkout Settlement
                     </Badge>
                   )}
-                </div>
                 {/* Car Details */}
                 {(booking as any).has_car && (booking as any).car_details && Array.isArray((booking as any).car_details) && (booking as any).car_details.length > 0 && (
                   <div className="mt-2 space-y-1.5">
