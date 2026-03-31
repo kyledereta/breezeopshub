@@ -1067,6 +1067,8 @@ export function BookingModal({
               water_jug_fee: 0,
               towel_rent_fee: 0,
                bonfire_fee: 0,
+               atv_fee: 0,
+               banana_boat_fee: 0,
                early_checkin_fee: 0,
                extension_fee: 0,
                daytour_fee: 0,
