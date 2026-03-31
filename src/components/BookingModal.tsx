@@ -1965,6 +1965,8 @@ export function BookingModal({
                     { key: "water_jug" as const, label: "Water Jug", desc: "₱100/jug" },
                     { key: "towel_rent" as const, label: "Towel Rent", desc: "₱100/pc" },
                     { key: "bonfire" as const, label: "Bonfire Setup", desc: "₱300" },
+                    { key: "atv" as const, label: "ATV Ride", desc: "₱600/30min" },
+                    { key: "banana_boat" as const, label: "Banana Boat", desc: "₱150/head" },
                     { key: "early_checkin" as const, label: "Early Check-in", desc: "₱500" },
                     { key: "daytour" as const, label: "Day Tour", desc: "Manual fee" },
                   ].map((item) => (
