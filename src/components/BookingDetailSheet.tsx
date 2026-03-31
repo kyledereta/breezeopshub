@@ -681,6 +681,19 @@ export function BookingDetailSheet({ open, onOpenChange, booking, onEdit, onEdit
                       {booking.deposit_status === "Deducted" && booking.deposit_deducted_amount > 0 && ` (₱${booking.deposit_deducted_amount.toLocaleString()})`}
                     </Badge>
                   )}
+                  {(booking as any).wristband_qty > 0 && (
+                    <Badge variant="outline" className={cn("text-[10px]",
+                      (booking as any).wristband_collected
+                        ? "border-primary/30 text-primary"
+                        : (booking as any).wristband_returned_qty > 0 && (booking as any).wristband_returned_qty < (booking as any).wristband_qty
+                        ? "border-warning-orange/30 text-warning-orange"
+                        : "border-muted-foreground/30 text-muted-foreground"
+                    )}>
+                      Wristbands: {(booking as any).wristband_qty} given
+                      {(booking as any).wristband_returned_qty > 0 && ` / ${(booking as any).wristband_returned_qty} returned`}
+                      {(booking as any).wristband_collected && " ✓"}
+                    </Badge>
+                  )}
                   {(booking as any).post_checkout_settlement && (
                     <Badge variant="outline" className="text-[10px] border-warning-orange/30 text-warning-orange">
                       Post-Checkout Settlement

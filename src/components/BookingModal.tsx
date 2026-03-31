@@ -110,6 +110,9 @@ const bookingSchema = z.object({
   other_extras_fee: z.coerce.number().min(0),
   other_extras_note: z.string().max(300).optional().or(z.literal("")),
   late_checkout: z.boolean(),
+  wristband_qty: z.coerce.number().min(0),
+  wristband_returned_qty: z.coerce.number().min(0),
+  wristband_collected: z.boolean(),
 }).refine((data) => {
   if (data.is_daytour_booking) return true;
   return data.check_out > data.check_in;
@@ -303,6 +306,9 @@ export function BookingModal({
       other_extras_fee: 0,
       other_extras_note: "",
       late_checkout: false,
+      wristband_qty: 0,
+      wristband_returned_qty: 0,
+      wristband_collected: false,
     },
   });
 
@@ -329,6 +335,7 @@ export function BookingModal({
   const watchDaytourFee = form.watch("daytour_fee");
   const watchOtherExtrasFee = form.watch("other_extras_fee");
   const watchDepositDeductedAmount = form.watch("deposit_deducted_amount");
+  const watchBookingStatus = form.watch("booking_status");
 
   // Get combined max_pax across all selected units
   const combinedMaxPax = useMemo(() => {
@@ -754,6 +761,9 @@ export function BookingModal({
         other_extras_fee: (booking as any).other_extras_fee ?? 0,
         other_extras_note: (booking as any).other_extras_note ?? "",
         late_checkout: (booking as any).late_checkout ?? false,
+        wristband_qty: (booking as any).wristband_qty ?? 0,
+        wristband_returned_qty: (booking as any).wristband_returned_qty ?? 0,
+        wristband_collected: (booking as any).wristband_collected ?? false,
       };
       form.reset(vals);
       originalValuesRef.current = { ...vals };
@@ -830,6 +840,9 @@ export function BookingModal({
         other_extras_fee: 0,
         other_extras_note: "",
         late_checkout: false,
+        wristband_qty: 0,
+        wristband_returned_qty: 0,
+        wristband_collected: false,
       });
       setAdditionalUnitIds([]);
       setAdditionalPet(false);
@@ -959,6 +972,9 @@ export function BookingModal({
         other_extras_fee: values.other_extras_fee || 0,
         other_extras_note: values.other_extras_note || null,
         late_checkout: values.late_checkout,
+        wristband_qty: values.wristband_qty || 0,
+        wristband_returned_qty: values.wristband_returned_qty || 0,
+        wristband_collected: values.wristband_collected,
         has_car: hasCar,
         car_details: hasCar && carDetails.length > 0 ? carDetails : [],
         extras_paid_status: extrasPaidStatus,
@@ -2626,6 +2642,58 @@ export function BookingModal({
                 </div>
               )}
             </div>
+
+              {/* Wristband Tracking */}
+              <Separator className="bg-border/50" />
+              <div className="space-y-3">
+                <p className="text-xs font-medium text-foreground">Wristband Tracking</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="wristband_qty"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Wristbands Given</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" min={0} className="bg-background border-border" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  {(watchBookingStatus === "Checked Out" || watchBookingStatus === "Checked In") && (
+                    <FormField
+                      control={form.control}
+                      name="wristband_returned_qty"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs text-muted-foreground">Wristbands Returned</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="number" min={0} className="bg-background border-border" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </div>
+                {watchBookingStatus === "Checked Out" && (
+                  <div className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-3 py-2">
+                    <span className="text-xs text-muted-foreground">All Wristbands Collected?</span>
+                    <FormField
+                      control={form.control}
+                      name="wristband_collected"
+                      render={({ field }) => (
+                        <Switch checked={field.value} onCheckedChange={field.onChange} className="scale-75" />
+                      )}
+                    />
+                  </div>
+                )}
+                {Number(form.watch("wristband_qty")) > 0 && Number(form.watch("wristband_returned_qty")) > 0 && Number(form.watch("wristband_returned_qty")) < Number(form.watch("wristband_qty")) && (
+                  <p className="text-[10px] text-warning-orange flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    {Number(form.watch("wristband_qty")) - Number(form.watch("wristband_returned_qty"))} wristband(s) not yet returned
+                  </p>
+                )}
+              </div>
 
             <Separator className="bg-border" />
 
