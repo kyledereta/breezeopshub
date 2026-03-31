@@ -335,6 +335,7 @@ export function BookingModal({
   const watchDaytourFee = form.watch("daytour_fee");
   const watchOtherExtrasFee = form.watch("other_extras_fee");
   const watchDepositDeductedAmount = form.watch("deposit_deducted_amount");
+  const watchBookingStatus = form.watch("booking_status");
 
   // Get combined max_pax across all selected units
   const combinedMaxPax = useMemo(() => {
