@@ -20,9 +20,17 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Home, Tent, TreePalm, Crown, Fan, Snowflake, Search, Pencil, Construction, CheckCircle, AlertTriangle, XCircle, Download } from "lucide-react";
+import { Home, Tent, TreePalm, Crown, Fan, Snowflake, Search, Pencil, Construction, CheckCircle, AlertTriangle, XCircle, Download, SprayCan, Wrench, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { downloadCsv } from "@/lib/csvExport";
+import { format, parseISO, formatDistanceToNow } from "date-fns";
+
+const DAMAGE_OPTIONS = [
+  "Faucet", "Toilet", "Shower Head", "Door Lock", "Window", "Light Fixture",
+  "Ceiling Fan", "Air Conditioner", "Mattress", "Bed Frame", "Cabinet",
+  "Flooring", "Wall Damage", "Roof Leak", "Electrical Outlet", "Plumbing",
+  "Screen Door", "Water Heater", "Towel Rack", "Mirror", "Other",
+];
 
 function getUnitIcon(name: string) {
   if (name.includes("Villa") && name.includes("Owner")) return Crown;
@@ -193,6 +201,56 @@ export default function UnitsPage() {
                           </div>
                         </div>
 
+                        {/* Deep Cleaning */}
+                        <div className="pt-1 border-t border-border space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <SprayCan className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Deep Cleaned</span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 text-[10px] px-2 text-primary hover:text-primary"
+                              onClick={async () => {
+                                try {
+                                  await updateUnit.mutateAsync({ id: unit.id, last_deep_cleaned: format(new Date(), "yyyy-MM-dd") });
+                                  toast.success(`${unit.name} marked as deep cleaned today`);
+                                } catch (err: any) {
+                                  toast.error(err.message ?? "Failed to update");
+                                }
+                              }}
+                            >
+                              Mark Today
+                            </Button>
+                          </div>
+                          <p className="text-[11px] text-foreground">
+                            {(unit as any).last_deep_cleaned
+                              ? `${format(parseISO((unit as any).last_deep_cleaned), "MMM d, yyyy")} (${formatDistanceToNow(parseISO((unit as any).last_deep_cleaned), { addSuffix: true })})`
+                              : "Never recorded"}
+                          </p>
+                        </div>
+
+                        {/* Damage Items */}
+                        {(() => {
+                          const damages: string[] = (unit as any).damage_items || [];
+                          return damages.length > 0 ? (
+                            <div className="pt-1 border-t border-border space-y-1.5">
+                              <div className="flex items-center gap-1.5">
+                                <Wrench className="h-3 w-3 text-destructive" />
+                                <span className="text-[10px] text-destructive uppercase tracking-wider font-medium">Needs Attention</span>
+                              </div>
+                              <div className="flex flex-wrap gap-1">
+                                {damages.map((d) => (
+                                  <Badge key={d} variant="outline" className="text-[9px] border-destructive/30 text-destructive bg-destructive/10">
+                                    {d}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          ) : null;
+                        })()}
+
                         {/* Quick Status Toggle */}
                         <div className="pt-1 border-t border-border space-y-2">
                           <div className="flex items-center justify-between">
@@ -248,6 +306,8 @@ function UnitEditModal({ open, onOpenChange, unit }: { open: boolean; onOpenChan
   const [hasAc, setHasAc] = useState(false);
   const [notes, setNotes] = useState("");
   const [unitStatus, setUnitStatus] = useState("Available");
+  const [lastDeepCleaned, setLastDeepCleaned] = useState("");
+  const [damageItems, setDamageItems] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   // Reset on open
@@ -260,6 +320,8 @@ function UnitEditModal({ open, onOpenChange, unit }: { open: boolean; onOpenChan
       setHasAc(unit.has_ac);
       setNotes(unit.notes || "");
       setUnitStatus((unit as any).unit_status || "Available");
+      setLastDeepCleaned((unit as any).last_deep_cleaned || "");
+      setDamageItems((unit as any).damage_items || []);
     }
   };
 
@@ -267,7 +329,7 @@ function UnitEditModal({ open, onOpenChange, unit }: { open: boolean; onOpenChan
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (o) handleOpen(); onOpenChange(o); }}>
-      <DialogContent className="bg-card border-border max-w-md">
+      <DialogContent className="bg-card border-border max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display text-foreground">Edit {unit.name}</DialogTitle>
         </DialogHeader>
@@ -310,6 +372,63 @@ function UnitEditModal({ open, onOpenChange, unit }: { open: boolean; onOpenChan
             <Switch checked={hasAc} onCheckedChange={setHasAc} />
             <Label className="text-xs text-foreground">Air Conditioned</Label>
           </div>
+
+          {/* Deep Cleaning */}
+          <div>
+            <Label className="text-xs text-muted-foreground">Last Deep Cleaned</Label>
+            <div className="flex gap-2">
+              <Input
+                type="date"
+                value={lastDeepCleaned}
+                onChange={(e) => setLastDeepCleaned(e.target.value)}
+                className="bg-background border-border flex-1"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs shrink-0"
+                type="button"
+                onClick={() => setLastDeepCleaned(format(new Date(), "yyyy-MM-dd"))}
+              >
+                Today
+              </Button>
+            </div>
+          </div>
+
+          {/* Damage Items */}
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Damage / Needs Attention</Label>
+            <Select
+              value=""
+              onValueChange={(val) => {
+                if (val && !damageItems.includes(val)) {
+                  setDamageItems([...damageItems, val]);
+                }
+              }}
+            >
+              <SelectTrigger className="bg-background border-border">
+                <SelectValue placeholder="Add damage item..." />
+              </SelectTrigger>
+              <SelectContent className="bg-popover border-border">
+                {DAMAGE_OPTIONS.filter((d) => !damageItems.includes(d)).map((d) => (
+                  <SelectItem key={d} value={d}>{d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {damageItems.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {damageItems.map((d) => (
+                  <Badge key={d} variant="outline" className="text-xs gap-1 border-destructive/30 text-destructive bg-destructive/10">
+                    {d}
+                    <button type="button" onClick={() => setDamageItems(damageItems.filter((x) => x !== d))} className="ml-0.5 hover:text-destructive">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div>
             <Label className="text-xs text-muted-foreground">Notes</Label>
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="bg-background border-border resize-none h-20" />
@@ -329,6 +448,8 @@ function UnitEditModal({ open, onOpenChange, unit }: { open: boolean; onOpenChan
                   has_ac: hasAc,
                   notes: notes || null,
                   unit_status: unitStatus,
+                  last_deep_cleaned: lastDeepCleaned || null,
+                  damage_items: damageItems,
                 });
                 toast.success("Unit updated");
                 onOpenChange(false);
