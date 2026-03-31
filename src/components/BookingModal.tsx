@@ -760,6 +760,9 @@ export function BookingModal({
         other_extras_fee: (booking as any).other_extras_fee ?? 0,
         other_extras_note: (booking as any).other_extras_note ?? "",
         late_checkout: (booking as any).late_checkout ?? false,
+        wristband_qty: (booking as any).wristband_qty ?? 0,
+        wristband_returned_qty: (booking as any).wristband_returned_qty ?? 0,
+        wristband_collected: (booking as any).wristband_collected ?? false,
       };
       form.reset(vals);
       originalValuesRef.current = { ...vals };
