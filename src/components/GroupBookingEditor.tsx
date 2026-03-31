@@ -269,6 +269,7 @@ export function GroupBookingEditor({ open, onOpenChange, groupBookings }: GroupB
         const computedTotal = computeUnitTotal(us, rate, nights);
 
         const payload: any = {
+          unit_id: us.unit_id || null,
           guest_name: guestName,
           check_in: checkIn,
           check_out: checkOut,
