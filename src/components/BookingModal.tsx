@@ -2133,6 +2133,46 @@ export function BookingModal({
                     )}
                   />
                 )}
+                {watchAtv && (
+                  <FormField
+                    control={form.control}
+                    name="atv_fee"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">ATV Ride Fee (₱)</FormLabel>
+                        <div className="flex items-center gap-2">
+                          <FormControl>
+                            <Input {...field} type="number" min={0} step="any" className="bg-background border-border flex-1" />
+                          </FormControl>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="text-[9px] text-muted-foreground">{extrasPaidStatus.atv ? "Paid" : "Unpaid"}</span>
+                            <Switch checked={!!extrasPaidStatus.atv} onCheckedChange={() => toggleExtraPaid("atv")} className="scale-75" />
+                          </div>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                )}
+                {watchBananaBoat && (
+                  <FormField
+                    control={form.control}
+                    name="banana_boat_fee"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">Banana Boat Fee (₱)</FormLabel>
+                        <div className="flex items-center gap-2">
+                          <FormControl>
+                            <Input {...field} type="number" min={0} step="any" className="bg-background border-border flex-1" />
+                          </FormControl>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="text-[9px] text-muted-foreground">{extrasPaidStatus.banana_boat ? "Paid" : "Unpaid"}</span>
+                            <Switch checked={!!extrasPaidStatus.banana_boat} onCheckedChange={() => toggleExtraPaid("banana_boat")} className="scale-75" />
+                          </div>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                )}
                 {watchEarlyCheckin && (
                   <FormField
                     control={form.control}
