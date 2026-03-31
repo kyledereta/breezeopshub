@@ -503,6 +503,28 @@ export function BookingModal({
     }
   }, [watchBonfire, form]);
 
+  // Auto-set ATV fee when toggled
+  useEffect(() => {
+    if (watchAtv) {
+      if (form.getValues("atv_fee") === 0) {
+        form.setValue("atv_fee", 600);
+      }
+    } else {
+      form.setValue("atv_fee", 0);
+    }
+  }, [watchAtv, form]);
+
+  // Auto-set banana boat fee when toggled
+  useEffect(() => {
+    if (watchBananaBoat) {
+      if (form.getValues("banana_boat_fee") === 0) {
+        form.setValue("banana_boat_fee", 150);
+      }
+    } else {
+      form.setValue("banana_boat_fee", 0);
+    }
+  }, [watchBananaBoat, form]);
+
   // Auto-set early check-in fee when toggled
   useEffect(() => {
     if (watchEarlyCheckin) {
