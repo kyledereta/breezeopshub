@@ -555,6 +555,8 @@ export function BookingModal({
   const watchWaterJugFee = form.watch("water_jug_fee");
   const watchTowelRentFee = form.watch("towel_rent_fee");
   const watchBonfireFee = form.watch("bonfire_fee");
+  const watchAtvFee = form.watch("atv_fee");
+  const watchBananaBoatFee = form.watch("banana_boat_fee");
   const watchEarlyCheckinFee = form.watch("early_checkin_fee");
 
   // Auto-calculate total amount based on nightly rate × nights + all extras - discount
