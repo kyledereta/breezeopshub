@@ -104,8 +104,9 @@ export function TodayReportDialog({
         inHouse.push(b);
       }
 
-      // Departures
-      if (b.check_out === todayStr) {
+      // Departures — exclude day tours from previous days
+      const isDaytourYesterday = b.is_daytour_booking && b.check_in < todayStr;
+      if (b.check_out === todayStr && !isDaytourYesterday) {
         departures.push(b);
         if (b.booking_status === "Checked Out") checkedOut.push(b);
       }

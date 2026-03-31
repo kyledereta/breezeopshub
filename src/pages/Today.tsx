@@ -498,10 +498,12 @@ export default function TodayPage() {
       if (ci <= todayStr && co >= todayStr && b.booking_status !== "Checked In" && b.booking_status !== "Checked Out") {
         checkIns.push(b);
       }
-      if (co === todayStr && b.booking_status === "Checked Out") {
+      // Day tours belong to their check-in date only; skip them on the check-out date
+      const isDaytourYesterday = b.is_daytour_booking && ci < todayStr;
+      if (co === todayStr && b.booking_status === "Checked Out" && !isDaytourYesterday) {
         baseCheckOuts.push(b);
       }
-      if (co === todayStr && b.booking_status === "Checked In") {
+      if (co === todayStr && b.booking_status === "Checked In" && !isDaytourYesterday) {
         dueDepartures.push(b);
       }
       if (b.payment_status === "Unpaid" || b.payment_status === "Partial DP" || hasUnpaidExtras(b)) {
@@ -563,7 +565,8 @@ export default function TodayPage() {
     // Turnover units: units departing today that need cleaning
     const departuresToday = allBookings.filter(b =>
       b.booking_status !== "Cancelled" && !b.deleted_at && b.unit_id &&
-      b.check_out === todayStr
+      b.check_out === todayStr &&
+      !(b.is_daytour_booking && b.check_in < todayStr)
     );
     const departingUnitIds = new Set(departuresToday.map(b => b.unit_id!));
     const turnoverUnits: { unitId: string; departingGuest: string; nextBooking: Booking | null; urgency: "urgent" | "tomorrow" | "none" }[] = [];
