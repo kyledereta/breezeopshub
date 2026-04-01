@@ -485,37 +485,39 @@ function UnitEntryCard({
         </div>
       </div>
 
-      {/* Dates & Nights */}
-      <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
-        <div>
-          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Check-in</Label>
-          <Input
-            type="date"
-            value={entry.checkIn}
-            onChange={(e) => onUpdate(entry.id, { checkIn: e.target.value })}
-            className="h-8 text-xs"
-          />
+      {/* Dates & Nights — only show for single bookings */}
+      {!isGroup && (
+        <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+          <div>
+            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Check-in</Label>
+            <Input
+              type="date"
+              value={entry.checkIn}
+              onChange={(e) => onUpdate(entry.id, { checkIn: e.target.value })}
+              className="h-8 text-xs"
+            />
+          </div>
+          <div>
+            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Check-out</Label>
+            <Input
+              type="date"
+              value={entry.checkOut}
+              onChange={(e) => onUpdate(entry.id, { checkOut: e.target.value })}
+              className="h-8 text-xs"
+            />
+          </div>
+          <div>
+            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Nights</Label>
+            <Input
+              type="number"
+              min={1}
+              value={entry.nights}
+              onChange={(e) => onUpdate(entry.id, { nights: Math.max(1, Number(e.target.value)) })}
+              className="h-8 w-14 text-xs"
+            />
+          </div>
         </div>
-        <div>
-          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Check-out</Label>
-          <Input
-            type="date"
-            value={entry.checkOut}
-            onChange={(e) => onUpdate(entry.id, { checkOut: e.target.value })}
-            className="h-8 text-xs"
-          />
-        </div>
-        <div>
-          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Nights</Label>
-          <Input
-            type="number"
-            min={1}
-            value={entry.nights}
-            onChange={(e) => onUpdate(entry.id, { nights: Math.max(1, Number(e.target.value)) })}
-            className="h-8 w-14 text-xs"
-          />
-        </div>
-      </div>
+      )
 
       {/* Rate info */}
       {selectedUnit && (
