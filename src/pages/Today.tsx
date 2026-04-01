@@ -1632,75 +1632,79 @@ export default function TodayPage() {
         </Dialog>
         {/* Resort Map Dialog */}
         <Dialog open={showResortMap} onOpenChange={setShowResortMap}>
-          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-0">
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-0 w-[95vw] sm:w-auto">
             <DialogHeader className="px-4 pt-4 pb-2">
-              <DialogTitle className="flex items-center justify-between font-display text-lg">
-                <span className="flex items-center gap-2">
-                  <MapIcon className="h-5 w-5 text-primary" />
-                  Resort Map
-                  <span className="text-xs font-normal text-muted-foreground ml-1">Top View · {format(new Date(), "MMMM d, yyyy")}</span>
+              <DialogTitle className="flex items-center gap-2 font-display text-base sm:text-lg">
+                <MapIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                Resort Map
+                <span className="text-[10px] sm:text-xs font-normal text-muted-foreground ml-1">
+                  {format(new Date(), "MMM d, yyyy")}
                 </span>
               </DialogTitle>
             </DialogHeader>
-            <div className="px-4 pb-2">
+            <div className="px-3 sm:px-4 pb-2">
               <MapLegend />
             </div>
-            <div className="px-4 pb-4 space-y-6">
+            <div className="px-3 sm:px-4 pb-4 space-y-4 sm:space-y-6">
               {/* Pool Area */}
               <div>
-                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">Pool Area</h2>
-                <div className="relative w-full" style={{ aspectRatio: "16/10" }}>
-                  <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-emerald-50 to-sky-50 dark:from-emerald-950/20 dark:to-sky-950/20 border border-border shadow-sm" />
-                  <div
-                    className="absolute rounded-lg bg-sky-400/40 border-2 border-sky-400/60 flex items-center justify-center backdrop-blur-sm"
-                    style={{ left: `${POOL.x}%`, top: `${POOL.y}%`, width: `${POOL.w}%`, height: `${POOL.h}%` }}
-                  >
-                    <div className="text-sky-700 dark:text-sky-300 text-sm font-medium tracking-widest uppercase opacity-60">Swimming Pool</div>
+                <h2 className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">Pool Area</h2>
+                <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
+                  <div className="relative min-w-[500px] sm:min-w-0 w-full" style={{ aspectRatio: "16/10" }}>
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-emerald-50 to-sky-50 dark:from-emerald-950/20 dark:to-sky-950/20 border border-border shadow-sm" />
+                    <div
+                      className="absolute rounded-lg bg-sky-400/40 border-2 border-sky-400/60 flex items-center justify-center backdrop-blur-sm"
+                      style={{ left: `${POOL.x}%`, top: `${POOL.y}%`, width: `${POOL.w}%`, height: `${POOL.h}%` }}
+                    >
+                      <div className="text-sky-700 dark:text-sky-300 text-[10px] sm:text-sm font-medium tracking-widest uppercase opacity-60">Swimming Pool</div>
+                    </div>
+                    <div
+                      className="absolute rounded-lg bg-orange-100 dark:bg-orange-950/30 border border-orange-300 dark:border-orange-700 flex items-center justify-center"
+                      style={{ left: `${POOL_KITCHEN.x}%`, top: `${POOL_KITCHEN.y}%`, width: `${POOL_KITCHEN.w}%`, height: `${POOL_KITCHEN.h}%` }}
+                    >
+                      <span className="text-[8px] sm:text-[10px] font-medium text-orange-600 dark:text-orange-400 uppercase tracking-wider">Kitchen</span>
+                    </div>
+                    {renderMapUnits(poolMapped, POOL_UNITS, poolShortName)}
+                    <span className="absolute text-[7px] sm:text-[9px] text-muted-foreground font-medium uppercase tracking-widest" style={{ left: "3%", top: "1%" }}>Pool Villas (Left)</span>
+                    <span className="absolute text-[7px] sm:text-[9px] text-muted-foreground font-medium uppercase tracking-widest" style={{ right: "3%", top: "1%", textAlign: "right" }}>Pool Villas (Right)</span>
+                    <span className="absolute text-[7px] sm:text-[9px] text-muted-foreground font-medium uppercase tracking-widest" style={{ right: "3%", bottom: "12%", textAlign: "right" }}>AC Pool Kubos</span>
                   </div>
-                  <div
-                    className="absolute rounded-lg bg-orange-100 dark:bg-orange-950/30 border border-orange-300 dark:border-orange-700 flex items-center justify-center"
-                    style={{ left: `${POOL_KITCHEN.x}%`, top: `${POOL_KITCHEN.y}%`, width: `${POOL_KITCHEN.w}%`, height: `${POOL_KITCHEN.h}%` }}
-                  >
-                    <span className="text-[10px] font-medium text-orange-600 dark:text-orange-400 uppercase tracking-wider">Kitchen</span>
-                  </div>
-                  {renderMapUnits(poolMapped, POOL_UNITS, poolShortName)}
-                  <span className="absolute text-[9px] text-muted-foreground font-medium uppercase tracking-widest" style={{ left: "3%", top: "1%" }}>Pool Villas (Left Wing)</span>
-                  <span className="absolute text-[9px] text-muted-foreground font-medium uppercase tracking-widest" style={{ right: "3%", top: "1%", textAlign: "right" }}>Pool Villas (Right Wing)</span>
-                  <span className="absolute text-[9px] text-muted-foreground font-medium uppercase tracking-widest" style={{ right: "3%", bottom: "12%", textAlign: "right" }}>AC Pool Kubos</span>
                 </div>
               </div>
 
               {/* Beach Area */}
               <div>
-                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">Beach Area</h2>
-                <div className="relative w-full" style={{ aspectRatio: "16/10" }}>
-                  <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-amber-50 to-sky-50 dark:from-amber-950/20 dark:to-sky-950/20 border border-border shadow-sm" />
-                  <div
-                    className="absolute rounded-lg bg-lime-100 dark:bg-lime-950/30 border border-lime-400 dark:border-lime-700 flex items-center justify-center"
-                    style={{ left: `${OPEN_COTTAGE.x}%`, top: `${OPEN_COTTAGE.y}%`, width: `${OPEN_COTTAGE.w}%`, height: `${OPEN_COTTAGE.h}%` }}
-                  >
-                    <span className="text-[8px] font-medium text-lime-700 dark:text-lime-400 uppercase tracking-wider text-center leading-tight">Open<br />Cottage</span>
-                  </div>
-                  <div
-                    className="absolute rounded-lg bg-stone-200/60 dark:bg-stone-700/30 border border-dashed border-stone-400 dark:border-stone-600 flex items-center justify-center"
-                    style={{ left: `${WALKWAY.x}%`, top: `${WALKWAY.y}%`, width: `${WALKWAY.w}%`, height: `${WALKWAY.h}%` }}
-                  >
-                    <div className="flex items-center gap-2 text-stone-500 dark:text-stone-400">
-                      <span className="text-xs font-medium tracking-widest uppercase opacity-60">Walkway to Beachfront</span>
-                      <span className="text-lg opacity-40">→</span>
+                <h2 className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">Beach Area</h2>
+                <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
+                  <div className="relative min-w-[500px] sm:min-w-0 w-full" style={{ aspectRatio: "16/10" }}>
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-amber-50 to-sky-50 dark:from-amber-950/20 dark:to-sky-950/20 border border-border shadow-sm" />
+                    <div
+                      className="absolute rounded-lg bg-lime-100 dark:bg-lime-950/30 border border-lime-400 dark:border-lime-700 flex items-center justify-center"
+                      style={{ left: `${OPEN_COTTAGE.x}%`, top: `${OPEN_COTTAGE.y}%`, width: `${OPEN_COTTAGE.w}%`, height: `${OPEN_COTTAGE.h}%` }}
+                    >
+                      <span className="text-[7px] sm:text-[8px] font-medium text-lime-700 dark:text-lime-400 uppercase tracking-wider text-center leading-tight">Open<br />Cottage</span>
                     </div>
+                    <div
+                      className="absolute rounded-lg bg-stone-200/60 dark:bg-stone-700/30 border border-dashed border-stone-400 dark:border-stone-600 flex items-center justify-center"
+                      style={{ left: `${WALKWAY.x}%`, top: `${WALKWAY.y}%`, width: `${WALKWAY.w}%`, height: `${WALKWAY.h}%` }}
+                    >
+                      <div className="flex items-center gap-1 sm:gap-2 text-stone-500 dark:text-stone-400">
+                        <span className="text-[9px] sm:text-xs font-medium tracking-widest uppercase opacity-60">Walkway to Beach</span>
+                        <span className="text-sm sm:text-lg opacity-40">→</span>
+                      </div>
+                    </div>
+                    <div
+                      className="absolute rounded-r-xl bg-sky-300/30 dark:bg-sky-700/20 border-l-2 border-sky-400/50 flex items-center justify-center"
+                      style={{ right: "0%", top: "30%", width: "3%", height: "34%" }}
+                    >
+                      <span className="text-[7px] sm:text-[8px] text-sky-600 dark:text-sky-400 font-medium uppercase tracking-wider [writing-mode:vertical-rl] rotate-180">Beach</span>
+                    </div>
+                    {renderMapUnits(beachMapped, BEACH_UNITS, beachShortName)}
+                    <span className="absolute text-[7px] sm:text-[9px] text-muted-foreground font-medium uppercase tracking-widest" style={{ left: "10%", top: "22%" }}>Teepee Kubos</span>
+                    <span className="absolute text-[7px] sm:text-[9px] text-muted-foreground font-medium uppercase tracking-widest" style={{ left: "60%", top: "22%" }}>Beach Villas</span>
+                    <span className="absolute text-[7px] sm:text-[9px] text-muted-foreground font-medium uppercase tracking-widest" style={{ left: "3%", bottom: "8%" }}>Fan Kubos</span>
+                    <span className="absolute text-[7px] sm:text-[9px] text-muted-foreground font-medium uppercase tracking-widest" style={{ left: "58%", bottom: "8%" }}>AC Beach Kubos</span>
                   </div>
-                  <div
-                    className="absolute rounded-r-xl bg-sky-300/30 dark:bg-sky-700/20 border-l-2 border-sky-400/50 flex items-center justify-center"
-                    style={{ right: "0%", top: "30%", width: "3%", height: "34%" }}
-                  >
-                    <span className="text-[8px] text-sky-600 dark:text-sky-400 font-medium uppercase tracking-wider [writing-mode:vertical-rl] rotate-180">Beach</span>
-                  </div>
-                  {renderMapUnits(beachMapped, BEACH_UNITS, beachShortName)}
-                  <span className="absolute text-[9px] text-muted-foreground font-medium uppercase tracking-widest" style={{ left: "10%", top: "22%" }}>Teepee Kubos</span>
-                  <span className="absolute text-[9px] text-muted-foreground font-medium uppercase tracking-widest" style={{ left: "60%", top: "22%" }}>Beach Villas</span>
-                  <span className="absolute text-[9px] text-muted-foreground font-medium uppercase tracking-widest" style={{ left: "3%", bottom: "8%" }}>Fan Kubos</span>
-                  <span className="absolute text-[9px] text-muted-foreground font-medium uppercase tracking-widest" style={{ left: "58%", bottom: "8%" }}>AC Beach Kubos</span>
                 </div>
               </div>
             </div>
