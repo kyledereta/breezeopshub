@@ -242,6 +242,43 @@ export function QuickCalculator() {
 
       {expanded && (
         <div className="px-4 pb-4 space-y-3 border-t border-border pt-3">
+          {/* Group-level dates & nights */}
+          {isGroup && (
+            <div className="rounded-md border border-border p-3 bg-muted/30 space-y-2">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Group Dates</span>
+              <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+                <div>
+                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Check-in</Label>
+                  <Input
+                    type="date"
+                    value={groupCheckIn}
+                    onChange={(e) => setGroupCheckIn(e.target.value)}
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <div>
+                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Check-out</Label>
+                  <Input
+                    type="date"
+                    value={groupCheckOut}
+                    onChange={(e) => setGroupCheckOut(e.target.value)}
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <div>
+                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Nights</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={groupNights}
+                    onChange={(e) => setGroupNights(Math.max(1, Number(e.target.value)))}
+                    className="h-8 w-14 text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
           {entries.map((entry, idx) => (
             <UnitEntryCard
               key={entry.id}
