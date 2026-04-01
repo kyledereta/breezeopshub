@@ -118,7 +118,8 @@ export function QuickCalculator() {
   const getAccommodation = (entry: UnitEntry) => {
     const unit = units.find((u) => u.id === entry.unitId);
     if (!unit) return 0;
-    return unit.nightly_rate * entry.nights;
+    const nights = isGroup ? groupNights : entry.nights;
+    return unit.nightly_rate * nights;
   };
 
   const getExtrasTotal = (entry: UnitEntry) => {
