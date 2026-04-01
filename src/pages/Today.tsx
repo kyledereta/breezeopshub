@@ -1454,23 +1454,26 @@ export default function TodayPage() {
                   className="text-xs gap-1.5"
                   onClick={() => {
                     const lines: string[] = [];
-                    lines.push(`📋 *ARRIVALS — ${format(new Date(), "MMMM d, yyyy")}*`);
-                    lines.push("");
-                    for (const { area, bookings: areaBookings } of arrivalsGrouped) {
-                      lines.push(`*${area}*`);
-                      for (const b of areaBookings) {
-                        const gid = b.booking_group_id;
-                        const siblings = gid ? groupSiblingsMap.get(gid) : null;
-                        const groupTotal = gid ? [b, ...(siblings ?? [])].reduce((s, x) => s + x.total_amount, 0) : b.total_amount;
-                        const groupPax = gid ? [b, ...(siblings ?? [])].reduce((s, x) => s + x.pax, 0) : b.pax;
-                        const groupUnits = gid ? groupUnitNamesMap.get(gid) : null;
-                        const unitLabel = groupUnits && groupUnits.length > 1 ? groupUnits.join(" + ") : (unitMap.get(b.unit_id ?? "") ?? "—");
-                        const bal = groupTotal - b.deposit_paid - (siblings ?? []).reduce((s, x) => s + x.deposit_paid, 0);
-                        lines.push(`• ${b.guest_name} | ${groupPax} pax | DP ₱${b.deposit_paid.toLocaleString()} | Bal ₱${Math.max(0, bal).toLocaleString()} | ${unitLabel}`);
-                      }
-                      lines.push("");
-                    }
-                    lines.push(`*Total: ${checkIns.length} bookings · ${checkIns.reduce((s, b) => s + b.pax, 0)} pax · ₱${checkIns.reduce((s, b) => s + b.total_amount, 0).toLocaleString()}*`);
+                     lines.push(`📋 *ARRIVALS — ${format(new Date(), "MMMM d, yyyy")}*`);
+                     lines.push("");
+                     for (const { area, bookings: areaBookings } of arrivalsGrouped) {
+                       lines.push(`*${area}*`);
+                       for (const b of areaBookings) {
+                         const gid = b.booking_group_id;
+                         const siblings = gid ? groupSiblingsMap.get(gid) : null;
+                         const groupTotal = gid ? [b, ...(siblings ?? [])].reduce((s, x) => s + x.total_amount, 0) : b.total_amount;
+                         const groupPax = gid ? [b, ...(siblings ?? [])].reduce((s, x) => s + x.pax, 0) : b.pax;
+                         const groupUnits = gid ? groupUnitNamesMap.get(gid) : null;
+                         const unitLabel = groupUnits && groupUnits.length > 1 ? groupUnits.join(" + ") : (unitMap.get(b.unit_id ?? "") ?? "—");
+                         const bal = groupTotal - b.deposit_paid - (siblings ?? []).reduce((s, x) => s + x.deposit_paid, 0);
+                         lines.push(`${b.guest_name} - ${groupPax} pax`);
+                         lines.push(`${unitLabel}`);
+                         lines.push(`DP: ₱${b.deposit_paid.toLocaleString()}`);
+                         lines.push(`Balance: ₱${Math.max(0, bal).toLocaleString()}`);
+                         lines.push("");
+                       }
+                     }
+                     lines.push(`*Total: ${checkIns.length} bookings · ${checkIns.reduce((s, b) => s + b.pax, 0)} pax · ₱${checkIns.reduce((s, b) => s + b.total_amount, 0).toLocaleString()}*`);
                     navigator.clipboard.writeText(lines.join("\n"));
                     toast.success("Arrivals summary copied!");
                   }}
