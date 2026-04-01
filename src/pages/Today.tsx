@@ -1542,11 +1542,19 @@ export default function TodayPage() {
                   <div className="text-[10px] text-muted-foreground">Total Arrivals</div>
                 </div>
                 <div className="rounded-lg border border-border bg-card p-3 text-center">
-                  <div className="text-lg font-bold text-foreground">{checkIns.reduce((s, b) => s + b.pax, 0)}</div>
+                  <div className="text-lg font-bold text-foreground">{checkIns.reduce((s, b) => {
+                    const gid = b.booking_group_id;
+                    const siblings = gid ? groupSiblingsMap.get(gid) : null;
+                    return s + (gid ? [b, ...(siblings ?? [])].reduce((ps, x) => ps + x.pax, 0) : b.pax);
+                  }, 0)}</div>
                   <div className="text-[10px] text-muted-foreground">Total Pax</div>
                 </div>
                 <div className="rounded-lg border border-border bg-card p-3 text-center">
-                  <div className="text-lg font-bold text-foreground">₱{checkIns.reduce((s, b) => s + b.total_amount, 0).toLocaleString()}</div>
+                  <div className="text-lg font-bold text-foreground">₱{checkIns.reduce((s, b) => {
+                    const gid = b.booking_group_id;
+                    const siblings = gid ? groupSiblingsMap.get(gid) : null;
+                    return s + (gid ? [b, ...(siblings ?? [])].reduce((ts, x) => ts + x.total_amount, 0) : b.total_amount);
+                  }, 0).toLocaleString()}</div>
                   <div className="text-[10px] text-muted-foreground">Total Revenue</div>
                 </div>
               </div>
@@ -1555,7 +1563,11 @@ export default function TodayPage() {
                   <div className="flex items-center gap-2 px-1 py-1.5">
                     <span className="text-[10px] uppercase tracking-wider text-primary font-semibold">{area}</span>
                     <div className="flex-1 h-px bg-border" />
-                    <span className="text-[10px] text-muted-foreground">{areaBookings.length} bookings · {areaBookings.reduce((s, b) => s + b.pax, 0)} pax</span>
+                    <span className="text-[10px] text-muted-foreground">{areaBookings.length} bookings · {areaBookings.reduce((s, b) => {
+                      const gid = b.booking_group_id;
+                      const siblings = gid ? groupSiblingsMap.get(gid) : null;
+                      return s + (gid ? [b, ...(siblings ?? [])].reduce((ps, x) => ps + x.pax, 0) : b.pax);
+                    }, 0)} pax</span>
                   </div>
                   <div className="space-y-1">
                     {areaBookings.map((b) => {
@@ -1585,7 +1597,7 @@ export default function TodayPage() {
                               <BedDouble className="h-2.5 w-2.5" />
                               {groupUnits && groupUnits.length > 1 ? groupUnits.join(" + ") : (unitMap.get(b.unit_id ?? "") ?? "—")}
                               <span className="mx-0.5">·</span>
-                              {b.pax} pax
+                              {gid ? [b, ...(siblings ?? [])].reduce((s, x) => s + x.pax, 0) : b.pax} pax
                               {gid && <span className="mx-0.5">· ₱{groupTotal.toLocaleString()}</span>}
                             </div>
                           </div>
