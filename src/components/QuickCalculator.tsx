@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useUnits, groupUnitsByArea } from "@/hooks/useUnits";
-import { Calculator, ChevronDown, ChevronUp, RotateCcw } from "lucide-react";
+import { Calculator, ChevronDown, ChevronUp, RotateCcw, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -26,71 +26,114 @@ const EXTRAS = [
   { key: "other", label: "Other Extras", defaultFee: 0, hasQty: false },
 ] as const;
 
+type ExtrasState = Record<string, { enabled: boolean; fee: number; qty: number }>;
+
+interface UnitEntry {
+  id: string;
+  unitId: string;
+  nights: number;
+  usePeakRate: boolean;
+  extras: ExtrasState;
+}
+
+function createDefaultExtras(): ExtrasState {
+  const init: ExtrasState = {};
+  for (const e of EXTRAS) {
+    init[e.key] = { enabled: false, fee: e.defaultFee, qty: 1 };
+  }
+  return init;
+}
+
+function createUnitEntry(): UnitEntry {
+  return {
+    id: crypto.randomUUID(),
+    unitId: "",
+    nights: 1,
+    usePeakRate: false,
+    extras: createDefaultExtras(),
+  };
+}
+
 export function QuickCalculator() {
   const { data: units = [] } = useUnits();
   const grouped = useMemo(() => groupUnitsByArea(units), [units]);
 
   const [expanded, setExpanded] = useState(false);
-  const [unitId, setUnitId] = useState<string>("");
-  const [nights, setNights] = useState(1);
-  const [usePeakRate, setUsePeakRate] = useState(false);
+  const [entries, setEntries] = useState<UnitEntry[]>(() => [createUnitEntry()]);
   const [discount, setDiscount] = useState(0);
   const [depositPaid, setDepositPaid] = useState(0);
 
-  // Extras state: { [key]: { enabled, fee, qty } }
-  const [extras, setExtras] = useState<Record<string, { enabled: boolean; fee: number; qty: number }>>(() => {
-    const init: Record<string, { enabled: boolean; fee: number; qty: number }> = {};
-    for (const e of EXTRAS) {
-      init[e.key] = { enabled: false, fee: e.defaultFee, qty: 1 };
-    }
-    return init;
-  });
+  const isGroup = entries.length > 1;
 
-  const selectedUnit = units.find((u) => u.id === unitId);
-  const nightlyRate = selectedUnit ? (usePeakRate ? selectedUnit.peak_rate : selectedUnit.nightly_rate) : 0;
-  const accommodationTotal = nightlyRate * nights;
+  const updateEntry = useCallback((entryId: string, patch: Partial<UnitEntry>) => {
+    setEntries((prev) => prev.map((e) => (e.id === entryId ? { ...e, ...patch } : e)));
+  }, []);
 
-  const extrasTotal = useMemo(() => {
+  const toggleExtra = useCallback((entryId: string, key: string) => {
+    setEntries((prev) =>
+      prev.map((e) =>
+        e.id === entryId
+          ? { ...e, extras: { ...e.extras, [key]: { ...e.extras[key], enabled: !e.extras[key].enabled } } }
+          : e
+      )
+    );
+  }, []);
+
+  const setExtraFee = useCallback((entryId: string, key: string, fee: number) => {
+    setEntries((prev) =>
+      prev.map((e) =>
+        e.id === entryId ? { ...e, extras: { ...e.extras, [key]: { ...e.extras[key], fee } } } : e
+      )
+    );
+  }, []);
+
+  const setExtraQty = useCallback((entryId: string, key: string, qty: number) => {
+    setEntries((prev) =>
+      prev.map((e) =>
+        e.id === entryId
+          ? { ...e, extras: { ...e.extras, [key]: { ...e.extras[key], qty: Math.max(qty, 1) } } }
+          : e
+      )
+    );
+  }, []);
+
+  const addUnit = () => setEntries((prev) => [...prev, createUnitEntry()]);
+  const removeUnit = (entryId: string) => {
+    setEntries((prev) => {
+      const next = prev.filter((e) => e.id !== entryId);
+      return next.length === 0 ? [createUnitEntry()] : next;
+    });
+  };
+
+  const getAccommodation = (entry: UnitEntry) => {
+    const unit = units.find((u) => u.id === entry.unitId);
+    if (!unit) return 0;
+    return (entry.usePeakRate ? unit.peak_rate : unit.nightly_rate) * entry.nights;
+  };
+
+  const getExtrasTotal = (entry: UnitEntry) => {
     let total = 0;
     for (const e of EXTRAS) {
-      const s = extras[e.key];
-      if (s.enabled) {
-        total += s.fee * (e.hasQty ? s.qty : 1);
-      }
+      const s = entry.extras[e.key];
+      if (s.enabled) total += s.fee * (e.hasQty ? s.qty : 1);
     }
     return total;
-  }, [extras]);
+  };
 
-  const subtotal = accommodationTotal + extrasTotal;
+  const getEntryTotal = (entry: UnitEntry) => getAccommodation(entry) + getExtrasTotal(entry);
+
+  const subtotal = useMemo(() => entries.reduce((s, e) => s + getEntryTotal(e), 0), [entries, units]);
   const grandTotal = Math.max(subtotal - discount, 0);
   const balance = Math.max(grandTotal - depositPaid, 0);
 
-  const toggleExtra = (key: string) => {
-    setExtras((prev) => ({ ...prev, [key]: { ...prev[key], enabled: !prev[key].enabled } }));
-  };
-  const setExtraFee = (key: string, fee: number) => {
-    setExtras((prev) => ({ ...prev, [key]: { ...prev[key], fee } }));
-  };
-  const setExtraQty = (key: string, qty: number) => {
-    setExtras((prev) => ({ ...prev, [key]: { ...prev[key], qty: Math.max(qty, 1) } }));
-  };
-
   const handleReset = () => {
-    setUnitId("");
-    setNights(1);
-    setUsePeakRate(false);
+    setEntries([createUnitEntry()]);
     setDiscount(0);
     setDepositPaid(0);
-    const init: Record<string, { enabled: boolean; fee: number; qty: number }> = {};
-    for (const e of EXTRAS) {
-      init[e.key] = { enabled: false, fee: e.defaultFee, qty: 1 };
-    }
-    setExtras(init);
   };
 
   return (
     <div className="rounded-lg border border-border bg-card overflow-hidden">
-      {/* Header - always visible */}
       <button
         onClick={() => setExpanded(!expanded)}
         className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors"
@@ -100,7 +143,7 @@ export function QuickCalculator() {
           <span className="text-sm font-semibold text-foreground">Quick Calculator</span>
           {grandTotal > 0 && !expanded && (
             <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-primary/30">
-              ₱{grandTotal.toLocaleString()}
+              ₱{grandTotal.toLocaleString()}{isGroup ? ` (${entries.length} units)` : ""}
             </Badge>
           )}
         </div>
@@ -109,109 +152,30 @@ export function QuickCalculator() {
 
       {expanded && (
         <div className="px-4 pb-4 space-y-3 border-t border-border pt-3">
-          {/* Unit & Nights row */}
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Unit</Label>
-              <Select value={unitId} onValueChange={setUnitId}>
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue placeholder="Select unit" />
-                </SelectTrigger>
-                <SelectContent>
-                  {grouped.map(({ area, units: areaUnits }) => (
-                    <div key={area}>
-                      <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{area}</div>
-                      {areaUnits.map((u) => (
-                        <SelectItem key={u.id} value={u.id} className="text-xs">
-                          {u.name} — ₱{u.nightly_rate.toLocaleString()}
-                        </SelectItem>
-                      ))}
-                    </div>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Nights</Label>
-              <Input
-                type="number"
-                min={1}
-                value={nights}
-                onChange={(e) => setNights(Math.max(1, Number(e.target.value)))}
-                className="h-8 text-xs"
-              />
-            </div>
-          </div>
+          {entries.map((entry, idx) => (
+            <UnitEntryCard
+              key={entry.id}
+              entry={entry}
+              index={idx}
+              units={units}
+              grouped={grouped}
+              isGroup={isGroup}
+              accommodation={getAccommodation(entry)}
+              extrasTotal={getExtrasTotal(entry)}
+              entryTotal={getEntryTotal(entry)}
+              onUpdate={updateEntry}
+              onToggleExtra={toggleExtra}
+              onSetExtraFee={setExtraFee}
+              onSetExtraQty={setExtraQty}
+              onRemove={() => removeUnit(entry.id)}
+            />
+          ))}
 
-          {/* Rate info */}
-          {selectedUnit && (
-            <div className="flex items-center justify-between text-xs">
-              <div className="flex items-center gap-3">
-                <span className="text-muted-foreground">
-                  Rate: ₱{nightlyRate.toLocaleString()} × {nights}n = <span className="font-semibold text-foreground">₱{accommodationTotal.toLocaleString()}</span>
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Checkbox
-                  id="peak"
-                  checked={usePeakRate}
-                  onCheckedChange={(v) => setUsePeakRate(!!v)}
-                  className="h-3.5 w-3.5"
-                />
-                <Label htmlFor="peak" className="text-[10px] text-muted-foreground cursor-pointer">
-                  Peak (₱{selectedUnit.peak_rate.toLocaleString()})
-                </Label>
-              </div>
-            </div>
-          )}
-
-          {/* Extras */}
-          <div>
-            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 block">Add-ons / Extras</Label>
-            <div className="grid grid-cols-2 gap-1.5">
-              {EXTRAS.map((e) => {
-                const s = extras[e.key];
-                return (
-                  <div
-                    key={e.key}
-                    className={cn(
-                      "flex items-center gap-1.5 rounded-md border px-2 py-1.5 transition-colors",
-                      s.enabled ? "border-primary/30 bg-primary/5" : "border-border"
-                    )}
-                  >
-                    <Checkbox
-                      checked={s.enabled}
-                      onCheckedChange={() => toggleExtra(e.key)}
-                      className="h-3 w-3"
-                    />
-                    <span className="text-[11px] text-foreground flex-1 truncate">{e.label}</span>
-                    {s.enabled && (
-                      <div className="flex items-center gap-1">
-                        {e.hasQty && (
-                          <Input
-                            type="number"
-                            min={1}
-                            value={s.qty}
-                            onChange={(ev) => setExtraQty(e.key, Number(ev.target.value))}
-                            className="h-5 w-8 text-[10px] px-1 text-center"
-                            onClick={(ev) => ev.stopPropagation()}
-                          />
-                        )}
-                        <Input
-                          type="number"
-                          min={0}
-                          value={s.fee}
-                          onChange={(ev) => setExtraFee(e.key, Number(ev.target.value))}
-                          className="h-5 w-14 text-[10px] px-1 text-right"
-                          onClick={(ev) => ev.stopPropagation()}
-                        />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          {/* Add unit button */}
+          <Button variant="outline" size="sm" className="w-full text-xs gap-1.5 border-dashed" onClick={addUnit}>
+            <Plus className="h-3 w-3" />
+            Add Unit {isGroup ? `(${entries.length + 1})` : "(Group Booking)"}
+          </Button>
 
           {/* Discount & Deposit */}
           <div className="grid grid-cols-2 gap-2">
@@ -239,16 +203,37 @@ export function QuickCalculator() {
             </div>
           </div>
 
-          {/* Summary */}
+          {/* Grand Summary */}
           <div className="rounded-md bg-muted/50 p-3 space-y-1.5 text-xs">
-            <div className="flex justify-between text-muted-foreground">
-              <span>Accommodation</span>
-              <span>₱{accommodationTotal.toLocaleString()}</span>
-            </div>
-            {extrasTotal > 0 && (
-              <div className="flex justify-between text-muted-foreground">
-                <span>Extras</span>
-                <span>₱{extrasTotal.toLocaleString()}</span>
+            {isGroup && entries.map((entry, idx) => {
+              const unit = units.find((u) => u.id === entry.unitId);
+              const total = getEntryTotal(entry);
+              if (!unit || total === 0) return null;
+              return (
+                <div key={entry.id} className="flex justify-between text-muted-foreground">
+                  <span>{unit.name}</span>
+                  <span>₱{total.toLocaleString()}</span>
+                </div>
+              );
+            })}
+            {!isGroup && (
+              <>
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Accommodation</span>
+                  <span>₱{getAccommodation(entries[0]).toLocaleString()}</span>
+                </div>
+                {getExtrasTotal(entries[0]) > 0 && (
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Extras</span>
+                    <span>₱{getExtrasTotal(entries[0]).toLocaleString()}</span>
+                  </div>
+                )}
+              </>
+            )}
+            {isGroup && (
+              <div className="flex justify-between text-muted-foreground border-t border-border pt-1">
+                <span>Subtotal ({entries.length} units)</span>
+                <span>₱{subtotal.toLocaleString()}</span>
               </div>
             )}
             {discount > 0 && (
@@ -279,6 +264,165 @@ export function QuickCalculator() {
             <RotateCcw className="h-3 w-3" />
             Reset
           </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Per-unit card ─── */
+
+interface UnitEntryCardProps {
+  entry: UnitEntry;
+  index: number;
+  units: ReturnType<typeof useUnits>["data"] & {};
+  grouped: ReturnType<typeof groupUnitsByArea>;
+  isGroup: boolean;
+  accommodation: number;
+  extrasTotal: number;
+  entryTotal: number;
+  onUpdate: (id: string, patch: Partial<UnitEntry>) => void;
+  onToggleExtra: (id: string, key: string) => void;
+  onSetExtraFee: (id: string, key: string, fee: number) => void;
+  onSetExtraQty: (id: string, key: string, qty: number) => void;
+  onRemove: () => void;
+}
+
+function UnitEntryCard({
+  entry, index, units, grouped, isGroup,
+  accommodation, extrasTotal, entryTotal,
+  onUpdate, onToggleExtra, onSetExtraFee, onSetExtraQty, onRemove,
+}: UnitEntryCardProps) {
+  const selectedUnit = units.find((u) => u.id === entry.unitId);
+  const nightlyRate = selectedUnit ? (entry.usePeakRate ? selectedUnit.peak_rate : selectedUnit.nightly_rate) : 0;
+  const [extrasOpen, setExtrasOpen] = useState(false);
+
+  return (
+    <div className={cn("space-y-2", isGroup && "rounded-md border border-border p-3 bg-background")}>
+      {isGroup && (
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Unit {index + 1}
+          </span>
+          <div className="flex items-center gap-2">
+            {entryTotal > 0 && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                ₱{entryTotal.toLocaleString()}
+              </Badge>
+            )}
+            <button onClick={onRemove} className="text-muted-foreground hover:text-destructive transition-colors">
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Unit & Nights */}
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Unit</Label>
+          <Select value={entry.unitId} onValueChange={(v) => onUpdate(entry.id, { unitId: v })}>
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue placeholder="Select unit" />
+            </SelectTrigger>
+            <SelectContent>
+              {grouped.map(({ area, units: areaUnits }) => (
+                <div key={area}>
+                  <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{area}</div>
+                  {areaUnits.map((u) => (
+                    <SelectItem key={u.id} value={u.id} className="text-xs">
+                      {u.name} — ₱{u.nightly_rate.toLocaleString()}
+                    </SelectItem>
+                  ))}
+                </div>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Nights</Label>
+          <Input
+            type="number"
+            min={1}
+            value={entry.nights}
+            onChange={(e) => onUpdate(entry.id, { nights: Math.max(1, Number(e.target.value)) })}
+            className="h-8 text-xs"
+          />
+        </div>
+      </div>
+
+      {/* Rate info */}
+      {selectedUnit && (
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-muted-foreground">
+            ₱{nightlyRate.toLocaleString()} × {entry.nights}n = <span className="font-semibold text-foreground">₱{accommodation.toLocaleString()}</span>
+          </span>
+          <div className="flex items-center gap-1.5">
+            <Checkbox
+              id={`peak-${entry.id}`}
+              checked={entry.usePeakRate}
+              onCheckedChange={(v) => onUpdate(entry.id, { usePeakRate: !!v })}
+              className="h-3.5 w-3.5"
+            />
+            <Label htmlFor={`peak-${entry.id}`} className="text-[10px] text-muted-foreground cursor-pointer">
+              Peak (₱{selectedUnit.peak_rate.toLocaleString()})
+            </Label>
+          </div>
+        </div>
+      )}
+
+      {/* Extras toggle */}
+      <button
+        onClick={() => setExtrasOpen(!extrasOpen)}
+        className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+      >
+        {extrasOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+        Add-ons{extrasTotal > 0 ? ` (₱${extrasTotal.toLocaleString()})` : ""}
+      </button>
+
+      {extrasOpen && (
+        <div className="grid grid-cols-2 gap-1.5">
+          {EXTRAS.map((e) => {
+            const s = entry.extras[e.key];
+            return (
+              <div
+                key={e.key}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-md border px-2 py-1.5 transition-colors",
+                  s.enabled ? "border-primary/30 bg-primary/5" : "border-border"
+                )}
+              >
+                <Checkbox
+                  checked={s.enabled}
+                  onCheckedChange={() => onToggleExtra(entry.id, e.key)}
+                  className="h-3 w-3"
+                />
+                <span className="text-[11px] text-foreground flex-1 truncate">{e.label}</span>
+                {s.enabled && (
+                  <div className="flex items-center gap-1">
+                    {e.hasQty && (
+                      <Input
+                        type="number"
+                        min={1}
+                        value={s.qty}
+                        onChange={(ev) => onSetExtraQty(entry.id, e.key, Number(ev.target.value))}
+                        className="h-5 w-8 text-[10px] px-1 text-center"
+                        onClick={(ev) => ev.stopPropagation()}
+                      />
+                    )}
+                    <Input
+                      type="number"
+                      min={0}
+                      value={s.fee}
+                      onChange={(ev) => onSetExtraFee(entry.id, e.key, Number(ev.target.value))}
+                      className="h-5 w-14 text-[10px] px-1 text-right"
+                      onClick={(ev) => ev.stopPropagation()}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
