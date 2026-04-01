@@ -2930,6 +2930,7 @@ export function BookingModal({
                   (watchBonfire ? Number(watchBonfireFee) || 0 : 0) +
                   (watchAtv ? Number(watchAtvFee) || 0 : 0) +
                   (watchBananaBoat ? Number(watchBananaBoatFee) || 0 : 0) +
+                  (watchEarlyCheckin ? Number(watchEarlyCheckinFee) || 0 : 0) +
                   (watchDaytour ? Number(watchDaytourFee) || 0 : 0) +
                   (Number(watchOtherExtrasFee) || 0);
                 const discountAmount =
