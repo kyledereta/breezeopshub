@@ -14,6 +14,7 @@ import GuestsPage from "./pages/Guests";
 import SettingsPage from "./pages/Settings";
 import UnitsPage from "./pages/Units";
 import ResortMapPage from "./pages/ResortMap";
+import BeachMapPage from "./pages/BeachMap";
 import LoginPage from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
@@ -44,6 +45,7 @@ function ProtectedRoutes() {
       <Route path="/guests" element={<GuestsPage />} />
       <Route path="/units" element={<UnitsPage />} />
       <Route path="/map" element={<ResortMapPage />} />
+      <Route path="/beach-map" element={<BeachMapPage />} />
       <Route path="/settings" element={<SettingsPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
