@@ -1550,7 +1550,11 @@ export default function TodayPage() {
                   <div className="text-[10px] text-muted-foreground">Total Pax</div>
                 </div>
                 <div className="rounded-lg border border-border bg-card p-3 text-center">
-                  <div className="text-lg font-bold text-foreground">₱{checkIns.reduce((s, b) => s + b.total_amount, 0).toLocaleString()}</div>
+                  <div className="text-lg font-bold text-foreground">₱{checkIns.reduce((s, b) => {
+                    const gid = b.booking_group_id;
+                    const siblings = gid ? groupSiblingsMap.get(gid) : null;
+                    return s + (gid ? [b, ...(siblings ?? [])].reduce((ts, x) => ts + x.total_amount, 0) : b.total_amount);
+                  }, 0).toLocaleString()}</div>
                   <div className="text-[10px] text-muted-foreground">Total Revenue</div>
                 </div>
               </div>
