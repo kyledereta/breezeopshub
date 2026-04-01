@@ -1755,6 +1755,23 @@ export default function TodayPage() {
           </div>
         )}
 
+        {/* Map Drag Confirmation */}
+        <AlertDialog open={!!mapDragConfirm} onOpenChange={(open) => !open && setMapDragConfirm(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Move Guest to Another Unit?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Move <strong>{mapDragConfirm?.guestName}</strong> from <strong>{mapDragConfirm?.sourceUnit}</strong> to <strong>{mapDragConfirm?.targetUnit}</strong>?
+                This will update the booking across all views.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <Button variant="outline" onClick={() => setMapDragConfirm(null)}>Cancel</Button>
+              <AlertDialogAction onClick={confirmMapDrag}>Confirm Move</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         <UnitDetailSheet open={mapUnitSheetOpen} onOpenChange={setMapUnitSheetOpen} unit={mapSelectedUnit} />
         <BookingDetailSheet
           open={mapBookingSheetOpen}
