@@ -1497,17 +1497,20 @@ export default function TodayPage() {
                      lines.push("");
                      for (const { area, bookings: areaBookings } of arrivalsGrouped) {
                        lines.push(`*${area}*`);
-                       for (const b of areaBookings) {
+                     for (const b of areaBookings) {
                          const gid = b.booking_group_id;
                          const siblings = gid ? groupSiblingsMap.get(gid) : null;
-                         const groupTotal = gid ? [b, ...(siblings ?? [])].reduce((s, x) => s + x.total_amount, 0) : b.total_amount;
-                         const groupPax = gid ? [b, ...(siblings ?? [])].reduce((s, x) => s + x.pax, 0) : b.pax;
+                         const allInGroup = gid ? [b, ...(siblings ?? [])] : [b];
+                         const groupTotal = allInGroup.reduce((s, x) => s + x.total_amount, 0);
+                         const groupPax = allInGroup.reduce((s, x) => s + x.pax, 0);
+                         const groupDP = allInGroup.reduce((s, x) => s + x.deposit_paid, 0);
+                         const groupDiscount = allInGroup.reduce((s, x) => s + x.discount_given, 0);
                          const groupUnits = gid ? groupUnitNamesMap.get(gid) : null;
                          const unitLabel = groupUnits && groupUnits.length > 1 ? groupUnits.join(" + ") : (unitMap.get(b.unit_id ?? "") ?? "—");
-                         const bal = groupTotal - b.deposit_paid - (siblings ?? []).reduce((s, x) => s + x.deposit_paid, 0);
+                         const bal = groupTotal - groupDP - groupDiscount;
                          lines.push(`${b.guest_name} - ${groupPax} pax`);
                          lines.push(`${unitLabel}`);
-                         lines.push(`DP: ₱${b.deposit_paid.toLocaleString()}`);
+                         lines.push(`DP: ₱${groupDP.toLocaleString()}`);
                          lines.push(`Balance: ₱${Math.max(0, bal).toLocaleString()}`);
                          lines.push("");
                        }
