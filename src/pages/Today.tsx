@@ -524,6 +524,28 @@ export default function TodayPage() {
     return m;
   }, [allBookings]);
 
+  const getArrivalGroupMetrics = useCallback((booking: Booking) => {
+    const groupBookings = booking.booking_group_id
+      ? [booking, ...(groupSiblingsMap.get(booking.booking_group_id) ?? [])]
+      : [booking];
+
+    const hasDistributedFinancials = groupBookings.slice(1).some(
+      (groupBooking) =>
+        groupBooking.total_amount > 0 ||
+        groupBooking.deposit_paid > 0 ||
+        groupBooking.discount_given > 0
+    );
+
+    return {
+      pax: booking.booking_group_id && !hasDistributedFinancials
+        ? booking.pax
+        : groupBookings.reduce((sum, groupBooking) => sum + groupBooking.pax, 0),
+      totalAmount: groupBookings.reduce((sum, groupBooking) => sum + groupBooking.total_amount, 0),
+      totalDeposit: groupBookings.reduce((sum, groupBooking) => sum + groupBooking.deposit_paid, 0),
+      totalDiscount: groupBookings.reduce((sum, groupBooking) => sum + groupBooking.discount_given, 0),
+    };
+  }, [groupSiblingsMap]);
+
   const { checkIns, baseCheckOuts, dueDepartures, inHouse, pendingBalances, todayRevenue, upcomingArrivals, overbookings, noLateCheckoutUnitIds, daytourGuests, turnoverUnits } = useMemo(() => {
     const checkIns: Booking[] = [];
     const baseCheckOuts: Booking[] = [];
@@ -1499,12 +1521,7 @@ export default function TodayPage() {
                        lines.push(`*${area}*`);
                      for (const b of areaBookings) {
                          const gid = b.booking_group_id;
-                         const siblings = gid ? groupSiblingsMap.get(gid) : null;
-                         const allInGroup = gid ? [b, ...(siblings ?? [])] : [b];
-                         const groupTotal = allInGroup.reduce((s, x) => s + x.total_amount, 0);
-                         const groupPax = allInGroup.reduce((s, x) => s + x.pax, 0);
-                         const groupDP = allInGroup.reduce((s, x) => s + x.deposit_paid, 0);
-                         const groupDiscount = allInGroup.reduce((s, x) => s + x.discount_given, 0);
+                          const { pax: groupPax, totalAmount: groupTotal, totalDeposit: groupDP, totalDiscount: groupDiscount } = getArrivalGroupMetrics(b);
                          const groupUnits = gid ? groupUnitNamesMap.get(gid) : null;
                          const unitLabel = groupUnits && groupUnits.length > 1 ? groupUnits.join(" + ") : (unitMap.get(b.unit_id ?? "") ?? "—");
                          const bal = groupTotal - groupDP - groupDiscount;
@@ -1515,16 +1532,8 @@ export default function TodayPage() {
                          lines.push("");
                        }
                      }
-                     const totalPax = checkIns.reduce((s, b) => {
-                       const gid = b.booking_group_id;
-                       const siblings = gid ? groupSiblingsMap.get(gid) : null;
-                       return s + (gid ? [b, ...(siblings ?? [])].reduce((ps, x) => ps + x.pax, 0) : b.pax);
-                     }, 0);
-                     const totalAmount = checkIns.reduce((s, b) => {
-                       const gid = b.booking_group_id;
-                       const siblings = gid ? groupSiblingsMap.get(gid) : null;
-                       return s + (gid ? [b, ...(siblings ?? [])].reduce((ts, x) => ts + x.total_amount, 0) : b.total_amount);
-                     }, 0);
+                      const totalPax = checkIns.reduce((sum, booking) => sum + getArrivalGroupMetrics(booking).pax, 0);
+                      const totalAmount = checkIns.reduce((sum, booking) => sum + getArrivalGroupMetrics(booking).totalAmount, 0);
                      lines.push(`*Total: ${checkIns.length} bookings · ${totalPax} pax · ₱${totalAmount.toLocaleString()}*`);
                     navigator.clipboard.writeText(lines.join("\n"));
                     toast.success("Arrivals summary copied!");
@@ -1542,19 +1551,11 @@ export default function TodayPage() {
                   <div className="text-[10px] text-muted-foreground">Total Arrivals</div>
                 </div>
                 <div className="rounded-lg border border-border bg-card p-3 text-center">
-                  <div className="text-lg font-bold text-foreground">{checkIns.reduce((s, b) => {
-                    const gid = b.booking_group_id;
-                    const siblings = gid ? groupSiblingsMap.get(gid) : null;
-                    return s + (gid ? [b, ...(siblings ?? [])].reduce((ps, x) => ps + x.pax, 0) : b.pax);
-                  }, 0)}</div>
+                  <div className="text-lg font-bold text-foreground">{checkIns.reduce((sum, booking) => sum + getArrivalGroupMetrics(booking).pax, 0)}</div>
                   <div className="text-[10px] text-muted-foreground">Total Pax</div>
                 </div>
                 <div className="rounded-lg border border-border bg-card p-3 text-center">
-                  <div className="text-lg font-bold text-foreground">₱{checkIns.reduce((s, b) => {
-                    const gid = b.booking_group_id;
-                    const siblings = gid ? groupSiblingsMap.get(gid) : null;
-                    return s + (gid ? [b, ...(siblings ?? [])].reduce((ts, x) => ts + x.total_amount, 0) : b.total_amount);
-                  }, 0).toLocaleString()}</div>
+                  <div className="text-lg font-bold text-foreground">₱{checkIns.reduce((sum, booking) => sum + getArrivalGroupMetrics(booking).totalAmount, 0).toLocaleString()}</div>
                   <div className="text-[10px] text-muted-foreground">Total Revenue</div>
                 </div>
               </div>
@@ -1563,18 +1564,13 @@ export default function TodayPage() {
                   <div className="flex items-center gap-2 px-1 py-1.5">
                     <span className="text-[10px] uppercase tracking-wider text-primary font-semibold">{area}</span>
                     <div className="flex-1 h-px bg-border" />
-                    <span className="text-[10px] text-muted-foreground">{areaBookings.length} bookings · {areaBookings.reduce((s, b) => {
-                      const gid = b.booking_group_id;
-                      const siblings = gid ? groupSiblingsMap.get(gid) : null;
-                      return s + (gid ? [b, ...(siblings ?? [])].reduce((ps, x) => ps + x.pax, 0) : b.pax);
-                    }, 0)} pax</span>
+                    <span className="text-[10px] text-muted-foreground">{areaBookings.length} bookings · {areaBookings.reduce((sum, booking) => sum + getArrivalGroupMetrics(booking).pax, 0)} pax</span>
                   </div>
                   <div className="space-y-1">
                     {areaBookings.map((b) => {
                       const gid = b.booking_group_id;
                       const groupUnits = gid ? groupUnitNamesMap.get(gid) : null;
-                      const siblings = gid ? groupSiblingsMap.get(gid) : null;
-                      const groupTotal = gid ? [b, ...(siblings ?? [])].reduce((s, x) => s + x.total_amount, 0) : b.total_amount;
+                      const { pax: groupPax, totalAmount: groupTotal } = getArrivalGroupMetrics(b);
                       return (
                         <div
                           key={b.id}
@@ -1597,7 +1593,7 @@ export default function TodayPage() {
                               <BedDouble className="h-2.5 w-2.5" />
                               {groupUnits && groupUnits.length > 1 ? groupUnits.join(" + ") : (unitMap.get(b.unit_id ?? "") ?? "—")}
                               <span className="mx-0.5">·</span>
-                              {gid ? [b, ...(siblings ?? [])].reduce((s, x) => s + x.pax, 0) : b.pax} pax
+                              {groupPax} pax
                               {gid && <span className="mx-0.5">· ₱{groupTotal.toLocaleString()}</span>}
                             </div>
                           </div>
