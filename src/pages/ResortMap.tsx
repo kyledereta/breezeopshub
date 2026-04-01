@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { AppLayout } from "@/components/AppLayout";
 import { useUnits } from "@/hooks/useUnits";
 import { useBookings } from "@/hooks/useBookings";
+import { useUpdateBooking } from "@/hooks/useBookingMutations";
 import { UnitDetailSheet } from "@/components/UnitDetailSheet";
 import { BookingDetailSheet } from "@/components/BookingDetailSheet";
 import { BookingModal } from "@/components/BookingModal";
@@ -9,6 +10,17 @@ import { MapLegend } from "@/components/MapLegend";
 import { MapUnitBlock } from "@/components/MapUnitBlock";
 import { computeUnitStatusMap } from "@/lib/mapUtils";
 import { format } from "date-fns";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { Unit } from "@/hooks/useUnits";
 import type { Booking } from "@/hooks/useBookings";
 
@@ -65,11 +77,13 @@ function beachShortName(name: string) {
 const ResortMap = () => {
   const { data: units = [] } = useUnits();
   const { data: bookings = [] } = useBookings();
+  const updateBooking = useUpdateBooking();
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
   const [unitSheetOpen, setUnitSheetOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [dragConfirm, setDragConfirm] = useState<{ bookingId: string; targetUnitId: string; guestName: string; sourceUnit: string; targetUnit: string } | null>(null);
 
   const todayStr = format(new Date(), "yyyy-MM-dd");
   const unitStatusMap = useMemo(
@@ -91,6 +105,37 @@ const ResortMap = () => {
     }
   };
 
+  const handleMapDrop = useCallback((bookingId: string, targetUnitId: string) => {
+    const booking = bookings.find(b => b.id === bookingId);
+    const targetUnit = units.find(u => u.id === targetUnitId);
+    const sourceUnit = units.find(u => u.id === booking?.unit_id);
+    if (!booking || !targetUnit) return;
+    setDragConfirm({
+      bookingId,
+      targetUnitId,
+      guestName: booking.guest_name,
+      sourceUnit: sourceUnit?.name || "Unknown",
+      targetUnit: targetUnit.name,
+    });
+  }, [bookings, units]);
+
+  const confirmDrag = useCallback(() => {
+    if (!dragConfirm) return;
+    updateBooking.mutate(
+      { id: dragConfirm.bookingId, unit_id: dragConfirm.targetUnitId },
+      {
+        onSuccess: () => {
+          toast.success(`Moved ${dragConfirm.guestName} to ${dragConfirm.targetUnit}`);
+          setDragConfirm(null);
+        },
+        onError: (err) => {
+          toast.error("Failed to move booking: " + (err as Error).message);
+          setDragConfirm(null);
+        },
+      }
+    );
+  }, [dragConfirm, updateBooking]);
+
   const renderUnits = (
     mapped: Unit[],
     positions: Record<string, { x: number; y: number; w: number; h: number }>,
@@ -106,6 +151,9 @@ const ResortMap = () => {
           shortName={shortNameFn(unit.name)}
           guestName={info.guestName}
           status={info.status}
+          bookingId={info.booking?.id}
+          unitId={unit.id}
+          onDrop={handleMapDrop}
           style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: `${pos.w}%`, height: `${pos.h}%` }}
           onClick={() => handleUnitClick(unit)}
         />
@@ -198,6 +246,22 @@ const ResortMap = () => {
           </div>
         </div>
       </div>
+
+      <AlertDialog open={!!dragConfirm} onOpenChange={(open) => !open && setDragConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Move Guest to Another Unit?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Move <strong>{dragConfirm?.guestName}</strong> from <strong>{dragConfirm?.sourceUnit}</strong> to <strong>{dragConfirm?.targetUnit}</strong>?
+              This will update the booking across all views.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button variant="outline" onClick={() => setDragConfirm(null)}>Cancel</Button>
+            <AlertDialogAction onClick={confirmDrag}>Confirm Move</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <UnitDetailSheet open={unitSheetOpen} onOpenChange={setUnitSheetOpen} unit={selectedUnit} />
       <BookingDetailSheet
