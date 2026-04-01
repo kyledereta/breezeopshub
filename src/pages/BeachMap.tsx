@@ -104,55 +104,12 @@ const BeachMap = () => {
             {/* Background */}
             <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-amber-50 to-sky-50 dark:from-amber-950/20 dark:to-sky-950/20 border border-border shadow-sm" />
 
-            {/* Kitchen */}
-            <div
-              className="absolute rounded-lg bg-orange-100 dark:bg-orange-950/30 border border-orange-300 dark:border-orange-700 flex items-center justify-center"
-              style={{ left: `${KITCHEN.x}%`, top: `${KITCHEN.y}%`, width: `${KITCHEN.w}%`, height: `${KITCHEN.h}%` }}
-            >
-              <span className="text-[9px] font-medium text-orange-600 dark:text-orange-400 uppercase tracking-wider">
-                Kitchen
-              </span>
-            </div>
-
-            {/* Common CR */}
-            <div
-              className="absolute rounded-lg bg-slate-100 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 flex items-center justify-center"
-              style={{ left: `${COMMON_CR.x}%`, top: `${COMMON_CR.y}%`, width: `${COMMON_CR.w}%`, height: `${COMMON_CR.h}%` }}
-            >
-              <span className="text-[9px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                Common CR
-              </span>
-            </div>
-
-            {/* Walkway */}
-            <div
-              className="absolute rounded-lg bg-stone-200/60 dark:bg-stone-700/30 border border-dashed border-stone-400 dark:border-stone-600 flex items-center justify-center"
-              style={{ left: `${WALKWAY.x}%`, top: `${WALKWAY.y}%`, width: `${WALKWAY.w}%`, height: `${WALKWAY.h}%` }}
-            >
-              <div className="flex items-center gap-2 text-stone-500 dark:text-stone-400">
-                <span className="text-xs font-medium tracking-widest uppercase opacity-60">
-                  Walkway to Beachfront
-                </span>
-                <span className="text-lg opacity-40">→</span>
-              </div>
-            </div>
-
-            {/* Beachfront indicator */}
-            <div
-              className="absolute rounded-r-xl bg-sky-300/30 dark:bg-sky-700/20 border-l-2 border-sky-400/50 flex items-center justify-center"
-              style={{ right: "0%", top: "30%", width: "3%", height: "34%" }}
-            >
-              <span className="text-[8px] text-sky-600 dark:text-sky-400 font-medium uppercase tracking-wider [writing-mode:vertical-rl] rotate-180">
-                Beach
-              </span>
-            </div>
-
-            {/* Open Cottage */}
+            {/* Open Cottage (upper right) */}
             <div
               className="absolute rounded-lg bg-lime-100 dark:bg-lime-950/30 border border-lime-400 dark:border-lime-700 flex items-center justify-center"
               style={{ left: `${OPEN_COTTAGE.x}%`, top: `${OPEN_COTTAGE.y}%`, width: `${OPEN_COTTAGE.w}%`, height: `${OPEN_COTTAGE.h}%` }}
             >
-              <span className="text-[9px] font-medium text-lime-700 dark:text-lime-400 uppercase tracking-wider text-center leading-tight">
+              <span className="text-[8px] font-medium text-lime-700 dark:text-lime-400 uppercase tracking-wider text-center leading-tight">
                 Open<br />Cottage
               </span>
             </div>
