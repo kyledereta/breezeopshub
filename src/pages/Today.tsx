@@ -875,6 +875,37 @@ export default function TodayPage() {
     }
   }, [unitStatusMap]);
 
+  const handleMapDrop = useCallback((bookingId: string, targetUnitId: string) => {
+    const booking = allBookings.find(b => b.id === bookingId);
+    const targetUnit = units.find(u => u.id === targetUnitId);
+    const sourceUnit = units.find(u => u.id === booking?.unit_id);
+    if (!booking || !targetUnit) return;
+    setMapDragConfirm({
+      bookingId,
+      targetUnitId,
+      guestName: booking.guest_name,
+      sourceUnit: sourceUnit?.name || "Unknown",
+      targetUnit: targetUnit.name,
+    });
+  }, [allBookings, units]);
+
+  const confirmMapDrag = useCallback(() => {
+    if (!mapDragConfirm) return;
+    updateBooking.mutate(
+      { id: mapDragConfirm.bookingId, unit_id: mapDragConfirm.targetUnitId },
+      {
+        onSuccess: () => {
+          toast.success(`Moved ${mapDragConfirm.guestName} to ${mapDragConfirm.targetUnit}`);
+          setMapDragConfirm(null);
+        },
+        onError: (err) => {
+          toast.error("Failed to move booking: " + (err as Error).message);
+          setMapDragConfirm(null);
+        },
+      }
+    );
+  }, [mapDragConfirm, updateBooking]);
+
   const renderMapUnits = useCallback((
     mapped: Unit[],
     positions: Record<string, { x: number; y: number; w: number; h: number }>,
@@ -890,11 +921,14 @@ export default function TodayPage() {
           shortName={shortNameFn(unit.name)}
           guestName={info.guestName}
           status={info.status}
+          bookingId={info.booking?.id}
+          unitId={unit.id}
+          onDrop={handleMapDrop}
           style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: `${pos.w}%`, height: `${pos.h}%` }}
           onClick={() => handleMapUnitClick(unit)}
         />
       );
-    }), [unitStatusMap, handleMapUnitClick]);
+    }), [unitStatusMap, handleMapUnitClick, handleMapDrop]);
 
   // Show checkout reminder popup when there are due departures
   useEffect(() => {
