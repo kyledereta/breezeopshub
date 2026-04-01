@@ -12,7 +12,7 @@ import {
   LogIn, LogOut, Home, Users, BedDouble, GripVertical, Clock,
   AlertCircle, X, Pencil, Tent, TreePalm, Crown, Fan, Snowflake, CalendarDays,
   DollarSign, AlertTriangle, ArrowRight, Link2, ChevronDown, ChevronUp, Sun, RefreshCw,
-  CircleDollarSign, SprayCan, ClipboardList, Copy, Map,
+  CircleDollarSign, SprayCan, ClipboardList, Copy, Map as MapIcon,
 } from "lucide-react";
 import { MapLegend } from "@/components/MapLegend";
 import { MapUnitBlock } from "@/components/MapUnitBlock";
