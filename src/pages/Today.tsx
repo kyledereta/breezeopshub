@@ -12,7 +12,7 @@ import {
   LogIn, LogOut, Home, Users, BedDouble, GripVertical, Clock,
   AlertCircle, X, Pencil, Tent, TreePalm, Crown, Fan, Snowflake, CalendarDays,
   DollarSign, AlertTriangle, ArrowRight, Link2, ChevronDown, ChevronUp, Sun, RefreshCw,
-  CircleDollarSign, SprayCan, ClipboardList,
+  CircleDollarSign, SprayCan, ClipboardList, Copy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -611,14 +611,8 @@ export default function TodayPage() {
       }
     }
 
-    // Include due departures (checked in, checkout today — need to check out)
-    for (const booking of dueDepartures) {
-      if (!clearedDepartureIds.includes(booking.id)) {
-        byId.set(booking.id, booking);
-      }
-    }
-
-    // Include manually dragged bookings
+    // Due departures (Checked In, checkout today) stay in In-House — 
+    // only show in Departures if manually dragged here
     for (const bookingId of manualDepartureIds) {
       const booking = allBookings.find((item) => item.id === bookingId);
       if (booking && !clearedDepartureIds.includes(booking.id)) {
@@ -627,7 +621,7 @@ export default function TodayPage() {
     }
 
     return Array.from(byId.values());
-  }, [allBookings, baseCheckOuts, dueDepartures, manualDepartureIds, clearedDepartureIds]);
+  }, [allBookings, baseCheckOuts, manualDepartureIds, clearedDepartureIds]);
 
   const handleDrop = useCallback(
     (zone: DropZone, e: React.DragEvent) => {
@@ -1341,9 +1335,41 @@ export default function TodayPage() {
         <Dialog open={showArrivalsSummary} onOpenChange={setShowArrivalsSummary}>
           <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 font-display text-lg">
-                <LogIn className="h-5 w-5 text-primary" />
-                Arrivals Summary
+              <DialogTitle className="flex items-center justify-between font-display text-lg">
+                <span className="flex items-center gap-2">
+                  <LogIn className="h-5 w-5 text-primary" />
+                  Arrivals Summary
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs gap-1.5"
+                  onClick={() => {
+                    const lines: string[] = [];
+                    lines.push(`📋 *ARRIVALS — ${format(new Date(), "MMMM d, yyyy")}*`);
+                    lines.push("");
+                    for (const { area, bookings: areaBookings } of arrivalsGrouped) {
+                      lines.push(`*${area}*`);
+                      for (const b of areaBookings) {
+                        const gid = b.booking_group_id;
+                        const siblings = gid ? groupSiblingsMap.get(gid) : null;
+                        const groupTotal = gid ? [b, ...(siblings ?? [])].reduce((s, x) => s + x.total_amount, 0) : b.total_amount;
+                        const groupPax = gid ? [b, ...(siblings ?? [])].reduce((s, x) => s + x.pax, 0) : b.pax;
+                        const groupUnits = gid ? groupUnitNamesMap.get(gid) : null;
+                        const unitLabel = groupUnits && groupUnits.length > 1 ? groupUnits.join(" + ") : (unitMap.get(b.unit_id ?? "") ?? "—");
+                        const bal = groupTotal - b.deposit_paid - (siblings ?? []).reduce((s, x) => s + x.deposit_paid, 0);
+                        lines.push(`• ${b.guest_name} | ${groupPax} pax | DP ₱${b.deposit_paid.toLocaleString()} | Bal ₱${Math.max(0, bal).toLocaleString()} | ${unitLabel}`);
+                      }
+                      lines.push("");
+                    }
+                    lines.push(`*Total: ${checkIns.length} bookings · ${checkIns.reduce((s, b) => s + b.pax, 0)} pax · ₱${checkIns.reduce((s, b) => s + b.total_amount, 0).toLocaleString()}*`);
+                    navigator.clipboard.writeText(lines.join("\n"));
+                    toast.success("Arrivals summary copied!");
+                  }}
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                  Copy
+                </Button>
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-2 mt-2">
