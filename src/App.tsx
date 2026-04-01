@@ -14,7 +14,6 @@ import GuestsPage from "./pages/Guests";
 import SettingsPage from "./pages/Settings";
 import UnitsPage from "./pages/Units";
 import ResortMapPage from "./pages/ResortMap";
-import BeachMapPage from "./pages/BeachMap";
 import LoginPage from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
