@@ -69,6 +69,9 @@ export function QuickCalculator() {
   const [discount, setDiscount] = useState(0);
   const [depositPaid, setDepositPaid] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [groupCheckIn, setGroupCheckIn] = useState("");
+  const [groupCheckOut, setGroupCheckOut] = useState("");
+  const [groupNights, setGroupNights] = useState(1);
 
   const isGroup = entries.length > 1;
 
