@@ -587,7 +587,9 @@ export function BookingModal({
   // Supports multi-unit: sums nightly rates across all selected units
   useEffect(() => {
     if (!watchCheckIn || !watchCheckOut) return;
-    const allIds = [watchUnitId, ...additionalUnitIds].filter(Boolean);
+    // When editing a grouped booking, only compute for THIS booking's unit (not all units)
+    const isGroupedEdit = isEditing && booking?.booking_group_id;
+    const allIds = isGroupedEdit ? [watchUnitId].filter(Boolean) : [watchUnitId, ...additionalUnitIds].filter(Boolean);
     const selectedUnits = units.filter((u) => allIds.includes(u.id));
     if (selectedUnits.length === 0 && !watchIsDaytourBooking) return;
     try {

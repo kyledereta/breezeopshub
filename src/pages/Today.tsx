@@ -244,7 +244,7 @@ function GroupedGuestCard({ primaryBooking, siblingBookings, unitMap, groupUnitN
   const [expanded, setExpanded] = useState(false);
   const allGroupBookings = [primaryBooking, ...siblingBookings];
   const groupTotalAmount = allGroupBookings.reduce((sum, b) => sum + b.total_amount, 0);
-  const groupTotalPax = primaryBooking.pax;
+  const groupTotalPax = allGroupBookings.reduce((sum, b) => sum + b.pax, 0);
   const isContinuedStay = continuedStayIds?.has(primaryBooking.id);
 
   return (
