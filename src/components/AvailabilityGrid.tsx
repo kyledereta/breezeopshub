@@ -542,57 +542,39 @@ export function AvailabilityGrid({ onCellClick, onBookingClick, onUnitClick }: A
               })}
             </tr>
 
-            {/* Summary: Occupied */}
+            {/* Summary: Occupancy (consolidated) */}
             <tr className="bg-card/50">
               <td className="sticky left-0 z-30 bg-card/50 border-b border-r border-border px-3 py-1.5 text-muted-foreground font-medium text-[10px] uppercase tracking-wider">
-                Occupied
+                Occupancy
               </td>
-              {dailyOccupancy.map(({ date, occupied }) => (
-                <td
-                  key={date.toISOString()}
-                  className={cn(
-                    "border-b border-r border-border text-center py-1",
-                    isWeekend(date) && "bg-muted/20",
-                    isToday(date) && "bg-primary/10"
-                  )}
-                >
-                  <div className="flex flex-col items-center">
-                    <div className="w-5 bg-muted rounded-full h-1.5 overflow-hidden">
-                      <div
-                        className="h-full bg-primary rounded-full transition-all"
-                        style={{ width: `${(occupied / units.length) * 100}%` }}
-                      />
-                    </div>
-                    <span className="text-[9px] text-muted-foreground mt-0.5">{occupied}</span>
-                  </div>
-                </td>
-              ))}
-            </tr>
-
-            {/* Summary: Available */}
-            <tr className="bg-card/50">
-              <td className="sticky left-0 z-30 bg-card/50 border-b border-r border-border px-3 py-1.5 text-muted-foreground font-medium text-[10px] uppercase tracking-wider">
-                Available
-              </td>
-              {dailyOccupancy.map(({ date, available }) => (
-                <td
-                  key={date.toISOString()}
-                  className={cn(
-                    "border-b border-r border-border text-center py-1",
-                    isWeekend(date) && "bg-muted/20",
-                    isToday(date) && "bg-primary/10"
-                  )}
-                >
-                  <span
+              {dailyOccupancy.map(({ date, occupied, available }) => {
+                const total = occupied + available;
+                return (
+                  <td
+                    key={date.toISOString()}
                     className={cn(
-                      "text-sm font-semibold",
-                      available > 10 ? "text-gold-light" : available > 5 ? "text-primary" : "text-coral"
+                      "border-b border-r border-border text-center py-1",
+                      isWeekend(date) && "bg-muted/20",
+                      isToday(date) && "bg-primary/10"
                     )}
                   >
-                    {available}
-                  </span>
-                </td>
-              ))}
+                    <div className="flex flex-col items-center gap-0.5">
+                      <div className="w-5 bg-muted rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className="h-full bg-primary rounded-full transition-all"
+                          style={{ width: `${total > 0 ? (occupied / total) * 100 : 0}%` }}
+                        />
+                      </div>
+                      <span className={cn(
+                        "text-[9px] font-medium",
+                        available <= 3 ? "text-coral" : available <= 6 ? "text-primary" : "text-muted-foreground"
+                      )}>
+                        {occupied}/{total}
+                      </span>
+                    </div>
+                  </td>
+                );
+              })}
             </tr>
           </thead>
 
