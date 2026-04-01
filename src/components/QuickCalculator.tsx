@@ -133,7 +133,7 @@ export function QuickCalculator() {
 
   const getEntryTotal = (entry: UnitEntry) => getAccommodation(entry) + getExtrasTotal(entry);
 
-  const subtotal = useMemo(() => entries.reduce((s, e) => s + getEntryTotal(e), 0), [entries, units]);
+  const subtotal = useMemo(() => entries.reduce((s, e) => s + getEntryTotal(e), 0), [entries, units, groupNights, isGroup]);
   const grandTotal = Math.max(subtotal - discount, 0);
   const balance = Math.max(grandTotal - depositPaid, 0);
 
