@@ -6,7 +6,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { useBookings, type Booking } from "@/hooks/useBookings";
 import { useRealtimeBookings } from "@/hooks/useRealtimeBookings";
 import { useUpdateBooking } from "@/hooks/useBookingMutations";
-import { useUnits, groupUnitsByArea } from "@/hooks/useUnits";
+import { useUnits, groupUnitsByArea, type Unit } from "@/hooks/useUnits";
 import { useGuests } from "@/hooks/useGuests";
 import {
   LogIn, LogOut, Home, Users, BedDouble, GripVertical, Clock,
@@ -19,7 +19,6 @@ import { MapUnitBlock } from "@/components/MapUnitBlock";
 import { computeUnitStatusMap } from "@/lib/mapUtils";
 import { UnitDetailSheet } from "@/components/UnitDetailSheet";
 import { BookingDetailSheet } from "@/components/BookingDetailSheet";
-import type { Unit } from "@/hooks/useUnits";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
