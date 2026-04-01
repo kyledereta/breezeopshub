@@ -611,14 +611,8 @@ export default function TodayPage() {
       }
     }
 
-    // Include due departures (checked in, checkout today — need to check out)
-    for (const booking of dueDepartures) {
-      if (!clearedDepartureIds.includes(booking.id)) {
-        byId.set(booking.id, booking);
-      }
-    }
-
-    // Include manually dragged bookings
+    // Due departures (Checked In, checkout today) stay in In-House — 
+    // only show in Departures if manually dragged here
     for (const bookingId of manualDepartureIds) {
       const booking = allBookings.find((item) => item.id === bookingId);
       if (booking && !clearedDepartureIds.includes(booking.id)) {
@@ -627,7 +621,7 @@ export default function TodayPage() {
     }
 
     return Array.from(byId.values());
-  }, [allBookings, baseCheckOuts, dueDepartures, manualDepartureIds, clearedDepartureIds]);
+  }, [allBookings, baseCheckOuts, manualDepartureIds, clearedDepartureIds]);
 
   const handleDrop = useCallback(
     (zone: DropZone, e: React.DragEvent) => {
