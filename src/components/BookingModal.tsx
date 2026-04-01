@@ -376,6 +376,10 @@ export function BookingModal({
 
       if (booking) {
         query = query.neq("id", booking.id);
+        // Exclude other bookings in the same group to avoid false overlap warnings
+        if (booking.booking_group_id) {
+          query = query.or(`booking_group_id.is.null,booking_group_id.neq.${booking.booking_group_id}`);
+        }
       }
 
       const { data } = await query;
