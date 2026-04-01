@@ -1597,7 +1597,7 @@ export default function TodayPage() {
                               <BedDouble className="h-2.5 w-2.5" />
                               {groupUnits && groupUnits.length > 1 ? groupUnits.join(" + ") : (unitMap.get(b.unit_id ?? "") ?? "—")}
                               <span className="mx-0.5">·</span>
-                              {b.pax} pax
+                              {gid ? [b, ...(siblings ?? [])].reduce((s, x) => s + x.pax, 0) : b.pax} pax
                               {gid && <span className="mx-0.5">· ₱{groupTotal.toLocaleString()}</span>}
                             </div>
                           </div>
