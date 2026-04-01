@@ -517,7 +517,7 @@ function UnitEntryCard({
             />
           </div>
         </div>
-      )
+      )}
 
       {/* Rate info */}
       {selectedUnit && (
