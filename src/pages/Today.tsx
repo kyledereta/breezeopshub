@@ -6,14 +6,19 @@ import { AppLayout } from "@/components/AppLayout";
 import { useBookings, type Booking } from "@/hooks/useBookings";
 import { useRealtimeBookings } from "@/hooks/useRealtimeBookings";
 import { useUpdateBooking } from "@/hooks/useBookingMutations";
-import { useUnits, groupUnitsByArea } from "@/hooks/useUnits";
+import { useUnits, groupUnitsByArea, type Unit } from "@/hooks/useUnits";
 import { useGuests } from "@/hooks/useGuests";
 import {
   LogIn, LogOut, Home, Users, BedDouble, GripVertical, Clock,
   AlertCircle, X, Pencil, Tent, TreePalm, Crown, Fan, Snowflake, CalendarDays,
   DollarSign, AlertTriangle, ArrowRight, Link2, ChevronDown, ChevronUp, Sun, RefreshCw,
-  CircleDollarSign, SprayCan, ClipboardList, Copy,
+  CircleDollarSign, SprayCan, ClipboardList, Copy, Map as MapIcon,
 } from "lucide-react";
+import { MapLegend } from "@/components/MapLegend";
+import { MapUnitBlock } from "@/components/MapUnitBlock";
+import { computeUnitStatusMap } from "@/lib/mapUtils";
+import { UnitDetailSheet } from "@/components/UnitDetailSheet";
+import { BookingDetailSheet } from "@/components/BookingDetailSheet";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -389,6 +394,55 @@ function GroupedGuestCard({ primaryBooking, siblingBookings, unitMap, groupUnitN
   );
 }
 
+// ── Resort Map positions ──
+const POOL_UNITS: Record<string, { x: number; y: number; w: number; h: number }> = {
+  "Pool Villa 1": { x: 3, y: 5, w: 12, h: 18 },
+  "Pool Villa 2": { x: 17, y: 5, w: 12, h: 18 },
+  "Pool Villa 3": { x: 31, y: 5, w: 12, h: 18 },
+  "Pool Villa 4": { x: 57, y: 5, w: 12, h: 18 },
+  "Pool Villa 5": { x: 71, y: 5, w: 12, h: 18 },
+  "Pool Villa 6": { x: 85, y: 5, w: 12, h: 18 },
+  "Owner's Villa": { x: 3, y: 35, w: 16, h: 28 },
+  "AC Pool Kubo 1": { x: 71, y: 65, w: 12, h: 16 },
+  "AC Pool Kubo 2": { x: 85, y: 65, w: 12, h: 16 },
+};
+const POOL = { x: 25, y: 35, w: 40, h: 28 };
+const POOL_KITCHEN = { x: 44, y: 5, w: 12, h: 18 };
+
+const BEACH_UNITS: Record<string, { x: number; y: number; w: number; h: number }> = {
+  "Teepee Kubo 1": { x: 3, y: 4, w: 8, h: 16 },
+  "Teepee Kubo 2": { x: 12, y: 4, w: 8, h: 16 },
+  "Teepee Kubo 3": { x: 21, y: 4, w: 8, h: 16 },
+  "Teepee Kubo 4": { x: 30, y: 4, w: 8, h: 16 },
+  "Beach Villa 1": { x: 40, y: 4, w: 7, h: 16 },
+  "Beach Villa 2": { x: 48, y: 4, w: 7, h: 16 },
+  "Beach Villa 3": { x: 56, y: 4, w: 7, h: 16 },
+  "Beach Villa 4": { x: 64, y: 4, w: 7, h: 16 },
+  "Beach Villa 5": { x: 72, y: 4, w: 7, h: 16 },
+  "Beach Villa 6": { x: 80, y: 4, w: 7, h: 16 },
+  "Fan Kubo 1": { x: 3, y: 72, w: 9, h: 16 },
+  "Fan Kubo 2": { x: 13, y: 72, w: 9, h: 16 },
+  "Fan Kubo 3": { x: 23, y: 72, w: 9, h: 16 },
+  "Fan Kubo 4": { x: 33, y: 72, w: 9, h: 16 },
+  "Big Kubo": { x: 44, y: 72, w: 12, h: 16 },
+  "AC Beach Kubo 1": { x: 58, y: 72, w: 10, h: 16 },
+  "AC Beach Kubo 2": { x: 69, y: 72, w: 10, h: 16 },
+};
+const WALKWAY = { x: 3, y: 38, w: 94, h: 18 };
+const OPEN_COTTAGE = { x: 89, y: 4, w: 9, h: 16 };
+
+function poolShortName(name: string) {
+  return name.replace("Pool Villa ", "PV").replace("AC Pool Kubo ", "APK");
+}
+function beachShortName(name: string) {
+  return name
+    .replace("Teepee Kubo ", "TK")
+    .replace("Beach Villa ", "BV")
+    .replace("Fan Kubo ", "FK")
+    .replace("AC Beach Kubo ", "ABK")
+    .replace("Big Kubo", "BK");
+}
+
 type DropZone = "arrivals" | "inhouse" | "departures";
 
 export default function TodayPage() {
@@ -430,6 +484,11 @@ export default function TodayPage() {
   const [showInHouseSummary, setShowInHouseSummary] = useState(false);
   const [turnoverExpanded, setTurnoverExpanded] = useState(true);
   const [showTodayReport, setShowTodayReport] = useState(false);
+  const [showResortMap, setShowResortMap] = useState(false);
+  const [mapSelectedUnit, setMapSelectedUnit] = useState<Unit | null>(null);
+  const [mapUnitSheetOpen, setMapUnitSheetOpen] = useState(false);
+  const [mapSelectedBooking, setMapSelectedBooking] = useState<Booking | null>(null);
+  const [mapBookingSheetOpen, setMapBookingSheetOpen] = useState(false);
 
    const unitMap = useMemo(() => {
     const m = new Map<string, string>();
@@ -796,6 +855,46 @@ export default function TodayPage() {
 
   const groupedUnits = useMemo(() => groupUnitsByArea(units), [units]);
 
+  // Resort map data
+  const unitStatusMap = useMemo(
+    () => computeUnitStatusMap(units, allBookings, todayStr),
+    [units, allBookings, todayStr]
+  );
+  const poolMapped = useMemo(() => units.filter((u) => POOL_UNITS[u.name]), [units]);
+  const beachMapped = useMemo(() => units.filter((u) => BEACH_UNITS[u.name]), [units]);
+
+  const handleMapUnitClick = useCallback((unit: Unit) => {
+    const info = unitStatusMap[unit.id];
+    if (info?.booking) {
+      setMapSelectedBooking(info.booking);
+      setMapBookingSheetOpen(true);
+    } else {
+      setMapSelectedUnit(unit);
+      setMapUnitSheetOpen(true);
+    }
+  }, [unitStatusMap]);
+
+  const renderMapUnits = useCallback((
+    mapped: Unit[],
+    positions: Record<string, { x: number; y: number; w: number; h: number }>,
+    shortNameFn: (n: string) => string
+  ) =>
+    mapped.map((unit) => {
+      const pos = positions[unit.name];
+      const info = unitStatusMap[unit.id] || { status: "available" as const };
+      return (
+        <MapUnitBlock
+          key={unit.id}
+          name={unit.name}
+          shortName={shortNameFn(unit.name)}
+          guestName={info.guestName}
+          status={info.status}
+          style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: `${pos.w}%`, height: `${pos.h}%` }}
+          onClick={() => handleMapUnitClick(unit)}
+        />
+      );
+    }), [unitStatusMap, handleMapUnitClick]);
+
   // Show checkout reminder popup when there are due departures
   useEffect(() => {
     if (dueDepartures.length > 0 && !isLoading) {
@@ -854,6 +953,15 @@ export default function TodayPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs gap-1.5"
+              onClick={() => setShowResortMap(true)}
+            >
+              <MapIcon className="h-3.5 w-3.5" />
+              Resort Map
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -1522,6 +1630,90 @@ export default function TodayPage() {
             </div>
           </DialogContent>
         </Dialog>
+        {/* Resort Map Dialog */}
+        <Dialog open={showResortMap} onOpenChange={setShowResortMap}>
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-0">
+            <DialogHeader className="px-4 pt-4 pb-2">
+              <DialogTitle className="flex items-center justify-between font-display text-lg">
+                <span className="flex items-center gap-2">
+                  <MapIcon className="h-5 w-5 text-primary" />
+                  Resort Map
+                  <span className="text-xs font-normal text-muted-foreground ml-1">Top View · {format(new Date(), "MMMM d, yyyy")}</span>
+                </span>
+              </DialogTitle>
+            </DialogHeader>
+            <div className="px-4 pb-2">
+              <MapLegend />
+            </div>
+            <div className="px-4 pb-4 space-y-6">
+              {/* Pool Area */}
+              <div>
+                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">Pool Area</h2>
+                <div className="relative w-full" style={{ aspectRatio: "16/10" }}>
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-emerald-50 to-sky-50 dark:from-emerald-950/20 dark:to-sky-950/20 border border-border shadow-sm" />
+                  <div
+                    className="absolute rounded-lg bg-sky-400/40 border-2 border-sky-400/60 flex items-center justify-center backdrop-blur-sm"
+                    style={{ left: `${POOL.x}%`, top: `${POOL.y}%`, width: `${POOL.w}%`, height: `${POOL.h}%` }}
+                  >
+                    <div className="text-sky-700 dark:text-sky-300 text-sm font-medium tracking-widest uppercase opacity-60">Swimming Pool</div>
+                  </div>
+                  <div
+                    className="absolute rounded-lg bg-orange-100 dark:bg-orange-950/30 border border-orange-300 dark:border-orange-700 flex items-center justify-center"
+                    style={{ left: `${POOL_KITCHEN.x}%`, top: `${POOL_KITCHEN.y}%`, width: `${POOL_KITCHEN.w}%`, height: `${POOL_KITCHEN.h}%` }}
+                  >
+                    <span className="text-[10px] font-medium text-orange-600 dark:text-orange-400 uppercase tracking-wider">Kitchen</span>
+                  </div>
+                  {renderMapUnits(poolMapped, POOL_UNITS, poolShortName)}
+                  <span className="absolute text-[9px] text-muted-foreground font-medium uppercase tracking-widest" style={{ left: "3%", top: "1%" }}>Pool Villas (Left Wing)</span>
+                  <span className="absolute text-[9px] text-muted-foreground font-medium uppercase tracking-widest" style={{ right: "3%", top: "1%", textAlign: "right" }}>Pool Villas (Right Wing)</span>
+                  <span className="absolute text-[9px] text-muted-foreground font-medium uppercase tracking-widest" style={{ right: "3%", bottom: "12%", textAlign: "right" }}>AC Pool Kubos</span>
+                </div>
+              </div>
+
+              {/* Beach Area */}
+              <div>
+                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">Beach Area</h2>
+                <div className="relative w-full" style={{ aspectRatio: "16/10" }}>
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-amber-50 to-sky-50 dark:from-amber-950/20 dark:to-sky-950/20 border border-border shadow-sm" />
+                  <div
+                    className="absolute rounded-lg bg-lime-100 dark:bg-lime-950/30 border border-lime-400 dark:border-lime-700 flex items-center justify-center"
+                    style={{ left: `${OPEN_COTTAGE.x}%`, top: `${OPEN_COTTAGE.y}%`, width: `${OPEN_COTTAGE.w}%`, height: `${OPEN_COTTAGE.h}%` }}
+                  >
+                    <span className="text-[8px] font-medium text-lime-700 dark:text-lime-400 uppercase tracking-wider text-center leading-tight">Open<br />Cottage</span>
+                  </div>
+                  <div
+                    className="absolute rounded-lg bg-stone-200/60 dark:bg-stone-700/30 border border-dashed border-stone-400 dark:border-stone-600 flex items-center justify-center"
+                    style={{ left: `${WALKWAY.x}%`, top: `${WALKWAY.y}%`, width: `${WALKWAY.w}%`, height: `${WALKWAY.h}%` }}
+                  >
+                    <div className="flex items-center gap-2 text-stone-500 dark:text-stone-400">
+                      <span className="text-xs font-medium tracking-widest uppercase opacity-60">Walkway to Beachfront</span>
+                      <span className="text-lg opacity-40">→</span>
+                    </div>
+                  </div>
+                  <div
+                    className="absolute rounded-r-xl bg-sky-300/30 dark:bg-sky-700/20 border-l-2 border-sky-400/50 flex items-center justify-center"
+                    style={{ right: "0%", top: "30%", width: "3%", height: "34%" }}
+                  >
+                    <span className="text-[8px] text-sky-600 dark:text-sky-400 font-medium uppercase tracking-wider [writing-mode:vertical-rl] rotate-180">Beach</span>
+                  </div>
+                  {renderMapUnits(beachMapped, BEACH_UNITS, beachShortName)}
+                  <span className="absolute text-[9px] text-muted-foreground font-medium uppercase tracking-widest" style={{ left: "10%", top: "22%" }}>Teepee Kubos</span>
+                  <span className="absolute text-[9px] text-muted-foreground font-medium uppercase tracking-widest" style={{ left: "60%", top: "22%" }}>Beach Villas</span>
+                  <span className="absolute text-[9px] text-muted-foreground font-medium uppercase tracking-widest" style={{ left: "3%", bottom: "8%" }}>Fan Kubos</span>
+                  <span className="absolute text-[9px] text-muted-foreground font-medium uppercase tracking-widest" style={{ left: "58%", bottom: "8%" }}>AC Beach Kubos</span>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <UnitDetailSheet open={mapUnitSheetOpen} onOpenChange={setMapUnitSheetOpen} unit={mapSelectedUnit} />
+        <BookingDetailSheet
+          open={mapBookingSheetOpen}
+          onOpenChange={setMapBookingSheetOpen}
+          booking={mapSelectedBooking}
+          onEdit={(b) => { setMapBookingSheetOpen(false); setEditingBooking(b); }}
+        />
       </div>
     </AppLayout>
   );
