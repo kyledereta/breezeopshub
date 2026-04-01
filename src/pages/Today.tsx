@@ -1034,6 +1034,9 @@ export default function TodayPage() {
               <StatCard icon={CalendarDays} label="Bookings" value={String(checkIns.length + inHouse.length + visibleDepartures.length)} sub="Today's bookings" onClick={() => navigate("/bookings")} />
             </div>
 
+            {/* Quick Calculator */}
+            <QuickCalculator />
+
             {/* Form Submissions */}
             <FormSubmissionsSection unitMap={unitMap} />
 
