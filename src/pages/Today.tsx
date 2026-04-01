@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { BookingModal } from "@/components/BookingModal";
 import { FormSubmissionsSection } from "@/components/FormSubmissionsSection";
+import { QuickCalculator } from "@/components/QuickCalculator";
 import { useContinuedStaySet, useContinuedStayMap, type ContinuedStayInfo } from "@/hooks/useContinuedStay";
 import { DaySummaryDialog } from "@/components/DaySummaryDialog";
 import { TodayReportDialog } from "@/components/TodayReportDialog";
@@ -1032,6 +1033,9 @@ export default function TodayPage() {
               />
               <StatCard icon={CalendarDays} label="Bookings" value={String(checkIns.length + inHouse.length + visibleDepartures.length)} sub="Today's bookings" onClick={() => navigate("/bookings")} />
             </div>
+
+            {/* Quick Calculator */}
+            <QuickCalculator />
 
             {/* Form Submissions */}
             <FormSubmissionsSection unitMap={unitMap} />
