@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { useUnits, groupUnitsByArea } from "@/hooks/useUnits";
-import { Calculator, ChevronDown, ChevronUp, RotateCcw, Plus, X } from "lucide-react";
+import { Calculator, ChevronDown, ChevronUp, RotateCcw, Plus, X, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -8,6 +8,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { format, parseISO } from "date-fns";
+import { toast } from "sonner";
 
 const EXTRAS = [
   { key: "extra_pax", label: "Extra Pax", defaultFee: 0, hasQty: true },
@@ -32,7 +34,9 @@ interface UnitEntry {
   id: string;
   unitId: string;
   nights: number;
-  usePeakRate: boolean;
+  pax: number;
+  checkIn: string;
+  checkOut: string;
   extras: ExtrasState;
 }
 
@@ -49,7 +53,9 @@ function createUnitEntry(): UnitEntry {
     id: crypto.randomUUID(),
     unitId: "",
     nights: 1,
-    usePeakRate: false,
+    pax: 2,
+    checkIn: "",
+    checkOut: "",
     extras: createDefaultExtras(),
   };
 }
@@ -62,6 +68,7 @@ export function QuickCalculator() {
   const [entries, setEntries] = useState<UnitEntry[]>(() => [createUnitEntry()]);
   const [discount, setDiscount] = useState(0);
   const [depositPaid, setDepositPaid] = useState(0);
+  const [copied, setCopied] = useState(false);
 
   const isGroup = entries.length > 1;
 
@@ -108,7 +115,7 @@ export function QuickCalculator() {
   const getAccommodation = (entry: UnitEntry) => {
     const unit = units.find((u) => u.id === entry.unitId);
     if (!unit) return 0;
-    return (entry.usePeakRate ? unit.peak_rate : unit.nightly_rate) * entry.nights;
+    return unit.nightly_rate * entry.nights;
   };
 
   const getExtrasTotal = (entry: UnitEntry) => {
@@ -130,6 +137,66 @@ export function QuickCalculator() {
     setEntries([createUnitEntry()]);
     setDiscount(0);
     setDepositPaid(0);
+  };
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "";
+    try {
+      return format(parseISO(dateStr), "MMM d, yyyy");
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const handleCopy = () => {
+    const lines: string[] = [];
+
+    for (const entry of entries) {
+      const unit = units.find((u) => u.id === entry.unitId);
+      if (!unit) continue;
+
+      const unitLine = `${unit.name} (${entry.pax} pax)`;
+      lines.push(unitLine);
+
+      if (entry.checkIn || entry.checkOut) {
+        const ci = entry.checkIn ? formatDate(entry.checkIn) : "—";
+        const co = entry.checkOut ? formatDate(entry.checkOut) : "—";
+        lines.push(`${ci} → ${co} (${entry.nights}n)`);
+      } else {
+        lines.push(`${entry.nights} night(s)`);
+      }
+
+      lines.push(`Accommodation: ₱${getAccommodation(entry).toLocaleString()}`);
+
+      // List enabled extras
+      const enabledExtras = EXTRAS.filter((e) => entry.extras[e.key].enabled);
+      if (enabledExtras.length > 0) {
+        for (const e of enabledExtras) {
+          const s = entry.extras[e.key];
+          const amt = s.fee * (e.hasQty ? s.qty : 1);
+          const qtyLabel = e.hasQty && s.qty > 1 ? ` x${s.qty}` : "";
+          lines.push(`${e.label}${qtyLabel}: ₱${amt.toLocaleString()}`);
+        }
+      }
+
+      lines.push(`Subtotal: ₱${getEntryTotal(entry).toLocaleString()}`);
+      lines.push("");
+    }
+
+    if (discount > 0) {
+      lines.push(`Discount: -₱${discount.toLocaleString()}`);
+    }
+    lines.push(`Total: ₱${grandTotal.toLocaleString()}`);
+    if (depositPaid > 0) {
+      lines.push(`Deposit Paid: ₱${depositPaid.toLocaleString()}`);
+      lines.push(`Balance Due: ₱${balance.toLocaleString()}`);
+    }
+
+    navigator.clipboard.writeText(lines.join("\n")).then(() => {
+      setCopied(true);
+      toast.success("Summary copied to clipboard");
+      setTimeout(() => setCopied(false), 2000);
+    });
   };
 
   return (
@@ -205,13 +272,13 @@ export function QuickCalculator() {
 
           {/* Grand Summary */}
           <div className="rounded-md bg-muted/50 p-3 space-y-1.5 text-xs">
-            {isGroup && entries.map((entry, idx) => {
+            {isGroup && entries.map((entry) => {
               const unit = units.find((u) => u.id === entry.unitId);
               const total = getEntryTotal(entry);
               if (!unit || total === 0) return null;
               return (
                 <div key={entry.id} className="flex justify-between text-muted-foreground">
-                  <span>{unit.name}</span>
+                  <span>{unit.name} ({entry.pax} pax)</span>
                   <span>₱{total.toLocaleString()}</span>
                 </div>
               );
@@ -260,10 +327,17 @@ export function QuickCalculator() {
             )}
           </div>
 
-          <Button variant="ghost" size="sm" className="w-full text-xs text-muted-foreground gap-1.5" onClick={handleReset}>
-            <RotateCcw className="h-3 w-3" />
-            Reset
-          </Button>
+          {/* Action buttons */}
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={handleCopy}>
+              {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+              {copied ? "Copied!" : "Copy Summary"}
+            </Button>
+            <Button variant="ghost" size="sm" className="flex-1 text-xs text-muted-foreground gap-1.5" onClick={handleReset}>
+              <RotateCcw className="h-3 w-3" />
+              Reset
+            </Button>
+          </div>
         </div>
       )}
     </div>
@@ -294,7 +368,7 @@ function UnitEntryCard({
   onUpdate, onToggleExtra, onSetExtraFee, onSetExtraQty, onRemove,
 }: UnitEntryCardProps) {
   const selectedUnit = units.find((u) => u.id === entry.unitId);
-  const nightlyRate = selectedUnit ? (entry.usePeakRate ? selectedUnit.peak_rate : selectedUnit.nightly_rate) : 0;
+  const nightlyRate = selectedUnit ? selectedUnit.nightly_rate : 0;
   const [extrasOpen, setExtrasOpen] = useState(false);
 
   return (
@@ -317,8 +391,8 @@ function UnitEntryCard({
         </div>
       )}
 
-      {/* Unit & Nights */}
-      <div className="grid grid-cols-2 gap-2">
+      {/* Unit & Pax */}
+      <div className="grid grid-cols-[1fr_auto] gap-2">
         <div>
           <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Unit</Label>
           <Select value={entry.unitId} onValueChange={(v) => onUpdate(entry.id, { unitId: v })}>
@@ -340,34 +414,53 @@ function UnitEntryCard({
           </Select>
         </div>
         <div>
+          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Pax</Label>
+          <Input
+            type="number"
+            min={1}
+            value={entry.pax}
+            onChange={(e) => onUpdate(entry.id, { pax: Math.max(1, Number(e.target.value)) })}
+            className="h-8 w-16 text-xs"
+          />
+        </div>
+      </div>
+
+      {/* Dates & Nights */}
+      <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+        <div>
+          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Check-in</Label>
+          <Input
+            type="date"
+            value={entry.checkIn}
+            onChange={(e) => onUpdate(entry.id, { checkIn: e.target.value })}
+            className="h-8 text-xs"
+          />
+        </div>
+        <div>
+          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Check-out</Label>
+          <Input
+            type="date"
+            value={entry.checkOut}
+            onChange={(e) => onUpdate(entry.id, { checkOut: e.target.value })}
+            className="h-8 text-xs"
+          />
+        </div>
+        <div>
           <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Nights</Label>
           <Input
             type="number"
             min={1}
             value={entry.nights}
             onChange={(e) => onUpdate(entry.id, { nights: Math.max(1, Number(e.target.value)) })}
-            className="h-8 text-xs"
+            className="h-8 w-14 text-xs"
           />
         </div>
       </div>
 
       {/* Rate info */}
       {selectedUnit && (
-        <div className="flex items-center justify-between text-xs">
-          <span className="text-muted-foreground">
-            ₱{nightlyRate.toLocaleString()} × {entry.nights}n = <span className="font-semibold text-foreground">₱{accommodation.toLocaleString()}</span>
-          </span>
-          <div className="flex items-center gap-1.5">
-            <Checkbox
-              id={`peak-${entry.id}`}
-              checked={entry.usePeakRate}
-              onCheckedChange={(v) => onUpdate(entry.id, { usePeakRate: !!v })}
-              className="h-3.5 w-3.5"
-            />
-            <Label htmlFor={`peak-${entry.id}`} className="text-[10px] text-muted-foreground cursor-pointer">
-              Peak (₱{selectedUnit.peak_rate.toLocaleString()})
-            </Label>
-          </div>
+        <div className="text-xs text-muted-foreground">
+          ₱{nightlyRate.toLocaleString()} × {entry.nights}n = <span className="font-semibold text-foreground">₱{accommodation.toLocaleString()}</span>
         </div>
       )}
 
