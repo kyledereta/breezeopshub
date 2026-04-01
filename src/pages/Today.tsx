@@ -394,6 +394,55 @@ function GroupedGuestCard({ primaryBooking, siblingBookings, unitMap, groupUnitN
   );
 }
 
+// ── Resort Map positions ──
+const POOL_UNITS: Record<string, { x: number; y: number; w: number; h: number }> = {
+  "Pool Villa 1": { x: 3, y: 5, w: 12, h: 18 },
+  "Pool Villa 2": { x: 17, y: 5, w: 12, h: 18 },
+  "Pool Villa 3": { x: 31, y: 5, w: 12, h: 18 },
+  "Pool Villa 4": { x: 57, y: 5, w: 12, h: 18 },
+  "Pool Villa 5": { x: 71, y: 5, w: 12, h: 18 },
+  "Pool Villa 6": { x: 85, y: 5, w: 12, h: 18 },
+  "Owner's Villa": { x: 3, y: 35, w: 16, h: 28 },
+  "AC Pool Kubo 1": { x: 71, y: 65, w: 12, h: 16 },
+  "AC Pool Kubo 2": { x: 85, y: 65, w: 12, h: 16 },
+};
+const POOL = { x: 25, y: 35, w: 40, h: 28 };
+const POOL_KITCHEN = { x: 44, y: 5, w: 12, h: 18 };
+
+const BEACH_UNITS: Record<string, { x: number; y: number; w: number; h: number }> = {
+  "Teepee Kubo 1": { x: 3, y: 4, w: 8, h: 16 },
+  "Teepee Kubo 2": { x: 12, y: 4, w: 8, h: 16 },
+  "Teepee Kubo 3": { x: 21, y: 4, w: 8, h: 16 },
+  "Teepee Kubo 4": { x: 30, y: 4, w: 8, h: 16 },
+  "Beach Villa 1": { x: 40, y: 4, w: 7, h: 16 },
+  "Beach Villa 2": { x: 48, y: 4, w: 7, h: 16 },
+  "Beach Villa 3": { x: 56, y: 4, w: 7, h: 16 },
+  "Beach Villa 4": { x: 64, y: 4, w: 7, h: 16 },
+  "Beach Villa 5": { x: 72, y: 4, w: 7, h: 16 },
+  "Beach Villa 6": { x: 80, y: 4, w: 7, h: 16 },
+  "Fan Kubo 1": { x: 3, y: 72, w: 9, h: 16 },
+  "Fan Kubo 2": { x: 13, y: 72, w: 9, h: 16 },
+  "Fan Kubo 3": { x: 23, y: 72, w: 9, h: 16 },
+  "Fan Kubo 4": { x: 33, y: 72, w: 9, h: 16 },
+  "Big Kubo": { x: 44, y: 72, w: 12, h: 16 },
+  "AC Beach Kubo 1": { x: 58, y: 72, w: 10, h: 16 },
+  "AC Beach Kubo 2": { x: 69, y: 72, w: 10, h: 16 },
+};
+const WALKWAY = { x: 3, y: 38, w: 94, h: 18 };
+const OPEN_COTTAGE = { x: 89, y: 4, w: 9, h: 16 };
+
+function poolShortName(name: string) {
+  return name.replace("Pool Villa ", "PV").replace("AC Pool Kubo ", "APK");
+}
+function beachShortName(name: string) {
+  return name
+    .replace("Teepee Kubo ", "TK")
+    .replace("Beach Villa ", "BV")
+    .replace("Fan Kubo ", "FK")
+    .replace("AC Beach Kubo ", "ABK")
+    .replace("Big Kubo", "BK");
+}
+
 type DropZone = "arrivals" | "inhouse" | "departures";
 
 export default function TodayPage() {
