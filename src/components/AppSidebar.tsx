@@ -1,4 +1,4 @@
-import { Calendar, ClipboardList, Wallet, BarChart3, Users, Settings, LayoutDashboard, Home, LogOut, Map } from "lucide-react";
+import { Calendar, ClipboardList, Wallet, BarChart3, Users, Settings, LayoutDashboard, Home, LogOut } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
