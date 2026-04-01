@@ -32,14 +32,6 @@ const WEEKEND_COLOR = "F3F4F6"; // gray-100
 const HEADER_COLOR = "1F2937";  // gray-800
 const HEADER_BG = "F9FAFB";    // gray-50
 
-const PAYMENT_COLORS: Record<string, string> = {
-  "Fully Paid": "DCFCE7",
-  "Airbnb Paid": "FCE7F3",
-  "Partial DP": "FEF3C7",
-  "Unpaid": "FEE2E2",
-  "Refunded": "E0E7FF",
-  "Unpaid Extras": "FFEDD5",
-};
 
 export async function exportAvailabilityGrid(
   units: Unit[],
