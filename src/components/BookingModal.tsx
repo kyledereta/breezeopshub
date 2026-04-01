@@ -2473,7 +2473,23 @@ export function BookingModal({
                   });
                 }
 
-                const remaining = groupTotalAmt - groupDpAmt;
+                // Calculate paid extras for the current booking
+                let currentPaidExtras = 0;
+                if (watchUtensilRental && extrasPaidStatus.utensil_rental) currentPaidExtras += Number(watchUtensilFee) || 0;
+                if (watchKaraoke && extrasPaidStatus.karaoke) currentPaidExtras += Number(watchKaraokeFee) || 0;
+                if (watchKitchenUse && extrasPaidStatus.kitchen_use) currentPaidExtras += Number(watchKitchenFee) || 0;
+                if (watchWaterJug && extrasPaidStatus.water_jug) currentPaidExtras += Number(watchWaterJugFee) || 0;
+                if (watchTowelRent && extrasPaidStatus.towel_rent) currentPaidExtras += Number(watchTowelRentFee) || 0;
+                if (watchBonfire && extrasPaidStatus.bonfire) currentPaidExtras += Number(watchBonfireFee) || 0;
+                if (watchAtv && extrasPaidStatus.atv) currentPaidExtras += Number(watchAtvFee) || 0;
+                if (watchBananaBoat && extrasPaidStatus.banana_boat) currentPaidExtras += Number(watchBananaBoatFee) || 0;
+                if (watchEarlyCheckin && extrasPaidStatus.early_checkin) currentPaidExtras += Number(watchEarlyCheckinFee) || 0;
+                if (watchPets && additionalPet && extrasPaidStatus.pet_fee) currentPaidExtras += Number(watchPetFee) || 0;
+                if (watchDaytour && extrasPaidStatus.daytour) currentPaidExtras += Number(watchDaytourFee) || 0;
+                if (extrasPaidStatus.other_extras) currentPaidExtras += Number(watchOtherExtrasFee) || 0;
+                if (watchDepositStatus === "Deducted" && extrasPaidStatus.deposit_deduction) currentPaidExtras += Number(watchDepositDeductedAmount) || 0;
+
+                const remaining = groupTotalAmt - groupDpAmt - currentPaidExtras;
                 if (remaining <= 0) return null;
                 return (
                   <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2">
