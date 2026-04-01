@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { BookingModal } from "@/components/BookingModal";
 import { FormSubmissionsSection } from "@/components/FormSubmissionsSection";
+import { QuickCalculator } from "@/components/QuickCalculator";
 import { useContinuedStaySet, useContinuedStayMap, type ContinuedStayInfo } from "@/hooks/useContinuedStay";
 import { DaySummaryDialog } from "@/components/DaySummaryDialog";
 import { TodayReportDialog } from "@/components/TodayReportDialog";
