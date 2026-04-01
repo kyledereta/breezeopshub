@@ -19,17 +19,18 @@ import type { Booking } from "@/hooks/useBookings";
 
 const UNIT_POSITIONS: Record<string, { x: number; y: number; w: number; h: number }> = {
   // Upper row — Teepee Kubos (after Kitchen & CR)
-  "Teepee Kubo 1": { x: 22, y: 4, w: 7.5, h: 16 },
-  "Teepee Kubo 2": { x: 30.5, y: 4, w: 7.5, h: 16 },
-  "Teepee Kubo 3": { x: 39, y: 4, w: 7.5, h: 16 },
-  "Teepee Kubo 4": { x: 47.5, y: 4, w: 7.5, h: 16 },
+  // Upper row — Teepee Kubos
+  "Teepee Kubo 1": { x: 3, y: 4, w: 8, h: 16 },
+  "Teepee Kubo 2": { x: 12, y: 4, w: 8, h: 16 },
+  "Teepee Kubo 3": { x: 21, y: 4, w: 8, h: 16 },
+  "Teepee Kubo 4": { x: 30, y: 4, w: 8, h: 16 },
   // Upper row — Beach Villas
-  "Beach Villa 1": { x: 57, y: 4, w: 6.5, h: 16 },
-  "Beach Villa 2": { x: 64.5, y: 4, w: 6.5, h: 16 },
-  "Beach Villa 3": { x: 72, y: 4, w: 6.5, h: 16 },
-  "Beach Villa 4": { x: 79.5, y: 4, w: 6.5, h: 16 },
-  "Beach Villa 5": { x: 87, y: 4, w: 6.5, h: 16 },
-  "Beach Villa 6": { x: 94.5, y: 4, w: 6.5, h: 16 },  // we'll clamp at 94.5 but it will be tight
+  "Beach Villa 1": { x: 40, y: 4, w: 7, h: 16 },
+  "Beach Villa 2": { x: 48, y: 4, w: 7, h: 16 },
+  "Beach Villa 3": { x: 56, y: 4, w: 7, h: 16 },
+  "Beach Villa 4": { x: 64, y: 4, w: 7, h: 16 },
+  "Beach Villa 5": { x: 72, y: 4, w: 7, h: 16 },
+  "Beach Villa 6": { x: 80, y: 4, w: 7, h: 16 },
   // Lower row — Fan Kubos
   "Fan Kubo 1": { x: 3, y: 72, w: 9, h: 16 },
   "Fan Kubo 2": { x: 13, y: 72, w: 9, h: 16 },
@@ -43,10 +44,8 @@ const UNIT_POSITIONS: Record<string, { x: number; y: number; w: number; h: numbe
 };
 
 // Fixed structures
-const KITCHEN = { x: 3, y: 4, w: 8, h: 16 };
-const COMMON_CR = { x: 12, y: 4, w: 8, h: 16 };
 const WALKWAY = { x: 3, y: 38, w: 94, h: 18 };
-const OPEN_COTTAGE = { x: 82, y: 72, w: 15, h: 16 };
+const OPEN_COTTAGE = { x: 89, y: 4, w: 9, h: 16 };
 
 function getShortName(name: string): string {
   return name
