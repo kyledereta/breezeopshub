@@ -44,7 +44,6 @@ function ProtectedRoutes() {
       <Route path="/guests" element={<GuestsPage />} />
       <Route path="/units" element={<UnitsPage />} />
       <Route path="/map" element={<ResortMapPage />} />
-      <Route path="/beach-map" element={<BeachMapPage />} />
       <Route path="/settings" element={<SettingsPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
