@@ -140,6 +140,9 @@ export function QuickCalculator() {
     setEntries([createUnitEntry()]);
     setDiscount(0);
     setDepositPaid(0);
+    setGroupCheckIn("");
+    setGroupCheckOut("");
+    setGroupNights(1);
   };
 
   const formatDate = (dateStr: string) => {
