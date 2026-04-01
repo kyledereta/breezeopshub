@@ -157,6 +157,18 @@ export function QuickCalculator() {
   const handleCopy = () => {
     const lines: string[] = [];
 
+    // For group bookings, show shared dates at top
+    if (isGroup) {
+      if (groupCheckIn || groupCheckOut) {
+        const ci = groupCheckIn ? formatDate(groupCheckIn) : "—";
+        const co = groupCheckOut ? formatDate(groupCheckOut) : "—";
+        lines.push(`📅 ${ci} → ${co} (${groupNights}n)`);
+      } else {
+        lines.push(`📅 ${groupNights} night(s)`);
+      }
+      lines.push("");
+    }
+
     for (const entry of entries) {
       const unit = units.find((u) => u.id === entry.unitId);
       if (!unit) continue;
@@ -164,17 +176,18 @@ export function QuickCalculator() {
       const unitLine = `${unit.name} (${entry.pax} pax)`;
       lines.push(unitLine);
 
-      if (entry.checkIn || entry.checkOut) {
-        const ci = entry.checkIn ? formatDate(entry.checkIn) : "—";
-        const co = entry.checkOut ? formatDate(entry.checkOut) : "—";
-        lines.push(`${ci} → ${co} (${entry.nights}n)`);
-      } else {
-        lines.push(`${entry.nights} night(s)`);
+      if (!isGroup) {
+        if (entry.checkIn || entry.checkOut) {
+          const ci = entry.checkIn ? formatDate(entry.checkIn) : "—";
+          const co = entry.checkOut ? formatDate(entry.checkOut) : "—";
+          lines.push(`${ci} → ${co} (${entry.nights}n)`);
+        } else {
+          lines.push(`${entry.nights} night(s)`);
+        }
       }
 
       lines.push(`Accommodation: ₱${getAccommodation(entry).toLocaleString()}`);
 
-      // List enabled extras
       const enabledExtras = EXTRAS.filter((e) => entry.extras[e.key].enabled);
       if (enabledExtras.length > 0) {
         for (const e of enabledExtras) {
@@ -185,10 +198,13 @@ export function QuickCalculator() {
         }
       }
 
-      lines.push(`Subtotal: ₱${getEntryTotal(entry).toLocaleString()}`);
+      lines.push(`Unit Total: ₱${getEntryTotal(entry).toLocaleString()}`);
       lines.push("");
     }
 
+    if (isGroup) {
+      lines.push(`Subtotal (${entries.length} units): ₱${subtotal.toLocaleString()}`);
+    }
     if (discount > 0) {
       lines.push(`Discount: -₱${discount.toLocaleString()}`);
     }
