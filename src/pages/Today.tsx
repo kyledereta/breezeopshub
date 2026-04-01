@@ -12,8 +12,14 @@ import {
   LogIn, LogOut, Home, Users, BedDouble, GripVertical, Clock,
   AlertCircle, X, Pencil, Tent, TreePalm, Crown, Fan, Snowflake, CalendarDays,
   DollarSign, AlertTriangle, ArrowRight, Link2, ChevronDown, ChevronUp, Sun, RefreshCw,
-  CircleDollarSign, SprayCan, ClipboardList, Copy,
+  CircleDollarSign, SprayCan, ClipboardList, Copy, Map,
 } from "lucide-react";
+import { MapLegend } from "@/components/MapLegend";
+import { MapUnitBlock } from "@/components/MapUnitBlock";
+import { computeUnitStatusMap } from "@/lib/mapUtils";
+import { UnitDetailSheet } from "@/components/UnitDetailSheet";
+import { BookingDetailSheet } from "@/components/BookingDetailSheet";
+import type { Unit } from "@/hooks/useUnits";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
