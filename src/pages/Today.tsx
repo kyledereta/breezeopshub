@@ -855,6 +855,46 @@ export default function TodayPage() {
 
   const groupedUnits = useMemo(() => groupUnitsByArea(units), [units]);
 
+  // Resort map data
+  const unitStatusMap = useMemo(
+    () => computeUnitStatusMap(units, allBookings, todayStr),
+    [units, allBookings, todayStr]
+  );
+  const poolMapped = useMemo(() => units.filter((u) => POOL_UNITS[u.name]), [units]);
+  const beachMapped = useMemo(() => units.filter((u) => BEACH_UNITS[u.name]), [units]);
+
+  const handleMapUnitClick = useCallback((unit: Unit) => {
+    const info = unitStatusMap[unit.id];
+    if (info?.booking) {
+      setMapSelectedBooking(info.booking);
+      setMapBookingSheetOpen(true);
+    } else {
+      setMapSelectedUnit(unit);
+      setMapUnitSheetOpen(true);
+    }
+  }, [unitStatusMap]);
+
+  const renderMapUnits = useCallback((
+    mapped: Unit[],
+    positions: Record<string, { x: number; y: number; w: number; h: number }>,
+    shortNameFn: (n: string) => string
+  ) =>
+    mapped.map((unit) => {
+      const pos = positions[unit.name];
+      const info = unitStatusMap[unit.id] || { status: "available" as const };
+      return (
+        <MapUnitBlock
+          key={unit.id}
+          name={unit.name}
+          shortName={shortNameFn(unit.name)}
+          guestName={info.guestName}
+          status={info.status}
+          style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: `${pos.w}%`, height: `${pos.h}%` }}
+          onClick={() => handleMapUnitClick(unit)}
+        />
+      );
+    }), [unitStatusMap, handleMapUnitClick]);
+
   // Show checkout reminder popup when there are due departures
   useEffect(() => {
     if (dueDepartures.length > 0 && !isLoading) {
