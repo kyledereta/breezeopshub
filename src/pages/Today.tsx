@@ -484,6 +484,11 @@ export default function TodayPage() {
   const [showInHouseSummary, setShowInHouseSummary] = useState(false);
   const [turnoverExpanded, setTurnoverExpanded] = useState(true);
   const [showTodayReport, setShowTodayReport] = useState(false);
+  const [showResortMap, setShowResortMap] = useState(false);
+  const [mapSelectedUnit, setMapSelectedUnit] = useState<Unit | null>(null);
+  const [mapUnitSheetOpen, setMapUnitSheetOpen] = useState(false);
+  const [mapSelectedBooking, setMapSelectedBooking] = useState<Booking | null>(null);
+  const [mapBookingSheetOpen, setMapBookingSheetOpen] = useState(false);
 
    const unitMap = useMemo(() => {
     const m = new Map<string, string>();
