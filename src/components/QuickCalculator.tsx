@@ -69,6 +69,9 @@ export function QuickCalculator() {
   const [discount, setDiscount] = useState(0);
   const [depositPaid, setDepositPaid] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [groupCheckIn, setGroupCheckIn] = useState("");
+  const [groupCheckOut, setGroupCheckOut] = useState("");
+  const [groupNights, setGroupNights] = useState(1);
 
   const isGroup = entries.length > 1;
 
@@ -115,7 +118,8 @@ export function QuickCalculator() {
   const getAccommodation = (entry: UnitEntry) => {
     const unit = units.find((u) => u.id === entry.unitId);
     if (!unit) return 0;
-    return unit.nightly_rate * entry.nights;
+    const nights = isGroup ? groupNights : entry.nights;
+    return unit.nightly_rate * nights;
   };
 
   const getExtrasTotal = (entry: UnitEntry) => {
@@ -129,7 +133,7 @@ export function QuickCalculator() {
 
   const getEntryTotal = (entry: UnitEntry) => getAccommodation(entry) + getExtrasTotal(entry);
 
-  const subtotal = useMemo(() => entries.reduce((s, e) => s + getEntryTotal(e), 0), [entries, units]);
+  const subtotal = useMemo(() => entries.reduce((s, e) => s + getEntryTotal(e), 0), [entries, units, groupNights, isGroup]);
   const grandTotal = Math.max(subtotal - discount, 0);
   const balance = Math.max(grandTotal - depositPaid, 0);
 
@@ -137,6 +141,9 @@ export function QuickCalculator() {
     setEntries([createUnitEntry()]);
     setDiscount(0);
     setDepositPaid(0);
+    setGroupCheckIn("");
+    setGroupCheckOut("");
+    setGroupNights(1);
   };
 
   const formatDate = (dateStr: string) => {
@@ -151,6 +158,18 @@ export function QuickCalculator() {
   const handleCopy = () => {
     const lines: string[] = [];
 
+    // For group bookings, show shared dates at top
+    if (isGroup) {
+      if (groupCheckIn || groupCheckOut) {
+        const ci = groupCheckIn ? formatDate(groupCheckIn) : "—";
+        const co = groupCheckOut ? formatDate(groupCheckOut) : "—";
+        lines.push(`📅 ${ci} → ${co} (${groupNights}n)`);
+      } else {
+        lines.push(`📅 ${groupNights} night(s)`);
+      }
+      lines.push("");
+    }
+
     for (const entry of entries) {
       const unit = units.find((u) => u.id === entry.unitId);
       if (!unit) continue;
@@ -158,17 +177,18 @@ export function QuickCalculator() {
       const unitLine = `${unit.name} (${entry.pax} pax)`;
       lines.push(unitLine);
 
-      if (entry.checkIn || entry.checkOut) {
-        const ci = entry.checkIn ? formatDate(entry.checkIn) : "—";
-        const co = entry.checkOut ? formatDate(entry.checkOut) : "—";
-        lines.push(`${ci} → ${co} (${entry.nights}n)`);
-      } else {
-        lines.push(`${entry.nights} night(s)`);
+      if (!isGroup) {
+        if (entry.checkIn || entry.checkOut) {
+          const ci = entry.checkIn ? formatDate(entry.checkIn) : "—";
+          const co = entry.checkOut ? formatDate(entry.checkOut) : "—";
+          lines.push(`${ci} → ${co} (${entry.nights}n)`);
+        } else {
+          lines.push(`${entry.nights} night(s)`);
+        }
       }
 
       lines.push(`Accommodation: ₱${getAccommodation(entry).toLocaleString()}`);
 
-      // List enabled extras
       const enabledExtras = EXTRAS.filter((e) => entry.extras[e.key].enabled);
       if (enabledExtras.length > 0) {
         for (const e of enabledExtras) {
@@ -179,10 +199,13 @@ export function QuickCalculator() {
         }
       }
 
-      lines.push(`Subtotal: ₱${getEntryTotal(entry).toLocaleString()}`);
+      lines.push(`Unit Total: ₱${getEntryTotal(entry).toLocaleString()}`);
       lines.push("");
     }
 
+    if (isGroup) {
+      lines.push(`Subtotal (${entries.length} units): ₱${subtotal.toLocaleString()}`);
+    }
     if (discount > 0) {
       lines.push(`Discount: -₱${discount.toLocaleString()}`);
     }
@@ -219,6 +242,43 @@ export function QuickCalculator() {
 
       {expanded && (
         <div className="px-4 pb-4 space-y-3 border-t border-border pt-3">
+          {/* Group-level dates & nights */}
+          {isGroup && (
+            <div className="rounded-md border border-border p-3 bg-muted/30 space-y-2">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Group Dates</span>
+              <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+                <div>
+                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Check-in</Label>
+                  <Input
+                    type="date"
+                    value={groupCheckIn}
+                    onChange={(e) => setGroupCheckIn(e.target.value)}
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <div>
+                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Check-out</Label>
+                  <Input
+                    type="date"
+                    value={groupCheckOut}
+                    onChange={(e) => setGroupCheckOut(e.target.value)}
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <div>
+                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Nights</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={groupNights}
+                    onChange={(e) => setGroupNights(Math.max(1, Number(e.target.value)))}
+                    className="h-8 w-14 text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
           {entries.map((entry, idx) => (
             <UnitEntryCard
               key={entry.id}
@@ -425,37 +485,39 @@ function UnitEntryCard({
         </div>
       </div>
 
-      {/* Dates & Nights */}
-      <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
-        <div>
-          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Check-in</Label>
-          <Input
-            type="date"
-            value={entry.checkIn}
-            onChange={(e) => onUpdate(entry.id, { checkIn: e.target.value })}
-            className="h-8 text-xs"
-          />
+      {/* Dates & Nights — only show for single bookings */}
+      {!isGroup && (
+        <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+          <div>
+            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Check-in</Label>
+            <Input
+              type="date"
+              value={entry.checkIn}
+              onChange={(e) => onUpdate(entry.id, { checkIn: e.target.value })}
+              className="h-8 text-xs"
+            />
+          </div>
+          <div>
+            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Check-out</Label>
+            <Input
+              type="date"
+              value={entry.checkOut}
+              onChange={(e) => onUpdate(entry.id, { checkOut: e.target.value })}
+              className="h-8 text-xs"
+            />
+          </div>
+          <div>
+            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Nights</Label>
+            <Input
+              type="number"
+              min={1}
+              value={entry.nights}
+              onChange={(e) => onUpdate(entry.id, { nights: Math.max(1, Number(e.target.value)) })}
+              className="h-8 w-14 text-xs"
+            />
+          </div>
         </div>
-        <div>
-          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Check-out</Label>
-          <Input
-            type="date"
-            value={entry.checkOut}
-            onChange={(e) => onUpdate(entry.id, { checkOut: e.target.value })}
-            className="h-8 text-xs"
-          />
-        </div>
-        <div>
-          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">Nights</Label>
-          <Input
-            type="number"
-            min={1}
-            value={entry.nights}
-            onChange={(e) => onUpdate(entry.id, { nights: Math.max(1, Number(e.target.value)) })}
-            className="h-8 w-14 text-xs"
-          />
-        </div>
-      </div>
+      )}
 
       {/* Rate info */}
       {selectedUnit && (
