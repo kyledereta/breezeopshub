@@ -426,13 +426,28 @@ export function GroupBookingEditor({ open, onOpenChange, groupBookings }: GroupB
               </h3>
 
               {editMode === "group" && (
-                <div className="bg-muted/30 p-3 rounded-lg border border-border grid grid-cols-2 gap-3">
-                  <Button variant="outline" size="sm" className="text-xs" onClick={() => applyToAll({ utensil_rental: !unitStates[0]?.utensil_rental })}>
-                    <Copy className="h-3 w-3 mr-2" /> Toggle Utensils
-                  </Button>
-                  <Button variant="outline" size="sm" className="text-xs" onClick={() => applyToAll({ karaoke: !unitStates[0]?.karaoke })}>
-                    <Copy className="h-3 w-3 mr-2" /> Toggle Karaoke
-                  </Button>
+              <div className="bg-muted/30 p-3 rounded-lg border border-border space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button variant="outline" size="sm" className="text-xs" onClick={() => applyToAll({ utensil_rental: !unitStates[0]?.utensil_rental })}>
+                      <Copy className="h-3 w-3 mr-2" /> Toggle Utensils
+                    </Button>
+                    <Button variant="outline" size="sm" className="text-xs" onClick={() => applyToAll({ karaoke: !unitStates[0]?.karaoke })}>
+                      <Copy className="h-3 w-3 mr-2" /> Toggle Karaoke
+                    </Button>
+                  </div>
+                  <Separator className="bg-border/50" />
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-foreground">Remaining Balance</span>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={unitStates.every((us) => us.remaining_paid)}
+                        onCheckedChange={(v) => applyToAll({ remaining_paid: v })}
+                      />
+                      <span className={`text-xs font-medium ${unitStates.every((us) => us.remaining_paid) ? "text-primary" : "text-destructive"}`}>
+                        {unitStates.every((us) => us.remaining_paid) ? "Paid" : "Unpaid"}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               )}
 
