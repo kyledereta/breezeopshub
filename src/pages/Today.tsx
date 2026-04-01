@@ -1512,7 +1512,17 @@ export default function TodayPage() {
                          lines.push("");
                        }
                      }
-                     lines.push(`*Total: ${checkIns.length} bookings · ${checkIns.reduce((s, b) => s + b.pax, 0)} pax · ₱${checkIns.reduce((s, b) => s + b.total_amount, 0).toLocaleString()}*`);
+                     const totalPax = checkIns.reduce((s, b) => {
+                       const gid = b.booking_group_id;
+                       const siblings = gid ? groupSiblingsMap.get(gid) : null;
+                       return s + (gid ? [b, ...(siblings ?? [])].reduce((ps, x) => ps + x.pax, 0) : b.pax);
+                     }, 0);
+                     const totalAmount = checkIns.reduce((s, b) => {
+                       const gid = b.booking_group_id;
+                       const siblings = gid ? groupSiblingsMap.get(gid) : null;
+                       return s + (gid ? [b, ...(siblings ?? [])].reduce((ts, x) => ts + x.total_amount, 0) : b.total_amount);
+                     }, 0);
+                     lines.push(`*Total: ${checkIns.length} bookings · ${totalPax} pax · ₱${totalAmount.toLocaleString()}*`);
                     navigator.clipboard.writeText(lines.join("\n"));
                     toast.success("Arrivals summary copied!");
                   }}
