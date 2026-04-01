@@ -187,21 +187,11 @@ export async function exportAvailabilityGrid(
           cell.font = { bold: true, size: 9 };
           cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: tintColor } };
         } else {
-          const val = cell.value;
-          if (val && typeof val === "string" && val.includes("\n")) {
-            // Find the booking to color by payment status
-            const dayIdx = colNumber - 2;
-            if (dayIdx >= 0 && dayIdx < days.length) {
-              const dateStr = format(days[dayIdx], "yyyy-MM-dd");
-              const booking = bookingMap.get(`${unit.id}-${dateStr}`);
-              const payColor = booking ? PAYMENT_COLORS[booking.payment_status] : null;
-              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: payColor || tintColor } };
-            }
-          } else if (colNumber - 2 >= 0 && colNumber - 2 < days.length && isWeekend(days[colNumber - 2])) {
+          const dayIdx = colNumber - 2;
+          if (dayIdx >= 0 && dayIdx < days.length && isWeekend(days[dayIdx])) {
             cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: WEEKEND_COLOR } };
-          } else {
-            cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: tintColor } };
           }
+          // No fill on booking cells — keep them plain/white
         }
       });
     });
