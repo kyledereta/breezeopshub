@@ -489,6 +489,7 @@ export default function TodayPage() {
   const [mapUnitSheetOpen, setMapUnitSheetOpen] = useState(false);
   const [mapSelectedBooking, setMapSelectedBooking] = useState<Booking | null>(null);
   const [mapBookingSheetOpen, setMapBookingSheetOpen] = useState(false);
+  const [mapDragConfirm, setMapDragConfirm] = useState<{ bookingId: string; targetUnitId: string; guestName: string; sourceUnit: string; targetUnit: string } | null>(null);
 
    const unitMap = useMemo(() => {
     const m = new Map<string, string>();
